@@ -1,4 +1,4 @@
-# AI Coding Instructions for talk-for-me
+# AI Coding Instructions for danis-voice-app
 
 ## Project Overview
 
@@ -138,6 +138,6 @@ npm run web            # Run in browser
 
 ## Critical Notes
 
-- This appears to be starter/template code - the app name "talk-for-me" suggests a communication/TTS feature not yet implemented
+- This appears to be starter/template code - the app name "danis-voice-app" suggests a communication/TTS feature not yet implemented
 - Current screens are placeholder content from `create-expo-app` boilerplate
 - No state management, API layer, or business logic present yet

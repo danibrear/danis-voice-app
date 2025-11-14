@@ -28,8 +28,6 @@ export default function RecentList({
 
   const theme = useTheme();
 
-  console.log("theme is", theme);
-
   useEffect(() => {
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps

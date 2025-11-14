@@ -10,6 +10,8 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 
+import { AudioModule } from "expo-audio";
+
 export default function ShowingModal({
   text,
   onDone,
@@ -83,6 +85,9 @@ export default function ShowingModal({
           labelStyle={formStyles.bigButton}
           onPress={() => {
             setIsSpeaking(true);
+            AudioModule.setAudioModeAsync({
+              playsInSilentMode: true,
+            });
 
             Speech.speak(text, {
               rate: preferences.speechRate,

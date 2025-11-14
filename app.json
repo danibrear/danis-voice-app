@@ -1,15 +1,19 @@
 {
   "expo": {
-    "name": "talk-for-me",
-    "slug": "talk-for-me",
+    "name": "Dani's Voice App",
+    "slug": "danis-voice-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "talkforme",
+    "scheme": "danisvoiceapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "rocks.db.voice",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -38,11 +42,18 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "14a7703f-9abd-457f-bb61-b7309eeb62bd"
+      }
     }
   }
 }
