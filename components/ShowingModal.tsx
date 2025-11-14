@@ -169,7 +169,7 @@ export default function ShowingModal({
           }}>
           <Text
             adjustsFontSizeToFit={true}
-            numberOfLines={10}
+            numberOfLines={15}
             style={{
               fontSize: 100,
               width: "95%",
