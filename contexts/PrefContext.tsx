@@ -1,4 +1,4 @@
-import { usePreferences } from "@/hooks/usePrefContext";
+import { usePreferences } from "@/hooks/usePreferences";
 import { Preferences } from "@/types/Preferences";
 import { createContext, ReactNode } from "react";
 
