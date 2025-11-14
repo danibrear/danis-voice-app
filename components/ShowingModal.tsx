@@ -3,7 +3,7 @@ import { Modal, Platform, Text, View } from "react-native";
 
 import { formStyles } from "@/styles";
 import * as Speech from "expo-speech";
-import { Button, useTheme } from "react-native-paper";
+import { Button, IconButton, useTheme } from "react-native-paper";
 import {
   SafeAreaInsetsContext,
   SafeAreaView,
@@ -24,6 +24,9 @@ export default function ShowingModal({
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
+  const [fontSize, setFontSize] = useState<number>(100);
+  const [defaultFontSize, setDefaultFontSize] = useState<number>(100);
+
   const [highlight, setHighlight] = useState<{ start: number; end: number }>({
     start: 0,
     end: 0,
@@ -32,12 +35,14 @@ export default function ShowingModal({
   const isWeb = Platform.OS === "web";
 
   const [numLines, setNumLines] = useState<number>(6);
-  const [longestWordLength, setLongestWordLength] = useState<number>(0);
 
   const preferences = useSelector((state: RootState) => state.preferences);
   const theme = useTheme();
 
   const safeAreaContext = useContext(SafeAreaInsetsContext);
+
+  const [isFlashing, setIsFlashing] = useState<boolean>(false);
+  const [flashOn, setFlashOn] = useState<boolean>(false);
 
   useEffect(() => {
     const words = text ? text.split(/\s+/) : [];
@@ -51,20 +56,34 @@ export default function ShowingModal({
         longest = len;
       }
     });
-    if (longest / 100 > 4 && lines >= 4) {
-      setNumLines((n) => n - 2);
-    }
-    setLongestWordLength(longest / 100);
+    setFontSize(calcFontSize(longest / 100));
+    setDefaultFontSize(calcFontSize(longest / 100));
   }, [text]);
 
-  const calcFontSize = () => {
-    if (longestWordLength > 10) {
+  useEffect(() => {
+    let flashInterval = undefined;
+    if (isFlashing) {
+      flashInterval = setInterval(() => {
+        setFlashOn((prev) => !prev);
+      }, 555.55);
+    } else {
+      setFlashOn(false);
+    }
+    return () => {
+      if (flashInterval) {
+        clearInterval(flashInterval);
+      }
+    };
+  }, [isFlashing]);
+
+  const calcFontSize = (len: number) => {
+    if (len > 10) {
       return 35;
     }
-    if (longestWordLength > 7) {
+    if (len > 7) {
       return 50;
     }
-    if (longestWordLength > 5) {
+    if (len > 5) {
       return 65;
     }
     return 100;
@@ -204,10 +223,71 @@ export default function ShowingModal({
           maxWidth: 600,
           alignSelf: "center",
           width: "100%",
-          backgroundColor: "rgba(0,0,0,.9)",
+          backgroundColor: isFlashing
+            ? flashOn
+              ? "rgba(0,0,0,.9)"
+              : "transparent"
+            : "rgba(0,0,0,.9)",
           paddingTop: safeAreaContext?.top,
           paddingBottom: safeAreaContext?.bottom,
+          position: "relative",
         }}>
+        <View
+          style={{
+            flexDirection: "column",
+            gap: 2,
+            position: "absolute",
+            top: safeAreaContext?.top ? safeAreaContext.top : 10,
+            left: 10,
+            zIndex: 10,
+          }}>
+          <IconButton
+            icon="flash"
+            size={20}
+            iconColor="white"
+            containerColor={isFlashing ? theme.colors.tertiary : "transparent"}
+            onPress={() => {
+              setIsFlashing(!isFlashing);
+            }}
+            mode={isFlashing ? "contained" : "outlined"}
+          />
+        </View>
+        <View
+          style={{
+            flexDirection: "column",
+            gap: 2,
+            position: "absolute",
+            top: safeAreaContext?.top ? safeAreaContext.top : 10,
+            right: 10,
+            zIndex: 10,
+          }}>
+          <IconButton
+            icon="magnify-plus"
+            containerColor={theme.colors.tertiary}
+            iconColor="white"
+            size={22}
+            onPress={() => setFontSize((size) => Math.min(150, size + 5))}
+            mode="contained"
+          />
+          <IconButton
+            icon="magnify-minus"
+            size={22}
+            containerColor={theme.colors.tertiary}
+            iconColor="white"
+            onPress={() => setFontSize((size) => Math.max(20, size - 5))}
+            mode="contained"
+          />
+          {fontSize !== defaultFontSize && (
+            <IconButton
+              icon="magnify-remove-outline"
+              size={22}
+              containerColor={theme.dark ? "#fff" : "#333"}
+              iconColor={theme.colors.tertiary}
+              onPress={() => setFontSize(defaultFontSize)}
+              mode="contained"
+            />
+          )}
+        </View>
         <View
           style={{
             flex: 1,
@@ -220,14 +300,15 @@ export default function ShowingModal({
           <Text
             adjustsFontSizeToFit={true}
             numberOfLines={numLines}
+            minimumFontScale={0.5}
             style={{
               flexShrink: 1,
-              fontSize: calcFontSize(),
+              fontSize: fontSize,
               width: "98%",
               fontWeight: "bold",
               textAlign: "center",
               verticalAlign: "middle",
-              color: "white",
+              color: isFlashing ? (flashOn ? "white" : "black") : "white",
             }}
             textBreakStrategy="balanced">
             {text?.slice(0, highlight.start)}
@@ -264,6 +345,9 @@ export default function ShowingModal({
               onPress={() => {
                 Speech.stop();
                 setIsSpeaking(false);
+                setIsFlashing(false);
+                setIsPaused(false);
+                setFlashOn(false);
                 onDone();
               }}>
               Done
