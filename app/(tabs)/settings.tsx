@@ -1,15 +1,16 @@
-import { coreStyles } from "@/styles";
-import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { RootState } from "@/store";
 import { setPitch, setRate } from "@/store/preferences";
-import { Button, Divider, Text } from "react-native-paper";
+import { coreStyles } from "@/styles";
+import * as WebBrowser from "expo-web-browser";
+import { TouchableOpacity, View } from "react-native";
+import { Button, Divider, Text, useTheme } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Settings() {
   const dispatch = useDispatch();
   const preferences = useSelector((state: RootState) => state.preferences);
+  const theme = useTheme();
   return (
     <View style={coreStyles.container}>
       <SafeAreaView style={coreStyles.container}>
@@ -80,6 +81,34 @@ export default function Settings() {
             </Button>
           </View>
         </View>
+        <TouchableOpacity
+          onPress={() => {
+            WebBrowser.openBrowserAsync("https://db.rocks");
+          }}
+          style={{
+            flexGrow: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}>
+          <View
+            style={{
+              paddingHorizontal: 50,
+              paddingVertical: 25,
+              borderColor: theme.colors.primary,
+              borderWidth: 0.5,
+              borderRadius: 10,
+              backgroundColor: theme.colors.surface,
+            }}>
+            <Text
+              style={{
+                fontWeight: "bold",
+                textAlign: "center",
+                fontSize: 16,
+              }}>
+              Made with ❤️ by DaniB
+            </Text>
+          </View>
+        </TouchableOpacity>
       </SafeAreaView>
     </View>
   );
