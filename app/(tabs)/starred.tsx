@@ -19,6 +19,7 @@ export default function TabTwoScreen() {
         ]}>
         <RecentList
           starred
+          style={{ flexGrow: 1 }}
           onPress={(item: StoredText) => {
             setShowText(item.text);
           }}

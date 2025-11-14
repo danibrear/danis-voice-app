@@ -5,6 +5,7 @@ import { StoredText } from "@/types/StoredText";
 import { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
+  Text,
   TouchableOpacity,
   useColorScheme,
   View,
@@ -44,19 +45,33 @@ export default function RecentList({
     }, 100);
   }, [colorScheme]);
 
+  const shownTexts = recentTexts.filter((f) => {
+    if (starred) {
+      return f.starred;
+    }
+    return true;
+  });
+
   return (
     <View style={style}>
+      {shownTexts.length === 0 && (
+        <View style={listStyles.emptyContainer}>
+          <Text
+            style={{
+              fontWeight: "bold",
+              fontSize: 18,
+              color: isDarkMode ? "#888" : "#444",
+            }}>
+            No{starred ? " starred" : ""} phrases
+          </Text>
+        </View>
+      )}
       {!isChangingColorScheme && (
         <SwipeListView
           ref={listRef}
           keyboardShouldPersistTaps="handled"
           style={{ display: "flex", flexGrow: 1 }}
-          data={recentTexts.filter((f) => {
-            if (starred) {
-              return f.starred;
-            }
-            return true;
-          })}
+          data={shownTexts}
           keyExtractor={(item) => item.id}
           rightOpenValue={-75}
           renderHiddenItem={({ item }) => {
