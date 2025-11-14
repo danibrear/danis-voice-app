@@ -10,6 +10,7 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 
+import { calculateWidthOfWord } from "@/utils/fontSize";
 import { AudioModule } from "expo-audio";
 
 export default function ShowingModal({
@@ -28,6 +29,7 @@ export default function ShowingModal({
   });
 
   const [numLines, setNumLines] = useState<number>(6);
+  const [longestWordLength, setLongestWordLength] = useState<number>(0);
 
   const { preferences } = usePrefContext();
 
@@ -37,6 +39,13 @@ export default function ShowingModal({
     const words = text ? text.split(/\s+/) : [];
     const numWords = words.length;
     setNumLines(Math.min(numWords, 8));
+    let longest = 0;
+    words.forEach((word) => {
+      if (calculateWidthOfWord(word, 100) / 100 > longest) {
+        longest = calculateWidthOfWord(word, 100) / 100;
+      }
+    });
+    setLongestWordLength(longest);
   }, [text]);
 
   const renderPlayPause = () => {
@@ -185,17 +194,17 @@ export default function ShowingModal({
             adjustsFontSizeToFit={true}
             numberOfLines={numLines}
             style={{
-              fontSize: 120,
-              width: "95%",
+              flexShrink: 1,
+              fontSize: longestWordLength >= 5 ? 75 : 100,
+              width: "98%",
               fontWeight: "bold",
               textAlign: "center",
               verticalAlign: "middle",
               color: "white",
-              wordWrap: "nowrap",
             }}
             textBreakStrategy="balanced">
             {text?.slice(0, highlight.start)}
-            <Text style={{ color: "blue", wordWrap: "nowrap" }}>
+            <Text style={{ color: "blue" }}>
               {text?.slice(highlight.start, highlight.end)}
             </Text>
             {text?.slice(highlight.end)}

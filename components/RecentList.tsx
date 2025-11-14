@@ -37,7 +37,6 @@ export default function RecentList({
   const [isChangingColorScheme, setIsChangingColorScheme] = useState(false);
 
   useEffect(() => {
-    console.log("Color scheme changed to", colorScheme);
     setIsDarkMode(colorScheme === "dark");
     setIsChangingColorScheme(true);
     setTimeout(() => {
