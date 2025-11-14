@@ -6,7 +6,7 @@ import RecentList from "@/components/RecentList";
 import ShowingModal from "@/components/ShowingModal";
 import { addStoredText } from "@/store/storedTexts";
 import { StoredText } from "@/types/StoredText";
-import { Button, TextInput } from "react-native-paper";
+import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 
@@ -16,6 +16,7 @@ export default function HomeScreen() {
   const [showText, setShowText] = useState<string | null>(null);
 
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const safeAreaContext = useContext(SafeAreaInsetsContext);
 
@@ -47,12 +48,16 @@ export default function HomeScreen() {
           <TextInput
             value={textInput}
             clearButtonMode="always"
+            outlineStyle={{ borderRadius: 5 }}
             contentStyle={{ fontSize: 18, fontWeight: "bold" }}
             mode="outlined"
+            placeholderTextColor={
+              theme.dark ? theme.colors.onSurface : theme.colors.backdrop
+            }
             onChangeText={(t) => {
               setTextInput(t);
             }}
-            placeholder="Type text to show"
+            placeholder="Type text to show..."
           />
 
           <Button

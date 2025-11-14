@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Modal, Text, View } from "react-native";
+import { Modal, Platform, Text, View } from "react-native";
 
 import { formStyles } from "@/styles";
 import * as Speech from "expo-speech";
@@ -28,6 +28,8 @@ export default function ShowingModal({
     start: 0,
     end: 0,
   });
+
+  const isWeb = Platform.OS === "web";
 
   const [numLines, setNumLines] = useState<number>(6);
   const [longestWordLength, setLongestWordLength] = useState<number>(0);
@@ -193,10 +195,15 @@ export default function ShowingModal({
         flex: 1,
         alignItems: "center",
         backgroundColor: "transparent",
+        maxWidth: 600,
+        alignSelf: "center",
       }}>
       <SafeAreaView
         style={{
           flex: 1,
+          maxWidth: 600,
+          alignSelf: "center",
+          width: "100%",
           backgroundColor: "rgba(0,0,0,.9)",
           paddingTop: safeAreaContext?.top,
           paddingBottom: safeAreaContext?.bottom,
@@ -235,25 +242,24 @@ export default function ShowingModal({
             alignItems: "center",
             justifyContent: "center",
             paddingHorizontal: 10,
+            display: "flex",
+            paddingBottom: isWeb ? 40 : 20,
           }}>
           <View
             style={{
               paddingHorizontal: 10,
-              display: "flex",
-              flexDirection: "row",
+              width: "100%",
             }}>
             {renderControls()}
           </View>
           <View
             style={{
-              display: "flex",
-              flexDirection: "row",
               paddingHorizontal: 10,
               paddingTop: 30,
+              width: "100%",
             }}>
             <Button
               mode="contained"
-              style={{ flexGrow: 1 }}
               labelStyle={formStyles.bigButton}
               onPress={() => {
                 Speech.stop();

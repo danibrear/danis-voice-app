@@ -10,6 +10,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { View } from "react-native";
 import { ThemeProvider as RNPThemeProvider } from "react-native-paper";
 import "react-native-reanimated";
 import { Provider as ReduxProvider } from "react-redux";
@@ -37,9 +38,28 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <ReduxProvider store={store}>
         <RNPThemeProvider theme={colorScheme === "dark" ? darkTheme : theme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
+          <View
+            style={{
+              display: "flex",
+              flex: 1,
+              backgroundColor:
+                colorScheme === "dark"
+                  ? darkTheme.colors.background
+                  : theme.colors.surfaceDisabled,
+            }}>
+            <View
+              style={{
+                display: "flex",
+                flex: 1,
+                maxWidth: 600,
+                width: "100%",
+                alignSelf: "center",
+              }}>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              </Stack>
+            </View>
+          </View>
         </RNPThemeProvider>
       </ReduxProvider>
       <StatusBar style="auto" />
