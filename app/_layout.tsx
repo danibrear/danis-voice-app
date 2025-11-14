@@ -14,6 +14,7 @@ import { View } from "react-native";
 import { ThemeProvider as RNPThemeProvider } from "react-native-paper";
 import "react-native-reanimated";
 import { Provider as ReduxProvider } from "react-redux";
+
 export const unstable_settings = {
   anchor: "(tabs)",
 };
