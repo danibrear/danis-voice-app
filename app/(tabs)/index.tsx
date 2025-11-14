@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 // @ts-expect-error this is a static asset
 import Logo from "../../assets/images/splash-icon.png";
 
+import PageTitle from "@/components/PageTitle";
 import Animated, {
   FadeInDown,
   FadeOutDown,
@@ -50,6 +51,7 @@ export default function HomeScreen() {
   }, []);
   return (
     <View style={[coreStyles.container, { backgroundColor: "transparent" }]}>
+      <PageTitle title="" />
       <View
         style={[
           coreStyles.container,

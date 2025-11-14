@@ -1,3 +1,4 @@
+import PageTitle from "@/components/PageTitle";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { store } from "@/store";
 import { darkTheme, theme } from "@/theme";
@@ -48,6 +49,7 @@ export default function RootLayout() {
                   ? darkTheme.colors.background
                   : theme.colors.surfaceDisabled,
             }}>
+            <PageTitle title="" />
             <View
               style={{
                 display: "flex",
