@@ -11,7 +11,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { IconButton, List, useTheme } from "react-native-paper";
+import { Icon, IconButton, List, useTheme } from "react-native-paper";
 import { SwipeListView } from "react-native-swipe-list-view";
 import { useDispatch, useSelector } from "react-redux";
 export default function RecentList({
@@ -55,15 +55,47 @@ export default function RecentList({
   return (
     <View style={style}>
       {shownTexts.length === 0 && (
-        <View style={listStyles.emptyContainer}>
-          <Text
-            style={{
-              fontWeight: "bold",
-              fontSize: 18,
-              color: isDarkMode ? "#888" : "#444",
-            }}>
-            No{starred ? " starred" : ""} phrases
-          </Text>
+        <View
+          style={[
+            listStyles.emptyContainer,
+            {
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              alignSelf: "center",
+              gap: 15,
+            },
+          ]}>
+          <Icon
+            size={75}
+            source="emoticon-sad-outline"
+            color={theme.colors.tertiary}
+          />
+          <View>
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: 18,
+                color: isDarkMode ? "#dbdbdb" : "#555",
+                marginBottom: 10,
+              }}>
+              No{starred ? " starred" : ""} phrases
+            </Text>
+
+            <Text
+              style={{
+                color: theme.colors.tertiary,
+                fontSize: 15,
+                fontWeight: "bold",
+                textAlign: "center",
+                marginBottom: 10,
+              }}>
+              {!starred
+                ? "Use the box below to add some"
+                : "Tap the star icon on phrases"}
+            </Text>
+          </View>
         </View>
       )}
       {!isChangingColorScheme && (
