@@ -52,6 +52,16 @@ export default function RecentList({
     return true;
   });
 
+  const getData = () => {
+    if (shownTexts.length === 0) {
+      return [];
+    }
+    if (shownTexts.length < 3) {
+      return shownTexts;
+    }
+    return [...shownTexts, { id: "spacer", text: "", starred: false }];
+  };
+
   return (
     <View style={style}>
       {shownTexts.length === 0 && (
@@ -103,10 +113,13 @@ export default function RecentList({
           ref={listRef}
           keyboardShouldPersistTaps="handled"
           style={{ display: "flex", flexGrow: 1 }}
-          data={shownTexts}
+          data={getData()}
           keyExtractor={(item) => item.id}
           rightOpenValue={-75}
           renderHiddenItem={({ item }) => {
+            if (item.id === "spacer") {
+              return null;
+            }
             return (
               <View style={listStyles.hiddenContainer}>
                 <IconButton
@@ -126,6 +139,36 @@ export default function RecentList({
             const color = item.starred ? theme.colors.tertiary : undefined;
 
             const bgColor = isDarkMode ? theme.colors.background : "#fff";
+
+            if (item.id === "spacer") {
+              return (
+                <View
+                  style={{
+                    height: 75,
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: isDarkMode ? "#888" : "#bbb",
+                    }}>
+                    Made by{" "}
+                    <Text
+                      style={{
+                        opacity: 0.7,
+                        fontWeight: "bold",
+                        color: theme.colors.tertiary,
+                      }}>
+                      Dani
+                    </Text>
+                  </Text>
+                </View>
+              );
+            }
+
             return (
               <List.Item
                 style={[
