@@ -50,6 +50,19 @@ export default function ShowingModal({
     setLongestWordLength(longest / 100);
   }, [text]);
 
+  const calcFontSize = () => {
+    if (longestWordLength > 10) {
+      return 35;
+    }
+    if (longestWordLength > 7) {
+      return 50;
+    }
+    if (longestWordLength > 5) {
+      return 60;
+    }
+    return 100;
+  };
+
   const renderPlayPause = () => {
     const buttons = [];
     if (!text) {
@@ -197,7 +210,7 @@ export default function ShowingModal({
             numberOfLines={numLines}
             style={{
               flexShrink: 1,
-              fontSize: longestWordLength >= 4 ? 75 : 100,
+              fontSize: calcFontSize(),
               width: "98%",
               fontWeight: "bold",
               textAlign: "center",
