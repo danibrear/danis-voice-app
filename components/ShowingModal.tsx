@@ -42,11 +42,12 @@ export default function ShowingModal({
     setNumLines(Math.min(numWords, 8));
     let longest = 0;
     words.forEach((word) => {
-      if (calculateWidthOfWord(word, 100) / 100 > longest) {
-        longest = calculateWidthOfWord(word, 100) / 100;
+      const len = calculateWidthOfWord(word, 100);
+      if (len > longest) {
+        longest = len;
       }
     });
-    setLongestWordLength(longest);
+    setLongestWordLength(longest / 100);
   }, [text]);
 
   const renderPlayPause = () => {
@@ -196,7 +197,7 @@ export default function ShowingModal({
             numberOfLines={numLines}
             style={{
               flexShrink: 1,
-              fontSize: longestWordLength >= 5 ? 75 : 100,
+              fontSize: longestWordLength >= 4 ? 75 : 100,
               width: "98%",
               fontWeight: "bold",
               textAlign: "center",
