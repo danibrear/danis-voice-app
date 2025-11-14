@@ -81,16 +81,16 @@ export default function Settings() {
             </Button>
           </View>
         </View>
-        <TouchableOpacity
-          onPress={() => {
-            WebBrowser.openBrowserAsync("https://db.rocks");
-          }}
+        <View
           style={{
             flexGrow: 1,
             justifyContent: "center",
             alignItems: "center",
           }}>
-          <View
+          <TouchableOpacity
+            onPress={() => {
+              WebBrowser.openBrowserAsync("https://db.rocks");
+            }}
             style={{
               paddingHorizontal: 50,
               paddingVertical: 25,
@@ -107,8 +107,8 @@ export default function Settings() {
               }}>
               Made with ❤️ by DaniB
             </Text>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </View>
   );
