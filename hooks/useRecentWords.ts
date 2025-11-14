@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-type StoredText = {
-  id: string;
-  text: string;
-  starred: boolean;
-};
+import { StoredText } from "@/types/StoredText";
 
 const KEY = "recentTexts";
 
 export const useRecentWords = () => {
   const [recentTexts, setRecentTexts] = useState<StoredText[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const reload = async () => {
+    try {
+      setIsLoading(true);
+      const storedWords = await AsyncStorage.getItem(KEY);
+      if (storedWords) {
+        setRecentTexts(JSON.parse(storedWords));
+      }
+    } catch (error) {
+      console.error("Failed to load recent words:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchRecentWords = async () => {
@@ -85,6 +94,7 @@ export const useRecentWords = () => {
 
   return {
     recentTexts,
+    reload,
     isLoading,
     addRecentText,
     starText,

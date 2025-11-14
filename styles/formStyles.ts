@@ -11,28 +11,10 @@ export const formStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-
-  primaryButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  outlineButton: {
-    borderWidth: 1,
-    borderColor: "#007bff",
-    borderRadius: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    marginBottom: 10,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    display: "flex",
-    flexGrow: 1,
-    textAlign: "center",
+  bigButton: {
+    fontSize: 20,
     textTransform: "uppercase",
+    flexGrow: 1,
+    fontWeight: "bold",
   },
 });
