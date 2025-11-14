@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { Modal, Text, View } from "react-native";
 
-import { usePrefContext } from "@/hooks/usePrefContext";
 import { formStyles } from "@/styles";
 import * as Speech from "expo-speech";
 import { Button } from "react-native-paper";
@@ -10,8 +9,10 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 
+import { RootState } from "@/store";
 import { calculateWidthOfWord } from "@/utils/fontSize";
 import { AudioModule } from "expo-audio";
+import { useSelector } from "react-redux";
 
 export default function ShowingModal({
   text,
@@ -31,7 +32,7 @@ export default function ShowingModal({
   const [numLines, setNumLines] = useState<number>(6);
   const [longestWordLength, setLongestWordLength] = useState<number>(0);
 
-  const { preferences } = usePrefContext();
+  const preferences = useSelector((state: RootState) => state.preferences);
 
   const safeAreaContext = useContext(SafeAreaInsetsContext);
 
