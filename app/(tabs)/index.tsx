@@ -1,17 +1,24 @@
 import { coreStyles, formStyles, spacingStyles } from "@/styles";
-import { useContext, useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, View } from "react-native";
+import { useContext, useEffect, useState } from "react";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 
 import RecentList from "@/components/RecentList";
 import ShowingModal from "@/components/ShowingModal";
 import { addStoredText } from "@/store/storedTexts";
 import { StoredText } from "@/types/StoredText";
-import { Button, TextInput, useTheme } from "react-native-paper";
+import { Button, Icon, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 // @ts-expect-error this is a static asset
 import Logo from "../../assets/images/splash-icon.png";
 
+import Animated, {
+  FadeInDown,
+  FadeOutDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 export default function HomeScreen() {
   const [textInput, setTextInput] = useState("");
 
@@ -19,9 +26,28 @@ export default function HomeScreen() {
 
   const dispatch = useDispatch();
   const theme = useTheme();
+  const [error, setError] = useState<string | null>(null);
 
   const safeAreaContext = useContext(SafeAreaInsetsContext);
+  const opacity = useSharedValue(0.5);
 
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    };
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setError(null);
+    }, 1500);
+    return () => clearTimeout(timeout);
+  }, [error]);
+
+  useEffect(() => {
+    opacity.value = withTiming(0.1, { duration: 600 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <View style={[coreStyles.container, { backgroundColor: "transparent" }]}>
       <View
@@ -32,17 +58,20 @@ export default function HomeScreen() {
             backgroundColor: "transparent",
           },
         ]}>
-        <Image
+        <Animated.Image
           source={Logo}
-          style={{
-            position: "absolute",
-            width: "120%",
-            height: "120%",
-            left: "-10%",
-            top: "-10%",
-            resizeMode: "contain",
-            opacity: 0.1,
-          }}
+          style={[
+            {
+              position: "absolute",
+              width: "80%",
+              height: "80%",
+              left: "10%",
+              top: "10%",
+              resizeMode: "contain",
+              opacity: 0.1,
+            },
+            animatedStyles,
+          ]}
         />
         <RecentList
           style={{ flexGrow: 1, backgroundColor: "transparent" }}
@@ -59,7 +88,45 @@ export default function HomeScreen() {
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <View style={[spacingStyles.px5, { marginBottom: 10 }]}>
+        <View
+          style={[
+            spacingStyles.px5,
+            { marginBottom: 10, position: "relative" },
+          ]}>
+          {error && (
+            <Animated.View
+              entering={FadeInDown.duration(200)}
+              exiting={FadeOutDown.duration(200)}
+              style={{
+                position: "absolute",
+                top: -50,
+                left: 5,
+                right: 5,
+                padding: 10,
+                borderRadius: 5,
+                borderColor: theme.colors.error,
+                borderWidth: 1,
+                backgroundColor: theme.colors.errorContainer,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+              }}>
+              <Icon
+                source="alert-circle"
+                color={theme.colors.error}
+                size={20}
+              />
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: theme.colors.error,
+                }}>
+                {error}
+              </Text>
+            </Animated.View>
+          )}
           <TextInput
             value={textInput}
             clearButtonMode="always"
@@ -82,6 +149,10 @@ export default function HomeScreen() {
             }}
             labelStyle={formStyles.bigButton}
             onPress={() => {
+              if (textInput.trim().length === 0) {
+                setError("Please enter some text to show.");
+                return;
+              }
               dispatch(addStoredText(textInput));
               setShowText(textInput);
               setTextInput("");
