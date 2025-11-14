@@ -11,6 +11,7 @@
     "devsimulator": {
       "developmentClient": true,
       "distribution": "internal",
+      "buildArtifactPaths": ["./build"],
       "ios": {
         "simulator": true
       },

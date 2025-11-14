@@ -1,17 +1,15 @@
 import { Tabs } from "expo-router";
 import React from "react";
 
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Icon } from "react-native-paper";
+import { Icon, useTheme } from "react-native-paper";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const theme = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: theme.colors.primary,
         headerShown: false,
       }}>
       <Tabs.Screen
@@ -27,9 +25,10 @@ export default function TabLayout() {
         name="starred"
         options={{
           title: "Starred",
-          tabBarIcon: ({ color }) => (
-            <Icon size={28} source="star" color={color} />
-          ),
+          tabBarIcon: ({ focused, color }) => {
+            const updated = focused ? theme.colors.tertiary : color;
+            return <Icon size={28} source="star" color={updated} />;
+          },
         }}
       />
       <Tabs.Screen

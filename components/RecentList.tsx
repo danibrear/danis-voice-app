@@ -91,7 +91,7 @@ export default function RecentList({
           }}
           renderItem={({ item }) => {
             const icon = item.starred ? "star" : "star-outline";
-            const color = item.starred ? "gold" : undefined;
+            const color = item.starred ? theme.colors.tertiary : undefined;
 
             const bgColor = isDarkMode ? theme.colors.background : "#fff";
             return (

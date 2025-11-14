@@ -3,7 +3,7 @@ import { setPitch, setRate } from "@/store/preferences";
 import { coreStyles } from "@/styles";
 import * as WebBrowser from "expo-web-browser";
 import { TouchableOpacity, View } from "react-native";
-import { Button, Divider, Text, useTheme } from "react-native-paper";
+import { Button, Divider, Icon, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -94,7 +94,7 @@ export default function Settings() {
             style={{
               paddingHorizontal: 50,
               paddingVertical: 25,
-              borderColor: theme.colors.primary,
+              borderColor: theme.colors.tertiary,
               borderWidth: 0.5,
               borderRadius: 10,
               backgroundColor: theme.colors.surface,
@@ -105,7 +105,9 @@ export default function Settings() {
                 textAlign: "center",
                 fontSize: 16,
               }}>
-              Made with ❤️ by DaniB
+              Made with{" "}
+              <Icon source="heart" color={theme.colors.tertiary} size={20} /> by
+              DaniB
             </Text>
           </TouchableOpacity>
         </View>

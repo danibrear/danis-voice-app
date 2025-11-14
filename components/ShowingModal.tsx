@@ -3,7 +3,7 @@ import { Modal, Text, View } from "react-native";
 
 import { formStyles } from "@/styles";
 import * as Speech from "expo-speech";
-import { Button } from "react-native-paper";
+import { Button, useTheme } from "react-native-paper";
 import {
   SafeAreaInsetsContext,
   SafeAreaView,
@@ -33,6 +33,7 @@ export default function ShowingModal({
   const [longestWordLength, setLongestWordLength] = useState<number>(0);
 
   const preferences = useSelector((state: RootState) => state.preferences);
+  const theme = useTheme();
 
   const safeAreaContext = useContext(SafeAreaInsetsContext);
 
@@ -223,7 +224,7 @@ export default function ShowingModal({
             }}
             textBreakStrategy="balanced">
             {text?.slice(0, highlight.start)}
-            <Text style={{ color: "blue" }}>
+            <Text style={{ color: theme.colors.tertiary }}>
               {text?.slice(highlight.start, highlight.end)}
             </Text>
             {text?.slice(highlight.end)}

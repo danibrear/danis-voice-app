@@ -5,14 +5,14 @@ export const darkTheme = {
   colors: {
     ...MD3DarkTheme.colors,
     primary: "rgb(163, 201, 255)",
-    onPrimary: "rgb(0, 49, 92)",
+    onPrimary: "#084C61", //"rgb(0, 49, 92)",
     primaryContainer: "rgb(0, 72, 130)",
     onPrimaryContainer: "rgb(211, 228, 255)",
     secondary: "rgb(255, 176, 205)",
     onSecondary: "rgb(100, 0, 57)",
     secondaryContainer: "rgb(131, 27, 80)",
     onSecondaryContainer: "rgb(255, 217, 228)",
-    tertiary: "#E55B9B",
+    tertiary: "rgb(248, 77, 158)", //#f84d9e
     onTertiary: "rgb(0, 0, 0)",
     tertiaryContainer: "rgb(39, 80, 0)",
     onTertiaryContainer: "rgb(178, 245, 123)",
@@ -64,7 +64,7 @@ export const theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: "rgb(22, 96, 165)",
+    primary: "#084C61", //"rgb(22, 96, 165)",
     onPrimary: "rgb(255, 255, 255)",
     primaryContainer: "rgb(211, 228, 255)",
     onPrimaryContainer: "rgb(0, 28, 56)",
@@ -72,7 +72,7 @@ export const theme = {
     onSecondary: "rgb(255, 255, 255)",
     secondaryContainer: "rgb(255, 217, 228)",
     onSecondaryContainer: "rgb(62, 0, 33)",
-    tertiary: "#E55B9B",
+    tertiary: "rgb(248, 77, 158)", //#f84d9e
     onTertiary: "rgb(255, 255, 255)",
     tertiaryContainer: "rgb(178, 245, 123)",
     onTertiaryContainer: "rgb(12, 32, 0)",
