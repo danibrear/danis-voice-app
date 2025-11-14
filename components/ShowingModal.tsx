@@ -39,7 +39,8 @@ export default function ShowingModal({
   useEffect(() => {
     const words = text ? text.split(/\s+/) : [];
     const numWords = words.length;
-    setNumLines(Math.min(numWords, 8));
+    const lines = Math.min(numWords, 8);
+    setNumLines(lines);
     let longest = 0;
     words.forEach((word) => {
       const len = calculateWidthOfWord(word, 100);
@@ -47,6 +48,9 @@ export default function ShowingModal({
         longest = len;
       }
     });
+    if (longest / 100 > 4 && lines >= 4) {
+      setNumLines((n) => n - 2);
+    }
     setLongestWordLength(longest / 100);
   }, [text]);
 
@@ -58,7 +62,7 @@ export default function ShowingModal({
       return 50;
     }
     if (longestWordLength > 5) {
-      return 60;
+      return 65;
     }
     return 100;
   };

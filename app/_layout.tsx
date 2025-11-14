@@ -1,5 +1,6 @@
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { store } from "@/store";
+import { darkTheme, theme } from "@/theme";
 import {
   DarkTheme,
   DefaultTheme,
@@ -9,11 +10,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import {
-  MD2DarkTheme,
-  MD2LightTheme,
-  ThemeProvider as RNPThemeProvider,
-} from "react-native-paper";
+import { ThemeProvider as RNPThemeProvider } from "react-native-paper";
 import "react-native-reanimated";
 import { Provider as ReduxProvider } from "react-redux";
 export const unstable_settings = {
@@ -33,14 +30,13 @@ export default function RootLayout() {
   useEffect(() => {
     setTimeout(() => {
       SplashScreen.hideAsync();
-    }, 1000);
+    }, 2000);
   }, []);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <ReduxProvider store={store}>
-        <RNPThemeProvider
-          theme={colorScheme === "dark" ? MD2DarkTheme : MD2LightTheme}>
+        <RNPThemeProvider theme={colorScheme === "dark" ? darkTheme : theme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           </Stack>
