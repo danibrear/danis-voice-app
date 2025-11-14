@@ -1,10 +1,9 @@
 import { Tabs } from "expo-router";
 import React from "react";
 
-import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Icon } from "react-native-paper";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -14,14 +13,13 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <Icon size={28} source="home" color={color} />
           ),
         }}
       />
@@ -30,7 +28,7 @@ export default function TabLayout() {
         options={{
           title: "Starred",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="star.fill" color={color} />
+            <Icon size={28} source="star" color={color} />
           ),
         }}
       />
@@ -39,7 +37,7 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="ruler.fill" color={color} />
+            <Icon size={28} source="ruler" color={color} />
           ),
         }}
       />

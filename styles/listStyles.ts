@@ -33,9 +33,9 @@ export const listStyles = StyleSheet.create({
     borderRadius: 5,
   },
   listItem: {
-    paddingHorizontal: 10,
-    paddingVertical: 15,
-    fontSize: 24,
+    paddingHorizontal: 5,
+    paddingVertical: 10,
+    fontSize: 20,
     fontWeight: "bold",
   },
   iconButtonDelete: {

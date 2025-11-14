@@ -1,99 +1,118 @@
-import { useRecentContext } from "@/hooks/useRecentContext";
+import { RootState } from "@/store";
+import { removeText, starText, unstarText } from "@/store/storedTexts";
 import { listStyles } from "@/styles";
 import { StoredText } from "@/types/StoredText";
-import { useEffect } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  IconButton,
-  List,
-  useTheme,
-} from "react-native-paper";
+  Keyboard,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+  ViewStyle,
+} from "react-native";
+import { IconButton, List, useTheme } from "react-native-paper";
 import { SwipeListView } from "react-native-swipe-list-view";
+import { useDispatch, useSelector } from "react-redux";
 export default function RecentList({
   starred,
   onPress,
+  style,
 }: {
   onPress: (item: StoredText) => void;
   starred?: boolean;
+  style?: ViewStyle;
 }) {
-  const {
-    recentTexts,
-    isLoading: isLoadingRecentWords,
-    starText,
-    unstarText,
-    removeText,
-    reload,
-  } = useRecentContext();
+  const { recentTexts } = useSelector((state: RootState) => state.storedTexts);
 
   const theme = useTheme();
 
-  useEffect(() => {
-    reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const dispatch = useDispatch();
 
-  if (isLoadingRecentWords) {
-    return <ActivityIndicator />;
-  }
+  const colorScheme = useColorScheme();
+
+  const [isDarkMode, setIsDarkMode] = useState(colorScheme === "dark");
+
+  const listRef = useRef<SwipeListView<StoredText>>(null);
+
+  const [isChangingColorScheme, setIsChangingColorScheme] = useState(false);
+
+  useEffect(() => {
+    console.log("Color scheme changed to", colorScheme);
+    setIsDarkMode(colorScheme === "dark");
+    setIsChangingColorScheme(true);
+    setTimeout(() => {
+      setIsChangingColorScheme(false);
+    }, 100);
+  }, [colorScheme]);
+
   return (
-    <View>
-      <SwipeListView
-        data={recentTexts.filter((f) => {
-          if (starred) {
-            return f.starred;
-          }
-          return true;
-        })}
-        keyExtractor={(item) => item.id}
-        rightOpenValue={-75}
-        renderHiddenItem={({ item }) => {
-          return (
-            <View style={listStyles.hiddenContainer}>
-              <IconButton
-                icon="trash-can-outline"
-                iconColor="#c93c3c"
-                size={50}
-                onPress={() => {
-                  removeText(item.id);
-                }}
-                style={[listStyles.iconButtonDelete]}
-              />
-            </View>
-          );
-        }}
-        renderItem={({ item }) => {
-          const icon = item.starred ? "star" : "star-outline";
-          const color = item.starred ? "gold" : undefined;
-          return (
-            <List.Item
-              style={[
-                listStyles.listItem,
-                {
-                  backgroundColor: theme.colors.background,
-                },
-              ]}
-              titleStyle={listStyles.title}
-              title={item.text}
-              onPress={() => {
-                onPress(item);
-              }}
-              right={() => (
-                <TouchableOpacity
+    <View style={style}>
+      {!isChangingColorScheme && (
+        <SwipeListView
+          ref={listRef}
+          keyboardShouldPersistTaps="handled"
+          style={{ display: "flex", flexGrow: 1 }}
+          data={recentTexts.filter((f) => {
+            if (starred) {
+              return f.starred;
+            }
+            return true;
+          })}
+          keyExtractor={(item) => item.id}
+          rightOpenValue={-75}
+          renderHiddenItem={({ item }) => {
+            return (
+              <View style={listStyles.hiddenContainer}>
+                <IconButton
+                  icon="trash-can-outline"
+                  iconColor="#c93c3c"
+                  size={50}
                   onPress={() => {
-                    if (item.starred) {
-                      unstarText(item.id);
-                    } else {
-                      starText(item.id);
-                    }
-                  }}>
-                  <List.Icon color={color} icon={icon} />
-                </TouchableOpacity>
-              )}
-            />
-          );
-        }}
-      />
+                    dispatch(removeText(item.id));
+                  }}
+                  style={[listStyles.iconButtonDelete]}
+                />
+              </View>
+            );
+          }}
+          renderItem={({ item }) => {
+            const icon = item.starred ? "star" : "star-outline";
+            const color = item.starred ? "gold" : undefined;
+
+            const bgColor = isDarkMode ? theme.colors.background : "#fff";
+            return (
+              <List.Item
+                style={[
+                  listStyles.listItem,
+                  {
+                    backgroundColor: bgColor,
+                    borderBottomColor: isDarkMode ? "#555" : "#ccc",
+                    borderBottomWidth: 0.5,
+                  },
+                ]}
+                titleStyle={listStyles.title}
+                title={item.text}
+                onPress={() => {
+                  onPress(item);
+                }}
+                right={() => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      if (item.starred) {
+                        dispatch(unstarText(item.id));
+                      } else {
+                        dispatch(starText(item.id));
+                      }
+                    }}>
+                    <List.Icon color={color} icon={icon} />
+                  </TouchableOpacity>
+                )}
+              />
+            );
+          }}
+        />
+      )}
     </View>
   );
 }

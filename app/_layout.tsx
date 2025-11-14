@@ -6,11 +6,10 @@ import {
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
+import { Provider as ReduxProvider } from "react-redux";
 
-import { StoredTextProvider } from "@/contexts/StoredTextContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-
-import { PrefContextProvider } from "@/contexts/PrefContext";
+import { store } from "@/store";
 import {
   MD2DarkTheme,
   MD2LightTheme,
@@ -26,20 +25,14 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <RNPThemeProvider
-        theme={colorScheme === "dark" ? MD2DarkTheme : MD2LightTheme}>
-        <PrefContextProvider>
-          <StoredTextProvider>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="modal"
-                options={{ presentation: "modal", title: "Modal" }}
-              />
-            </Stack>
-          </StoredTextProvider>
-        </PrefContextProvider>
-      </RNPThemeProvider>
+      <ReduxProvider store={store}>
+        <RNPThemeProvider
+          theme={colorScheme === "dark" ? MD2DarkTheme : MD2LightTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+        </RNPThemeProvider>
+      </ReduxProvider>
       <StatusBar style="auto" />
     </ThemeProvider>
   );

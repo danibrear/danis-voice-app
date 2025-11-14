@@ -2,14 +2,21 @@ import RecentList from "@/components/RecentList";
 import ShowingModal from "@/components/ShowingModal";
 import { coreStyles } from "@/styles";
 import { StoredText } from "@/types/StoredText";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 export default function TabTwoScreen() {
   const [showText, setShowText] = useState<string | null>(null);
+  const safeAreaContext = useContext(SafeAreaInsetsContext);
   return (
     <View style={coreStyles.container}>
-      <SafeAreaView style={coreStyles.container}>
+      <View
+        style={[
+          coreStyles.container,
+          {
+            marginTop: safeAreaContext?.top,
+          },
+        ]}>
         <RecentList
           starred
           onPress={(item: StoredText) => {
@@ -22,7 +29,7 @@ export default function TabTwoScreen() {
             setShowText(null);
           }}
         />
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

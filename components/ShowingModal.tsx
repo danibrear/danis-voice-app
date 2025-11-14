@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Modal, Text, View } from "react-native";
 
 import { usePrefContext } from "@/hooks/usePrefContext";
@@ -27,9 +27,17 @@ export default function ShowingModal({
     end: 0,
   });
 
+  const [numLines, setNumLines] = useState<number>(6);
+
   const { preferences } = usePrefContext();
 
   const safeAreaContext = useContext(SafeAreaInsetsContext);
+
+  useEffect(() => {
+    const words = text ? text.split(/\s+/) : [];
+    const numWords = words.length;
+    setNumLines(Math.min(numWords, 8));
+  }, [text]);
 
   const renderPlayPause = () => {
     const buttons = [];
@@ -170,20 +178,24 @@ export default function ShowingModal({
             alignSelf: "stretch",
             alignItems: "center",
             justifyContent: "center",
+            alignContent: "center",
             flexGrow: 1,
           }}>
           <Text
             adjustsFontSizeToFit={true}
-            numberOfLines={15}
+            numberOfLines={numLines}
             style={{
-              fontSize: 100,
+              fontSize: 120,
               width: "95%",
               fontWeight: "bold",
               textAlign: "center",
+              verticalAlign: "middle",
               color: "white",
-            }}>
+              wordWrap: "nowrap",
+            }}
+            textBreakStrategy="balanced">
             {text?.slice(0, highlight.start)}
-            <Text style={{ color: "blue" }}>
+            <Text style={{ color: "blue", wordWrap: "nowrap" }}>
               {text?.slice(highlight.start, highlight.end)}
             </Text>
             {text?.slice(highlight.end)}

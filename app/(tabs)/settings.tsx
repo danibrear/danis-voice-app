@@ -2,11 +2,14 @@ import { coreStyles } from "@/styles";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { usePrefContext } from "@/hooks/usePrefContext";
+import { RootState } from "@/store";
+import { setPitch, setRate } from "@/store/preferences";
 import { Button, Divider, Text } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Settings() {
-  const { preferences, setPitch, setRate } = usePrefContext();
+  const dispatch = useDispatch();
+  const preferences = useSelector((state: RootState) => state.preferences);
   return (
     <View style={coreStyles.container}>
       <SafeAreaView style={coreStyles.container}>
@@ -29,7 +32,7 @@ export default function Settings() {
               labelStyle={{ fontWeight: "bold", fontSize: 20 }}
               mode="contained"
               onPress={() => {
-                setPitch(preferences.speechPitch - 0.1);
+                dispatch(setPitch(preferences.speechPitch - 0.1));
               }}>
               Pitch Down
             </Button>
@@ -38,7 +41,7 @@ export default function Settings() {
               labelStyle={{ fontWeight: "bold", fontSize: 20 }}
               mode="contained"
               onPress={() => {
-                setPitch(preferences.speechPitch + 0.1);
+                dispatch(setPitch(preferences.speechPitch + 0.1));
               }}>
               Pitch Up
             </Button>
@@ -62,7 +65,7 @@ export default function Settings() {
               labelStyle={{ fontWeight: "bold", fontSize: 20 }}
               mode="contained"
               onPress={() => {
-                setRate(preferences.speechRate - 0.1);
+                dispatch(setRate(preferences.speechRate - 0.1));
               }}>
               Rate Down
             </Button>
@@ -71,7 +74,7 @@ export default function Settings() {
               labelStyle={{ fontWeight: "bold", fontSize: 20 }}
               mode="contained"
               onPress={() => {
-                setRate(preferences.speechRate + 0.1);
+                dispatch(setRate(preferences.speechRate + 0.1));
               }}>
               Rate Up
             </Button>
