@@ -12,7 +12,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
-  Platform,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -53,8 +52,6 @@ export default function RecentList({
 
   const colorScheme = useColorScheme();
 
-  const isWeb = Platform.OS === "web";
-
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === "dark");
   const [isLongPressing, setIsLongPressing] = useState(false);
 
@@ -62,7 +59,7 @@ export default function RecentList({
     useState<StoredText | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isMovingWeb, setIsMovingWeb] = useState(false);
+  // const [isMovingWeb, setIsMovingWeb] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(
@@ -214,21 +211,6 @@ export default function RecentList({
           justifyContent: "flex-end",
           gap: 5,
         }}>
-        {/* {isWeb && (
-          <View
-            style={{
-              flexGrow: 1,
-              flexDirection: "row",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}>
-            <Button
-              onPress={() => setIsMovingWeb(!isMovingWeb)}
-              mode="contained">
-              {isMovingWeb ? "Done" : "Move"}
-            </Button>
-          </View>
-        )} */}
         {selectedIds.length > 0 && (
           <Button
             mode="contained"
@@ -295,6 +277,12 @@ export default function RecentList({
 
             return (
               <List.Item
+                onLongPress={(e) => {
+                  const { pageX, pageY } = e.nativeEvent;
+                  setMenuAnchor({ x: pageX, y: pageY });
+                  setIsLongPressing(true);
+                  setSelectedStoredText(item);
+                }}
                 style={[
                   listStyles.listItem,
                   {
@@ -304,20 +292,7 @@ export default function RecentList({
                   },
                 ]}
                 titleStyle={listStyles.title}
-                title={() => {
-                  return (
-                    <TouchableOpacity
-                      disabled={isActive || isUpdating}
-                      onLongPress={(e) => {
-                        const { pageX, pageY } = e.nativeEvent;
-                        setMenuAnchor({ x: pageX, y: pageY });
-                        setIsLongPressing(true);
-                        setSelectedStoredText(item);
-                      }}>
-                      <Text style={listStyles.title}>{item.text}</Text>
-                    </TouchableOpacity>
-                  );
-                }}
+                title={item.text}
                 onPress={
                   isLongPressing
                     ? undefined
@@ -327,9 +302,6 @@ export default function RecentList({
                 }
                 left={(props) => {
                   if (!isSelecting) {
-                    if (isWeb && !isMovingWeb) {
-                      return null;
-                    }
                     return (
                       <DragControl
                         onWebAction={(dir) => {
