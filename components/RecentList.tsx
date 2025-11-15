@@ -214,7 +214,7 @@ export default function RecentList({
           justifyContent: "flex-end",
           gap: 5,
         }}>
-        {isWeb && (
+        {/* {isWeb && (
           <View
             style={{
               flexGrow: 1,
@@ -228,7 +228,7 @@ export default function RecentList({
               {isMovingWeb ? "Done" : "Move"}
             </Button>
           </View>
-        )}
+        )} */}
         {selectedIds.length > 0 && (
           <Button
             mode="contained"
