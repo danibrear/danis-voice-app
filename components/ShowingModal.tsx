@@ -38,10 +38,7 @@ export default function ShowingModal({
 
   const [numLines, setNumLines] = useState<number>(6);
 
-  const [orientationLock, setOrientationLock] =
-    useState<ScreenOrientation.OrientationLock>(
-      ScreenOrientation.OrientationLock.PORTRAIT,
-    );
+  const [isPortrait, setIsPortrait] = useState<boolean>(true);
 
   const preferences = useSelector((state: RootState) => state.preferences);
   const theme = useTheme();
@@ -73,12 +70,29 @@ export default function ShowingModal({
     }
     window.addEventListener("orientationchange", (e) => {
       if (window.innerHeight <= window.innerWidth) {
-        setOrientationLock(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        setIsPortrait(false);
       } else {
-        setOrientationLock(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+        setIsPortrait(true);
       }
     });
+    return () => {
+      window.removeEventListener("orientationchange", () => {});
+    };
   }, [isWeb]);
+
+  useEffect(() => {
+    ScreenOrientation.addOrientationChangeListener((e) => {
+      setIsPortrait(
+        e.orientationInfo.orientation ===
+          ScreenOrientation.Orientation.PORTRAIT_UP ||
+          e.orientationInfo.orientation ===
+            ScreenOrientation.Orientation.PORTRAIT_DOWN,
+      );
+    });
+    return () => {
+      ScreenOrientation.removeOrientationChangeListeners();
+    };
+  }, []);
 
   useEffect(() => {
     let flashInterval = undefined;
@@ -96,52 +110,23 @@ export default function ShowingModal({
     };
   }, [isFlashing]);
 
-  const getIsPortrait = () => {
-    return (
-      orientationLock === ScreenOrientation.OrientationLock.PORTRAIT ||
-      orientationLock === ScreenOrientation.OrientationLock.PORTRAIT_DOWN ||
-      orientationLock === ScreenOrientation.OrientationLock.PORTRAIT_UP ||
-      orientationLock === ScreenOrientation.OrientationLock.DEFAULT
-    );
-  };
   const getFloatingButtonPosition = () => {
-    if (getIsPortrait()) {
+    if (isPortrait) {
       return {
         top: safeAreaContext?.top || 40,
         right: safeAreaContext?.right || 20,
         left: safeAreaContext?.left || 20,
       };
     }
-    if (orientationLock === ScreenOrientation.OrientationLock.LANDSCAPE_LEFT) {
-      return {
-        top: safeAreaContext?.right || 20,
-        right: safeAreaContext?.bottom || 20,
-        left: safeAreaContext?.top || 40,
-      };
-    }
+
     return {
-      top: safeAreaContext?.left,
-      right: safeAreaContext?.bottom,
-      left: safeAreaContext?.top,
+      top: safeAreaContext?.left || 20,
+      right: safeAreaContext?.bottom || 20,
+      left: safeAreaContext?.top || 40,
     };
   };
 
-  const isPortrait = getIsPortrait();
-
   const { top, right } = getFloatingButtonPosition();
-  const getOrientations = (): (
-    | "portrait"
-    | "portrait-upside-down"
-    | "landscape"
-    | "landscape-left"
-    | "landscape-right"
-  )[] => {
-    if (isPortrait) {
-      return ["portrait", "portrait-upside-down"];
-    } else {
-      return ["landscape", "landscape-left", "landscape-right"];
-    }
-  };
 
   const calcFontSize = (len: number) => {
     if (len > 10) {
@@ -154,32 +139,6 @@ export default function ShowingModal({
       return 65;
     }
     return 100;
-  };
-
-  const handleRotatePress = async () => {
-    if (isWeb) {
-      if (getIsPortrait()) {
-        setOrientationLock(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
-      } else {
-        setOrientationLock(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      }
-      return;
-    }
-    if (getIsPortrait()) {
-      setOrientationLock(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
-      setTimeout(async () => {
-        await ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT,
-        );
-      }, 100);
-    } else {
-      setOrientationLock(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      setTimeout(async () => {
-        await ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.PORTRAIT_UP,
-        );
-      }, 100);
-    }
   };
 
   const renderPlayPause = () => {
@@ -303,7 +262,13 @@ export default function ShowingModal({
   return (
     <Modal
       visible={!!text}
-      supportedOrientations={getOrientations()}
+      supportedOrientations={[
+        "landscape",
+        "landscape-left",
+        "landscape-right",
+        "portrait",
+        "portrait-upside-down",
+      ]}
       style={{
         display: "flex",
         flex: 1,
@@ -344,20 +309,6 @@ export default function ShowingModal({
             }}
             mode={isFlashing ? "contained" : "outlined"}
           />
-          {!isWeb && (
-            <IconButton
-              icon="phone-rotate-landscape"
-              size={20}
-              iconColor="white"
-              containerColor={
-                isPortrait ? "transparent" : theme.colors.tertiary
-              }
-              onPress={() => {
-                handleRotatePress();
-              }}
-              mode={isFlashing ? "contained" : "outlined"}
-            />
-          )}
         </View>
         <View
           style={{
@@ -456,6 +407,9 @@ export default function ShowingModal({
                   setIsFlashing(false);
                   setIsPaused(false);
                   setFlashOn(false);
+                  ScreenOrientation.lockAsync(
+                    ScreenOrientation.OrientationLock.PORTRAIT_UP,
+                  );
                   onDone();
                 }}>
                 Done
