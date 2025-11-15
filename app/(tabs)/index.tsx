@@ -13,6 +13,7 @@ import Logo from "../../assets/images/splash-icon.png";
 
 import PageTitle from "@/components/PageTitle";
 import ShowingModal from "@/components/ShowingModal";
+import { Ionicons } from "@expo/vector-icons";
 import Animated, {
   FadeInDown,
   FadeOutDown,
@@ -172,7 +173,16 @@ export default function HomeScreen() {
               }
               setTextInput("");
             }}>
-            Show
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <Ionicons
+                name="resize"
+                size={20}
+                style={{ marginRight: 5, lineHeight: 20 }}
+                color="white"
+              />
+              <Text style={{ color: "white", fontWeight: "bold" }}>Show</Text>
+            </View>
           </Button>
         </View>
       </KeyboardAvoidingView>
