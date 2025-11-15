@@ -12,6 +12,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
+  Platform,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -19,9 +20,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import DraggableFlatList, {
-  ScaleDecorator,
-} from "react-native-draggable-flatlist";
+import DraggableFlatList from "react-native-draggable-flatlist";
 import {
   Button,
   Card,
@@ -34,6 +33,7 @@ import {
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { useDispatch, useSelector } from "react-redux";
 import CustomMenu from "./CustomMenu";
+import DragControl from "./DragControl";
 import EditStoredTextDialog from "./EditStoredTextDialog";
 
 export default function RecentList({
@@ -53,6 +53,8 @@ export default function RecentList({
 
   const colorScheme = useColorScheme();
 
+  const isWeb = Platform.OS === "web";
+
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === "dark");
   const [isLongPressing, setIsLongPressing] = useState(false);
 
@@ -60,7 +62,7 @@ export default function RecentList({
     useState<StoredText | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const [isMovingWeb, setIsMovingWeb] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(
@@ -117,6 +119,25 @@ export default function RecentList({
       console.error("Error updating stored texts order:", error);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleWebAction = (dir: "up" | "down", item: StoredText) => {
+    const currentIndex = shownTexts.findIndex((t) => t.id === item.id);
+    if (currentIndex === -1) return;
+
+    let newIndex = currentIndex;
+    if (dir === "up" && currentIndex > 0) {
+      newIndex = currentIndex - 1;
+    } else if (dir === "down" && currentIndex < shownTexts.length - 1) {
+      newIndex = currentIndex + 1;
+    }
+
+    if (newIndex !== currentIndex) {
+      const newOrder = [...shownTexts];
+      const [movedItem] = newOrder.splice(currentIndex, 1);
+      newOrder.splice(newIndex, 0, movedItem);
+      handleReorderStoredTexts(newOrder);
     }
   };
 
@@ -193,6 +214,21 @@ export default function RecentList({
           justifyContent: "flex-end",
           gap: 5,
         }}>
+        {isWeb && (
+          <View
+            style={{
+              flexGrow: 1,
+              flexDirection: "row",
+              justifyContent: "flex-start",
+              alignItems: "center",
+            }}>
+            <Button
+              onPress={() => setIsMovingWeb(!isMovingWeb)}
+              mode="contained">
+              {isMovingWeb ? "Done" : "Move"}
+            </Button>
+          </View>
+        )}
         {selectedIds.length > 0 && (
           <Button
             mode="contained"
@@ -202,6 +238,7 @@ export default function RecentList({
                 dispatch(removeText(id));
               });
               setSelectedIds([]);
+              setIsSelecting(false);
             }}>
             Delete ({selectedIds.length})
           </Button>
@@ -290,34 +327,19 @@ export default function RecentList({
                 }
                 left={(props) => {
                   if (!isSelecting) {
+                    if (isWeb && !isMovingWeb) {
+                      return null;
+                    }
                     return (
-                      <ScaleDecorator>
-                        <TouchableOpacity
-                          disabled={isActive}
-                          onLongPress={() => {
-                            setIsDragging(true);
-                            drag();
-                          }}
-                          onPressOut={() => {
-                            setIsDragging(false);
-                          }}
-                          onPressIn={() => {
-                            setIsDragging(true);
-                            drag();
-                          }}
-                          style={{
-                            justifyContent: "center",
-                            alignItems: "center",
-                            paddingHorizontal: 5,
-                            margin: 0,
-                          }}>
-                          <MaterialIcons
-                            name="drag-indicator"
-                            size={25}
-                            {...props}
-                          />
-                        </TouchableOpacity>
-                      </ScaleDecorator>
+                      <DragControl
+                        onWebAction={(dir) => {
+                          handleWebAction(dir, item);
+                        }}
+                        drag={drag}
+                        isActive={isActive}
+                        setIsDragging={setIsDragging}
+                        {...props}
+                      />
                     );
                   }
 

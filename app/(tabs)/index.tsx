@@ -153,7 +153,12 @@ export default function HomeScreen() {
               justifyContent: "center",
               alignItems: "center",
             }}
-            labelStyle={formStyles.bigButton}
+            contentStyle={{
+              flexDirection: "row",
+              width: "100%",
+              alignItems: "center",
+            }}
+            labelStyle={[formStyles.bigButton]}
             onPress={() => {
               if (textInput.trim().length === 0) {
                 setError("Please enter some text to show.");
@@ -184,6 +189,9 @@ export default function HomeScreen() {
                 flexGrow: 1,
                 width: "100%",
                 textAlign: "center",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
               }}>
               Show
             </Text>
