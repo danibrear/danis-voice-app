@@ -184,6 +184,7 @@ export default function HomeScreen() {
                 display: "flex",
                 flexGrow: 1,
                 gap: 5,
+                width: "100%",
               }}>
               <Ionicons
                 name="resize"
