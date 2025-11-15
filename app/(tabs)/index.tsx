@@ -150,6 +150,9 @@ export default function HomeScreen() {
             mode="contained"
             style={{
               marginTop: 10,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
             }}
             labelStyle={formStyles.bigButton}
             onPress={() => {
@@ -174,14 +177,29 @@ export default function HomeScreen() {
               setTextInput("");
             }}>
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                display: "flex",
+                flexGrow: 1,
+                gap: 5,
+              }}>
               <Ionicons
                 name="resize"
-                size={20}
-                style={{ marginRight: 5, lineHeight: 20 }}
+                size={24}
+                style={{ marginRight: 5 }}
                 color="white"
               />
-              <Text style={{ color: "white", fontWeight: "bold" }}>Show</Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  fontSize: 18,
+                }}>
+                Show
+              </Text>
             </View>
           </Button>
         </View>
