@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Modal, Platform, Text, View } from "react-native";
 
 import { formStyles } from "@/styles";
@@ -15,6 +15,16 @@ import { RootState } from "@/store";
 import { calculateWidthOfWord } from "@/utils/fontSize";
 import { AudioModule } from "expo-audio";
 import { useSelector } from "react-redux";
+
+const colors = [
+  "#EF4444",
+  "#F59E0B",
+  "#EAB308",
+  "#10B981",
+  "#3B82F6",
+  "#8B5CF6",
+  "#EC4899",
+];
 
 export default function ShowingModal({
   text,
@@ -48,6 +58,39 @@ export default function ShowingModal({
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
   const [flashOn, setFlashOn] = useState<boolean>(false);
 
+  const calcFontSize = useCallback(
+    (len: number) => {
+      if (isWeb) {
+        if (!text) {
+          return 100;
+        }
+        if (text.length > 100) {
+          return 40;
+        } else if (text.length > 75) {
+          return 50;
+        } else if (text.length > 20) {
+          return 60;
+        } else if (text.length > 10) {
+          return 75;
+        } else if (text.length > 5) {
+          return 90;
+        }
+        return 100;
+      }
+      if (len > 10) {
+        return 35;
+      }
+      if (len > 7) {
+        return 50;
+      }
+      if (len > 5) {
+        return 65;
+      }
+      return 100;
+    },
+    [isWeb, text],
+  );
+
   useEffect(() => {
     const words = text ? text.split(/\s+/) : [];
     const numWords = words.length;
@@ -62,7 +105,7 @@ export default function ShowingModal({
     });
     setFontSize(calcFontSize(longest / 100));
     setDefaultFontSize(calcFontSize(longest / 100));
-  }, [text]);
+  }, [calcFontSize, text]);
 
   useEffect(() => {
     if (!isWeb) {
@@ -128,18 +171,38 @@ export default function ShowingModal({
 
   const { top, right } = getFloatingButtonPosition();
 
-  const calcFontSize = (len: number) => {
-    if (len > 10) {
-      return 35;
+  const [colorIndex, setColorIndex] = useState<number>(0);
+
+  const handleDone = useCallback(() => {
+    setHighlight({
+      start: 0,
+      end: 0,
+    });
+    setIsSpeaking(false);
+    setIsPaused(false);
+  }, []);
+
+  useEffect(() => {
+    if (!isSpeaking) {
+      return;
     }
-    if (len > 7) {
-      return 50;
+
+    const checkSpeaking = setInterval(async () => {
+      const speaking = await Speech.isSpeakingAsync();
+      if (!speaking) {
+        handleDone();
+        Speech.stop();
+      }
+    }, 50);
+    return () => clearInterval(checkSpeaking);
+  }, [isSpeaking, handleDone]);
+
+  useEffect(() => {
+    if (!isSpeaking) {
+      return;
     }
-    if (len > 5) {
-      return 65;
-    }
-    return 100;
-  };
+    setColorIndex((prev) => (prev + 1) % colors.length);
+  }, [highlight, isSpeaking]);
 
   const renderPlayPause = () => {
     const buttons = [];
@@ -178,10 +241,10 @@ export default function ShowingModal({
         <Button
           mode="contained"
           labelStyle={formStyles.bigButton}
-          onPress={() => {
-            Speech.resume();
+          onPress={async () => {
             setIsPaused(false);
             setIsSpeaking(true);
+            Speech.resume();
           }}>
           Resume
         </Button>,
@@ -203,16 +266,10 @@ export default function ShowingModal({
               rate: preferences.speechRate,
               pitch: preferences.speechPitch,
               onDone: () => {
-                setHighlight({
-                  start: 0,
-                  end: 0,
-                });
-                setIsSpeaking(false);
-                setIsPaused(false);
+                handleDone();
               },
-              onPause: () => {
-                setIsSpeaking(false);
-                setIsPaused(true);
+              onError: () => {
+                handleDone();
               },
               onBoundary: (e: { charIndex: number; charLength: number }) => {
                 const { charIndex, charLength } = e;
@@ -292,131 +349,149 @@ export default function ShowingModal({
         }}>
         <View
           style={{
-            flexDirection: "column",
-            gap: 2,
-            position: "absolute",
-            top,
-            left: right,
-            zIndex: 10,
-          }}>
-          <IconButton
-            icon="flash"
-            size={20}
-            iconColor="white"
-            containerColor={isFlashing ? theme.colors.tertiary : "transparent"}
-            onPress={() => {
-              setIsFlashing(!isFlashing);
-            }}
-            mode={isFlashing ? "contained" : "outlined"}
-          />
-        </View>
-        <View
-          style={{
-            flexDirection: "column",
-            gap: 2,
-            position: "absolute",
-            top,
-            right,
-            zIndex: 10,
-          }}>
-          <IconButton
-            icon="magnify-plus"
-            containerColor={theme.colors.tertiary}
-            iconColor="white"
-            size={22}
-            onPress={() => setFontSize((size) => Math.min(150, size + 5))}
-            mode="contained"
-          />
-          <IconButton
-            icon="magnify-minus"
-            size={22}
-            containerColor={theme.colors.tertiary}
-            iconColor="white"
-            onPress={() => setFontSize((size) => Math.max(20, size - 5))}
-            mode="contained"
-          />
-          {fontSize !== defaultFontSize && (
-            <IconButton
-              icon="magnify-remove-outline"
-              size={22}
-              containerColor={theme.dark ? "#fff" : "#333"}
-              iconColor={theme.colors.tertiary}
-              onPress={() => setFontSize(defaultFontSize)}
-              mode="contained"
-            />
-          )}
-        </View>
-        <View
-          style={{
+            maxWidth: isWeb ? 600 : "100%",
+            width: "100%",
             flex: 1,
-            alignSelf: "stretch",
-            alignItems: "center",
-            justifyContent: "center",
-            alignContent: "center",
-            flexGrow: 1,
+            marginHorizontal: isWeb ? "auto" : 0,
           }}>
-          <Text
-            adjustsFontSizeToFit={true}
-            numberOfLines={numLines}
-            minimumFontScale={0.5}
-            style={{
-              flexShrink: 1,
-              fontSize: fontSize,
-              width: "98%",
-              fontWeight: "bold",
-              textAlign: "center",
-              verticalAlign: "middle",
-              color: isFlashing ? (flashOn ? "white" : "black") : "white",
-            }}
-            textBreakStrategy="balanced">
-            {text?.slice(0, highlight.start)}
-            <Text style={{ color: theme.colors.tertiary }}>
-              {text?.slice(highlight.start, highlight.end)}
-            </Text>
-            {text?.slice(highlight.end)}
-          </Text>
-        </View>
-        {isPortrait && (
           <View
             style={{
+              flexDirection: "column",
+              gap: 2,
+              position: "absolute",
+              top,
+              left: right,
+              zIndex: 10,
+            }}>
+            <IconButton
+              icon="flash"
+              size={20}
+              iconColor="white"
+              containerColor={
+                isFlashing ? theme.colors.tertiary : "transparent"
+              }
+              onPress={() => {
+                setIsFlashing(!isFlashing);
+              }}
+              mode={isFlashing ? "contained" : "outlined"}
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: "column",
+              gap: 2,
+              position: "absolute",
+              top,
+              right,
+              zIndex: 10,
+            }}>
+            <IconButton
+              icon="magnify-plus"
+              containerColor={theme.colors.tertiary}
+              iconColor="white"
+              size={22}
+              onPress={() => setFontSize((size) => Math.min(150, size + 5))}
+              mode="contained"
+            />
+            <IconButton
+              icon="magnify-minus"
+              size={22}
+              containerColor={theme.colors.tertiary}
+              iconColor="white"
+              onPress={() => setFontSize((size) => Math.max(20, size - 5))}
+              mode="contained"
+            />
+            {fontSize !== defaultFontSize && (
+              <IconButton
+                icon="magnify-remove-outline"
+                size={22}
+                containerColor={theme.dark ? "#fff" : "#333"}
+                iconColor={theme.colors.tertiary}
+                onPress={() => setFontSize(defaultFontSize)}
+                mode="contained"
+              />
+            )}
+          </View>
+          <View
+            style={{
+              flex: 1,
+              alignSelf: "stretch",
               alignItems: "center",
               justifyContent: "center",
-              paddingHorizontal: 10,
-              display: "flex",
-              paddingBottom: isWeb ? 40 : 20,
+              alignContent: "center",
+              flexGrow: 1,
             }}>
-            <View
+            <Text
+              adjustsFontSizeToFit={true}
+              numberOfLines={numLines}
+              minimumFontScale={0.5}
               style={{
-                paddingHorizontal: 10,
-                width: "100%",
-              }}>
-              {renderControls()}
-            </View>
-            <View
-              style={{
-                paddingHorizontal: 10,
-                paddingTop: 30,
-                width: "100%",
-              }}>
-              <Button
-                mode="contained"
-                labelStyle={formStyles.bigButton}
-                onPress={() => {
-                  Speech.stop();
-                  setIsSpeaking(false);
-                  setIsFlashing(false);
-                  setIsPaused(false);
-                  setFlashOn(false);
-                  ScreenOrientation.lockAsync(
-                    ScreenOrientation.OrientationLock.PORTRAIT_UP,
-                  );
-                  onDone();
+                flexShrink: 1,
+                fontSize: fontSize,
+                width: "98%",
+                fontWeight: "bold",
+                textAlign: "center",
+                verticalAlign: "middle",
+                color: isFlashing ? (flashOn ? "white" : "black") : "white",
+              }}
+              textBreakStrategy="balanced">
+              {text?.slice(0, highlight.start)}
+              <Text
+                style={{
+                  color: colors[colorIndex],
+                  textShadowColor: colors[colorIndex],
+                  textShadowRadius: 2,
+                  textShadowOffset: { width: 1, height: 1 },
                 }}>
-                Done
-              </Button>
-            </View>
+                {text?.slice(highlight.start, highlight.end)}
+              </Text>
+              {text?.slice(highlight.end)}
+            </Text>
           </View>
-        )}
+          {isPortrait && (
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 10,
+                display: "flex",
+                paddingBottom: isWeb ? 40 : 20,
+              }}>
+              <View
+                style={{
+                  paddingHorizontal: 10,
+                  width: "100%",
+                }}>
+                {renderControls()}
+              </View>
+              <View
+                style={{
+                  paddingHorizontal: 10,
+                  paddingTop: 30,
+                  width: "100%",
+                }}>
+                <Button
+                  mode="contained"
+                  labelStyle={formStyles.bigButton}
+                  onPress={() => {
+                    Speech.stop();
+                    setIsSpeaking(false);
+                    setIsFlashing(false);
+                    setIsPaused(false);
+                    setFlashOn(false);
+                    if (!isWeb) {
+                      ScreenOrientation.lockAsync(
+                        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+                      );
+                    }
+                    onDone();
+                  }}>
+                  Done
+                </Button>
+              </View>
+            </View>
+          )}
+        </View>
       </SafeAreaView>
     </Modal>
   );
