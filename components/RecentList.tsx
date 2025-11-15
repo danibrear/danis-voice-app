@@ -230,6 +230,7 @@ export default function RecentList({
             mode="contained"
             onPress={() => {
               setIsSelecting(false);
+              setSelectedIds([]);
             }}>
             <MaterialIcons name="close" size={20} />
           </Button>
