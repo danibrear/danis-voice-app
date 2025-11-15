@@ -45,3 +45,5 @@ app-example
 
 *.app
 *.tar.gz
+*.apk
+*.aab

@@ -204,47 +204,49 @@ export default function RecentList({
           </Animated.View>
         </View>
       )}
-      <View
-        style={{
-          flexDirection: "row",
-          paddingHorizontal: 10,
-          justifyContent: "flex-end",
-          gap: 5,
-        }}>
-        {selectedIds.length > 0 && (
-          <Button
-            mode="contained"
-            buttonColor={theme.colors.error}
-            onPress={() => {
-              selectedIds.forEach((id) => {
-                dispatch(removeText(id));
-              });
-              setSelectedIds([]);
-              setIsSelecting(false);
-            }}>
-            Delete ({selectedIds.length})
-          </Button>
-        )}
-        {isSelecting && (
-          <Button
-            mode="contained"
-            onPress={() => {
-              setIsSelecting(false);
-              setSelectedIds([]);
-            }}>
-            <MaterialIcons name="close" size={20} />
-          </Button>
-        )}
-        {!isSelecting && (
-          <Button
-            mode="contained"
-            onPress={() => {
-              setIsSelecting(true);
-            }}>
-            Select
-          </Button>
-        )}
-      </View>
+      {shownTexts && shownTexts.length > 0 && (
+        <View
+          style={{
+            flexDirection: "row",
+            paddingHorizontal: 10,
+            justifyContent: "flex-end",
+            gap: 5,
+          }}>
+          {selectedIds.length > 0 && (
+            <Button
+              mode="contained"
+              buttonColor={theme.colors.error}
+              onPress={() => {
+                selectedIds.forEach((id) => {
+                  dispatch(removeText(id));
+                });
+                setSelectedIds([]);
+                setIsSelecting(false);
+              }}>
+              Delete ({selectedIds.length})
+            </Button>
+          )}
+          {isSelecting && (
+            <Button
+              mode="contained"
+              onPress={() => {
+                setIsSelecting(false);
+                setSelectedIds([]);
+              }}>
+              <MaterialIcons name="close" size={20} />
+            </Button>
+          )}
+          {!isSelecting && (
+            <Button
+              mode="contained"
+              onPress={() => {
+                setIsSelecting(true);
+              }}>
+              Select
+            </Button>
+          )}
+        </View>
+      )}
       {!isChangingColorScheme && shownTexts.length > 0 && (
         <DraggableFlatList
           keyboardShouldPersistTaps="handled"
