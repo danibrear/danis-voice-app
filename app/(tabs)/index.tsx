@@ -13,6 +13,7 @@ import Logo from "../../assets/images/splash-icon.png";
 
 import PageTitle from "@/components/PageTitle";
 import ShowingModal from "@/components/ShowingModal";
+import ThemedView from "@/components/themed/ThemedView";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, {
   FadeInDown,
@@ -52,7 +53,7 @@ export default function HomeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <View style={[coreStyles.container, { backgroundColor: "transparent" }]}>
+    <ThemedView style={[coreStyles.container]}>
       <PageTitle title="" />
       <View
         style={[
@@ -190,11 +191,11 @@ export default function HomeScreen() {
                 name="resize"
                 size={24}
                 style={{ marginRight: 5 }}
-                color="white"
+                color={theme.colors.onPrimary}
               />
               <Text
                 style={{
-                  color: "white",
+                  color: theme.colors.onPrimary,
                   fontWeight: "bold",
                   textAlign: "center",
                   fontSize: 18,
@@ -205,6 +206,6 @@ export default function HomeScreen() {
           </Button>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </ThemedView>
   );
 }

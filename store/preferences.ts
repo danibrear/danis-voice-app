@@ -29,10 +29,10 @@ export const preferencesSlice = createSlice({
     },
 
     setPitch: (state, action: PayloadAction<number>) => {
-      state.speechPitch = action.payload;
+      state.speechPitch = Math.min(2.0, Math.max(0.2, action.payload));
     },
     setRate: (state, action: PayloadAction<number>) => {
-      state.speechRate = action.payload;
+      state.speechRate = Math.min(2.0, Math.max(0.2, action.payload));
     },
 
     setPreferredVoice: (state, action: PayloadAction<string>) => {
