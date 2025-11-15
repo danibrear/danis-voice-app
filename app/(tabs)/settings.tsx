@@ -4,6 +4,7 @@ import { RootState } from "@/store";
 import { setColors, setPitch, setRate } from "@/store/preferences";
 import { coreStyles } from "@/styles";
 import { MaterialIcons } from "@expo/vector-icons";
+import { AudioModule } from "expo-audio";
 import * as Speech from "expo-speech";
 import * as WebBrowser from "expo-web-browser";
 import { ScrollView, TouchableOpacity, View } from "react-native";
@@ -154,6 +155,9 @@ export default function Settings() {
                     borderRadius: 100,
                   }}
                   onPress={() => {
+                    AudioModule.setAudioModeAsync({
+                      playsInSilentMode: true,
+                    });
                     Speech.speak("Made with love by Dani", {
                       pitch: preferences.speechPitch,
                       rate: preferences.speechRate,
