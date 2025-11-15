@@ -3,16 +3,16 @@ import { useContext, useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 
 import RecentList from "@/components/RecentList";
-import ShowingModal from "@/components/ShowingModal";
-import { addStoredText } from "@/store/storedTexts";
+import { createStoredText } from "@/store/storedTexts";
 import { StoredText } from "@/types/StoredText";
 import { Button, Icon, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 // @ts-expect-error this is a static asset
 import Logo from "../../assets/images/splash-icon.png";
 
 import PageTitle from "@/components/PageTitle";
+import ShowingModal from "@/components/ShowingModal";
 import Animated, {
   FadeInDown,
   FadeOutDown,
@@ -23,12 +23,12 @@ import Animated, {
 export default function HomeScreen() {
   const [textInput, setTextInput] = useState("");
 
-  const [showText, setShowText] = useState<string | null>(null);
-
   const dispatch = useDispatch();
   const theme = useTheme();
   const [error, setError] = useState<string | null>(null);
   const [storedText, setStoredText] = useState<StoredText | null>(null);
+
+  const storedTexts = useSelector((state: any) => state.storedTexts);
 
   const safeAreaContext = useContext(SafeAreaInsetsContext);
   const opacity = useSharedValue(0.5);
@@ -79,15 +79,13 @@ export default function HomeScreen() {
         <RecentList
           style={{ flexGrow: 1, backgroundColor: "transparent" }}
           onPress={(item: StoredText) => {
-            setShowText(item.text);
             setStoredText(item);
           }}
         />
         <ShowingModal
           storedText={storedText}
-          text={showText}
           onDone={() => {
-            setShowText(null);
+            setStoredText(null);
           }}
         />
       </View>
@@ -158,8 +156,20 @@ export default function HomeScreen() {
                 setError("Please enter some text to show.");
                 return;
               }
-              dispatch(addStoredText(textInput));
-              setShowText(textInput);
+              const existing = storedTexts.recentTexts.find(
+                (t: StoredText) => t.text === textInput,
+              );
+              if (existing) {
+                setStoredText(existing);
+              } else {
+                const newStoredText: StoredText = {
+                  id: Date.now().toString(),
+                  text: textInput,
+                  starred: false,
+                };
+                dispatch(createStoredText(newStoredText));
+                setStoredText(newStoredText);
+              }
               setTextInput("");
             }}>
             Show

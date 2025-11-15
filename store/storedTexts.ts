@@ -33,12 +33,37 @@ export const storedTextsSlice = createSlice({
       });
     },
 
+    createStoredText: (state, action: PayloadAction<StoredText>) => {
+      const existing = state.recentTexts.find(
+        (t) => t.text === action.payload.text,
+      );
+      state.recentTexts = state.recentTexts.filter(
+        (t) => t.text !== action.payload.text,
+      );
+      const mergedText = existing
+        ? { ...existing, ...action.payload }
+        : action.payload;
+      state.recentTexts.push(mergedText);
+    },
+
     updateStoredText: (state, action: PayloadAction<StoredText>) => {
       const index = state.recentTexts.findIndex(
         (t) => t.id === action.payload.id,
       );
       if (index !== -1) {
         state.recentTexts[index] = action.payload;
+      }
+    },
+
+    updatedStoredTextValue: (
+      state,
+      action: PayloadAction<{ id: string; value: string }>,
+    ) => {
+      const index = state.recentTexts.findIndex(
+        (t) => t.id === action.payload.id,
+      );
+      if (index !== -1) {
+        state.recentTexts[index].text = action.payload.value;
       }
     },
 
@@ -71,7 +96,7 @@ export const storedTextsSlice = createSlice({
       );
       if (index !== -1) {
         if (action.payload.fontSize === null) {
-          delete state.recentTexts[index].fontSize;
+          delete state.recentTexts[index]?.fontSize;
           return;
         }
         state.recentTexts[index].fontSize = action.payload.fontSize;
@@ -93,7 +118,9 @@ export const {
   addStoredText,
   updateStoredText,
   removeText,
+  createStoredText,
   setStoredTextFontSize,
+  updatedStoredTextValue,
 } = storedTextsSlice.actions;
 
 export default storedTextsSlice.reducer;

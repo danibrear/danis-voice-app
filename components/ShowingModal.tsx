@@ -2,11 +2,17 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { Dimensions, Modal, Platform, Text, View } from "react-native";
 
 import { formStyles } from "@/styles";
-import * as Speech from "expo-speech";
-import { Button, IconButton, useTheme } from "react-native-paper";
-import { SafeAreaInsetsContext } from "react-native-safe-area-context";
-
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
+import * as Speech from "expo-speech";
+import {
+  Button,
+  Dialog,
+  IconButton,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { RootState } from "@/store";
 import { calculateWidthOfWord } from "@/utils/fontSize";
@@ -14,18 +20,19 @@ import { AudioModule } from "expo-audio";
 import { useDispatch, useSelector } from "react-redux";
 
 import * as colors from "@/constants/colorPatterns";
-import { setStoredTextFontSize } from "@/store/storedTexts";
+import {
+  setStoredTextFontSize,
+  updatedStoredTextValue,
+} from "@/store/storedTexts";
 import { StoredText } from "@/types/StoredText";
 
 const WIDTH = Dimensions.get("window").width;
 
 export default function ShowingModal({
   storedText,
-  text,
   onDone,
 }: {
   storedText: StoredText | null;
-  text?: string | null;
   onDone: () => void;
 }) {
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
@@ -42,6 +49,11 @@ export default function ShowingModal({
   });
 
   const isWeb = Platform.OS === "web";
+
+  const [text, setText] = useState<string>(storedText?.text || "");
+
+  const [newText, setNewText] = useState<string>(storedText?.text || "");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const [numLines, setNumLines] = useState<number>(6);
 
@@ -61,6 +73,11 @@ export default function ShowingModal({
   );
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    setNewText(storedText ? storedText.text || "" : "");
+    setText(storedText ? storedText.text || "" : "");
+  }, [storedText]);
 
   useEffect(() => {
     if (
@@ -93,10 +110,10 @@ export default function ShowingModal({
   }, [colorIndex, preferences.colors, theme.colors.tertiary]);
 
   useEffect(() => {
-    if (!text) {
+    if (!storedText || !storedText?.text) {
       return;
     }
-    const words = text.split(/\s+/);
+    const words = storedText.text.split(/\s+/);
     const numWords = words.length;
     let longest = 0;
     let width = 0;
@@ -130,11 +147,11 @@ export default function ShowingModal({
       Math.floor(100 * (WIDTH / longest)) -
       (averageWordLength + webFontSizeAdjustment);
     const minFs = Math.min(100, fs);
-    if (!storedText?.fontSize) {
+    if (storedText && !storedText?.fontSize) {
       setFontSize(minFs);
     }
     setDefaultFontSize(minFs);
-  }, [text, storedText?.fontSize, isWeb]);
+  }, [storedText, isWeb]);
 
   useEffect(() => {
     if (!isWeb) {
@@ -216,7 +233,7 @@ export default function ShowingModal({
 
   const renderPlayPause = () => {
     const buttons = [];
-    if (!text) {
+    if (!storedText || !storedText?.text) {
       return;
     }
     if (isSpeaking) {
@@ -273,7 +290,7 @@ export default function ShowingModal({
               playsInSilentMode: true,
             });
 
-            Speech.speak(text, {
+            Speech.speak(text || "", {
               rate: preferences.speechRate,
               pitch: preferences.speechPitch,
               onDone: () => {
@@ -329,7 +346,7 @@ export default function ShowingModal({
 
   return (
     <Modal
-      visible={!!text}
+      visible={!!storedText}
       supportedOrientations={[
         "landscape",
         "landscape-left",
@@ -367,6 +384,34 @@ export default function ShowingModal({
             flex: 1,
             marginHorizontal: isWeb ? "auto" : 0,
           }}>
+          <View
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 100,
+              right: 100,
+              zIndex: 10000,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}>
+            <Button
+              onPress={() => {
+                setIsEditing(true);
+              }}
+              mode="contained"
+              labelStyle={{
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              icon={(props) => (
+                <MaterialCommunityIcons name="border-color" {...props} />
+              )}>
+              Edit
+            </Button>
+          </View>
           <View
             style={{
               flexDirection: "column",
@@ -434,32 +479,34 @@ export default function ShowingModal({
               alignContent: "center",
               flexGrow: 1,
             }}>
-            <Text
-              adjustsFontSizeToFit={true}
-              numberOfLines={numLines}
-              minimumFontScale={0.5}
-              style={{
-                fontSize: fontSize,
-                width: "98%",
-                fontWeight: "bold",
-                textAlign: "center",
-                color: isFlashing ? (flashOn ? "white" : "black") : "white",
-              }}>
-              {text?.slice(0, highlight.start)}
+            {!!text && (
               <Text
+                adjustsFontSizeToFit={true}
+                numberOfLines={numLines}
+                minimumFontScale={0.5}
                 style={{
-                  color:
-                    highlightColor === "#ffffff" ? "black" : highlightColor,
-                  backgroundColor:
-                    highlightColor === "#ffffff"
-                      ? highlightColor
-                      : "transparent",
-                  borderRadius: 10,
+                  fontSize: fontSize,
+                  width: "98%",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  color: isFlashing ? (flashOn ? "white" : "black") : "white",
                 }}>
-                {text?.slice(highlight.start, highlight.end)}
+                {text.slice(0, highlight.start)}
+                <Text
+                  style={{
+                    color:
+                      highlightColor === "#ffffff" ? "black" : highlightColor,
+                    backgroundColor:
+                      highlightColor === "#ffffff"
+                        ? highlightColor
+                        : "transparent",
+                    borderRadius: 10,
+                  }}>
+                  {text.slice(highlight.start, highlight.end)}
+                </Text>
+                {text.slice(highlight.end)}
               </Text>
-              {text?.slice(highlight.end)}
-            </Text>
+            )}
           </View>
           {isPortrait && (
             <View
@@ -506,6 +553,45 @@ export default function ShowingModal({
           )}
         </View>
       </View>
+      <Dialog
+        visible={isEditing}
+        onDismiss={() => {
+          setIsEditing(false);
+        }}>
+        <Dialog.Content>
+          <TextInput
+            mode="outlined"
+            value={newText}
+            onChangeText={setNewText}
+          />
+        </Dialog.Content>
+        <Dialog.Actions>
+          <Button
+            mode="contained"
+            style={{ paddingHorizontal: 15 }}
+            onPress={() => {
+              setIsEditing(false);
+              setText(newText);
+              if (storedText) {
+                dispatch(
+                  updatedStoredTextValue({
+                    id: storedText?.id,
+                    value: newText,
+                  }),
+                );
+              }
+            }}>
+            Save
+          </Button>
+          <Button
+            onPress={() => {
+              setIsEditing(false);
+              setNewText(storedText ? storedText.text || "" : "");
+            }}>
+            Cancel
+          </Button>
+        </Dialog.Actions>
+      </Dialog>
     </Modal>
   );
 }
