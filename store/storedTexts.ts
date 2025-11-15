@@ -69,13 +69,6 @@ export const storedTextsSlice = createSlice({
       const index = state.recentTexts.findIndex(
         (t) => t.id === action.payload.id,
       );
-      console.log(
-        "Setting font size for text id:",
-        action.payload.id,
-        "to",
-        action.payload.fontSize,
-        index,
-      );
       if (index !== -1) {
         if (action.payload.fontSize === null) {
           delete state.recentTexts[index].fontSize;

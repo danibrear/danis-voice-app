@@ -25,7 +25,13 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "rocks.db.voice"
+      "package": "rocks.db.voice",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "output": "static",
@@ -70,6 +76,12 @@
       "eas": {
         "projectId": "14a7703f-9abd-457f-bb61-b7309eeb62bd"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/14a7703f-9abd-457f-bb61-b7309eeb62bd"
     }
   }
 }
