@@ -8,14 +8,14 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
+import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { ThemeProvider as RNPThemeProvider } from "react-native-paper";
 import "react-native-reanimated";
 import { Provider as ReduxProvider } from "react-redux";
-
 export const unstable_settings = {
   anchor: "(tabs)",
 };
@@ -31,6 +31,10 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
+    if (Platform.OS === "web") {
+      return;
+    }
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     setTimeout(() => {
       SplashScreen.hideAsync();
     }, 2000);

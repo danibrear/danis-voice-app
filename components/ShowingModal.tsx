@@ -9,6 +9,8 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 
+import * as ScreenOrientation from "expo-screen-orientation";
+
 import { RootState } from "@/store";
 import { calculateWidthOfWord } from "@/utils/fontSize";
 import { AudioModule } from "expo-audio";
@@ -36,6 +38,11 @@ export default function ShowingModal({
 
   const [numLines, setNumLines] = useState<number>(6);
 
+  const [orientationLock, setOrientationLock] =
+    useState<ScreenOrientation.OrientationLock>(
+      ScreenOrientation.OrientationLock.PORTRAIT,
+    );
+
   const preferences = useSelector((state: RootState) => state.preferences);
   const theme = useTheme();
 
@@ -61,6 +68,19 @@ export default function ShowingModal({
   }, [text]);
 
   useEffect(() => {
+    if (!isWeb) {
+      return;
+    }
+    window.addEventListener("orientationchange", (e) => {
+      if (window.innerHeight <= window.innerWidth) {
+        setOrientationLock(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      } else {
+        setOrientationLock(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+      }
+    });
+  }, [isWeb]);
+
+  useEffect(() => {
     let flashInterval = undefined;
     if (isFlashing) {
       flashInterval = setInterval(() => {
@@ -76,6 +96,53 @@ export default function ShowingModal({
     };
   }, [isFlashing]);
 
+  const getIsPortrait = () => {
+    return (
+      orientationLock === ScreenOrientation.OrientationLock.PORTRAIT ||
+      orientationLock === ScreenOrientation.OrientationLock.PORTRAIT_DOWN ||
+      orientationLock === ScreenOrientation.OrientationLock.PORTRAIT_UP ||
+      orientationLock === ScreenOrientation.OrientationLock.DEFAULT
+    );
+  };
+  const getFloatingButtonPosition = () => {
+    if (getIsPortrait()) {
+      return {
+        top: safeAreaContext?.top || 40,
+        right: safeAreaContext?.right || 20,
+        left: safeAreaContext?.left || 20,
+      };
+    }
+    if (orientationLock === ScreenOrientation.OrientationLock.LANDSCAPE_LEFT) {
+      return {
+        top: safeAreaContext?.right || 20,
+        right: safeAreaContext?.bottom || 20,
+        left: safeAreaContext?.top || 40,
+      };
+    }
+    return {
+      top: safeAreaContext?.left,
+      right: safeAreaContext?.bottom,
+      left: safeAreaContext?.top,
+    };
+  };
+
+  const isPortrait = getIsPortrait();
+
+  const { top, right } = getFloatingButtonPosition();
+  const getOrientations = (): (
+    | "portrait"
+    | "portrait-upside-down"
+    | "landscape"
+    | "landscape-left"
+    | "landscape-right"
+  )[] => {
+    if (isPortrait) {
+      return ["portrait", "portrait-upside-down"];
+    } else {
+      return ["landscape", "landscape-left", "landscape-right"];
+    }
+  };
+
   const calcFontSize = (len: number) => {
     if (len > 10) {
       return 35;
@@ -87,6 +154,32 @@ export default function ShowingModal({
       return 65;
     }
     return 100;
+  };
+
+  const handleRotatePress = async () => {
+    if (isWeb) {
+      if (getIsPortrait()) {
+        setOrientationLock(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+      } else {
+        setOrientationLock(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      }
+      return;
+    }
+    if (getIsPortrait()) {
+      setOrientationLock(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+      setTimeout(async () => {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT,
+        );
+      }, 100);
+    } else {
+      setOrientationLock(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      setTimeout(async () => {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.PORTRAIT_UP,
+        );
+      }, 100);
+    }
   };
 
   const renderPlayPause = () => {
@@ -206,21 +299,21 @@ export default function ShowingModal({
       </View>
     );
   };
+
   return (
     <Modal
       visible={!!text}
+      supportedOrientations={getOrientations()}
       style={{
         display: "flex",
         flex: 1,
         alignItems: "center",
         backgroundColor: "transparent",
-        maxWidth: 600,
         alignSelf: "center",
       }}>
       <SafeAreaView
         style={{
           flex: 1,
-          maxWidth: 600,
           alignSelf: "center",
           width: "100%",
           backgroundColor: isFlashing
@@ -237,8 +330,8 @@ export default function ShowingModal({
             flexDirection: "column",
             gap: 2,
             position: "absolute",
-            top: safeAreaContext?.top ? safeAreaContext.top : 10,
-            left: 10,
+            top,
+            left: right,
             zIndex: 10,
           }}>
           <IconButton
@@ -251,14 +344,28 @@ export default function ShowingModal({
             }}
             mode={isFlashing ? "contained" : "outlined"}
           />
+          {!isWeb && (
+            <IconButton
+              icon="phone-rotate-landscape"
+              size={20}
+              iconColor="white"
+              containerColor={
+                isPortrait ? "transparent" : theme.colors.tertiary
+              }
+              onPress={() => {
+                handleRotatePress();
+              }}
+              mode={isFlashing ? "contained" : "outlined"}
+            />
+          )}
         </View>
         <View
           style={{
             flexDirection: "column",
             gap: 2,
             position: "absolute",
-            top: safeAreaContext?.top ? safeAreaContext.top : 10,
-            right: 10,
+            top,
+            right,
             zIndex: 10,
           }}>
           <IconButton
@@ -318,42 +425,44 @@ export default function ShowingModal({
             {text?.slice(highlight.end)}
           </Text>
         </View>
-        <View
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            paddingHorizontal: 10,
-            display: "flex",
-            paddingBottom: isWeb ? 40 : 20,
-          }}>
+        {isPortrait && (
           <View
             style={{
+              alignItems: "center",
+              justifyContent: "center",
               paddingHorizontal: 10,
-              width: "100%",
+              display: "flex",
+              paddingBottom: isWeb ? 40 : 20,
             }}>
-            {renderControls()}
-          </View>
-          <View
-            style={{
-              paddingHorizontal: 10,
-              paddingTop: 30,
-              width: "100%",
-            }}>
-            <Button
-              mode="contained"
-              labelStyle={formStyles.bigButton}
-              onPress={() => {
-                Speech.stop();
-                setIsSpeaking(false);
-                setIsFlashing(false);
-                setIsPaused(false);
-                setFlashOn(false);
-                onDone();
+            <View
+              style={{
+                paddingHorizontal: 10,
+                width: "100%",
               }}>
-              Done
-            </Button>
+              {renderControls()}
+            </View>
+            <View
+              style={{
+                paddingHorizontal: 10,
+                paddingTop: 30,
+                width: "100%",
+              }}>
+              <Button
+                mode="contained"
+                labelStyle={formStyles.bigButton}
+                onPress={() => {
+                  Speech.stop();
+                  setIsSpeaking(false);
+                  setIsFlashing(false);
+                  setIsPaused(false);
+                  setFlashOn(false);
+                  onDone();
+                }}>
+                Done
+              </Button>
+            </View>
           </View>
-        </View>
+        )}
       </SafeAreaView>
     </Modal>
   );

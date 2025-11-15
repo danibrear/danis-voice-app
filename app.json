@@ -3,12 +3,13 @@
     "name": "Dani's Voice App",
     "slug": "danis-voice-app",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "danisvoiceapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "requireFullScreen": true,
       "supportsTablet": true,
       "bundleIdentifier": "rocks.db.voice",
       "infoPlist": {
@@ -51,7 +52,14 @@
           "experimentalLauncherActivity": true
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT",
+          "requireFullScreen": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
