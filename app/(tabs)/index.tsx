@@ -1,6 +1,6 @@
 import { coreStyles, formStyles, spacingStyles } from "@/styles";
 import { useContext, useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { KeyboardAvoidingView, View } from "react-native";
 
 import RecentList from "@/components/RecentList";
 import { createStoredText } from "@/store/storedTexts";
@@ -14,7 +14,6 @@ import Logo from "../../assets/images/splash-icon.png";
 import PageTitle from "@/components/PageTitle";
 import ShowingModal from "@/components/ShowingModal";
 import ThemedView from "@/components/themed/ThemedView";
-import { Ionicons } from "@expo/vector-icons";
 import Animated, {
   FadeInDown,
   FadeOutDown,
@@ -49,37 +48,39 @@ export default function HomeScreen() {
   }, [error]);
 
   useEffect(() => {
-    opacity.value = withTiming(0.1, { duration: 600 });
+    opacity.value = withTiming(0.9, { duration: 600 });
+
+    setTimeout(() => {
+      opacity.value = withTiming(0.1, { duration: 600 });
+    }, 600);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <ThemedView style={[coreStyles.container]}>
+    <ThemedView
+      style={[
+        coreStyles.container,
+        {
+          flex: 1,
+          height: 300,
+        },
+      ]}>
       <PageTitle title="" />
+
       <View
         style={[
           coreStyles.container,
           {
             marginTop: safeAreaContext?.top,
             backgroundColor: "transparent",
+            flex: 1,
+            zIndex: 2,
           },
         ]}>
-        <Animated.Image
-          source={Logo}
-          style={[
-            {
-              position: "absolute",
-              width: "80%",
-              height: "80%",
-              left: "10%",
-              top: "10%",
-              resizeMode: "contain",
-              opacity: 0.1,
-            },
-            animatedStyles,
-          ]}
-        />
         <RecentList
-          style={{ flexGrow: 1, backgroundColor: "transparent" }}
+          style={{
+            flexGrow: 1,
+            display: "flex",
+          }}
           onPress={(item: StoredText) => {
             setStoredText(item);
           }}
@@ -92,12 +93,9 @@ export default function HomeScreen() {
         />
       </View>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <View
-          style={[
-            spacingStyles.px5,
-            { marginBottom: 10, position: "relative" },
-          ]}>
+        style={{ flexShrink: 1, zIndex: 2 }}
+        behavior="padding">
+        <View style={[spacingStyles.px5, { marginBottom: 10 }]}>
           {error && (
             <Animated.View
               entering={FadeInDown.duration(200)}
@@ -171,41 +169,43 @@ export default function HomeScreen() {
                   id: Date.now().toString(),
                   text: textInput,
                   starred: false,
+                  order: storedTexts.recentTexts.length,
                 };
                 dispatch(createStoredText(newStoredText));
                 setStoredText(newStoredText);
               }
               setTextInput("");
             }}>
-            <View
+            <Text
               style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                display: "flex",
+                color: theme.colors.onPrimary,
+                fontSize: 18,
+                fontWeight: "bold",
                 flexGrow: 1,
-                gap: 5,
                 width: "100%",
+                textAlign: "center",
               }}>
-              <Ionicons
-                name="resize"
-                size={24}
-                style={{ marginRight: 5 }}
-                color={theme.colors.onPrimary}
-              />
-              <Text
-                style={{
-                  color: theme.colors.onPrimary,
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  fontSize: 18,
-                }}>
-                Show
-              </Text>
-            </View>
+              Show
+            </Text>
           </Button>
         </View>
       </KeyboardAvoidingView>
+      <Animated.Image
+        source={Logo}
+        style={[
+          {
+            position: "absolute",
+            width: "80%",
+            height: "80%",
+            left: "10%",
+            top: "10%",
+            resizeMode: "contain",
+            opacity: 0.1,
+            zIndex: 1,
+          },
+          animatedStyles,
+        ]}
+      />
     </ThemedView>
   );
 }

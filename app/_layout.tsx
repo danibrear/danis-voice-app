@@ -13,7 +13,11 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Platform, View } from "react-native";
-import { ThemeProvider as RNPThemeProvider } from "react-native-paper";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  PaperProvider,
+  ThemeProvider as RNPThemeProvider,
+} from "react-native-paper";
 import "react-native-reanimated";
 import { Provider as ReduxProvider } from "react-redux";
 export const unstable_settings = {
@@ -41,35 +45,43 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <ReduxProvider store={store}>
-        <RNPThemeProvider theme={colorScheme === "dark" ? darkTheme : theme}>
-          <View
-            style={{
-              display: "flex",
-              flex: 1,
-              backgroundColor:
-                colorScheme === "dark"
-                  ? darkTheme.colors.background
-                  : theme.colors.surfaceDisabled,
-            }}>
-            <PageTitle title="" />
-            <View
-              style={{
-                display: "flex",
-                flex: 1,
-                maxWidth: 600,
-                width: "100%",
-                alignSelf: "center",
-              }}>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              </Stack>
-            </View>
-          </View>
-        </RNPThemeProvider>
-      </ReduxProvider>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <GestureHandlerRootView>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <ReduxProvider store={store}>
+          <PaperProvider>
+            <RNPThemeProvider
+              theme={colorScheme === "dark" ? darkTheme : theme}>
+              <View
+                style={{
+                  display: "flex",
+                  flex: 1,
+                  backgroundColor:
+                    colorScheme === "dark"
+                      ? darkTheme.colors.background
+                      : theme.colors.surfaceDisabled,
+                }}>
+                <PageTitle title="" />
+                <View
+                  style={{
+                    display: "flex",
+                    flex: 1,
+                    maxWidth: 600,
+                    width: "100%",
+                    alignSelf: "center",
+                  }}>
+                  <Stack>
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack>
+                </View>
+              </View>
+            </RNPThemeProvider>
+          </PaperProvider>
+        </ReduxProvider>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

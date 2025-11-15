@@ -34,7 +34,6 @@ export const listStyles = StyleSheet.create({
   },
   listItem: {
     paddingHorizontal: 5,
-    paddingVertical: 10,
     fontSize: 20,
     fontWeight: "bold",
   },
@@ -45,6 +44,7 @@ export const listStyles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "bold",
+    flexGrow: 1,
   },
   hiddenContainer: {
     flexDirection: "row",

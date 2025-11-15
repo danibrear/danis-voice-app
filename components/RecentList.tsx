@@ -1,20 +1,41 @@
 import { RootState } from "@/store";
-import { removeText, starText, unstarText } from "@/store/storedTexts";
+import {
+  removeText,
+  starText,
+  unstarText,
+  updatedStoredTextValue,
+  updateStoredText,
+} from "@/store/storedTexts";
 import { listStyles } from "@/styles";
 import { StoredText } from "@/types/StoredText";
-import { useEffect, useRef, useState } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
+  RefreshControl,
   Text,
   TouchableOpacity,
   useColorScheme,
   View,
   ViewStyle,
 } from "react-native";
-import { Icon, IconButton, List, useTheme } from "react-native-paper";
+import DraggableFlatList, {
+  ScaleDecorator,
+} from "react-native-draggable-flatlist";
+import {
+  Button,
+  Card,
+  Icon,
+  List,
+  Menu,
+  Modal,
+  useTheme,
+} from "react-native-paper";
 import Animated, { FadeInUp } from "react-native-reanimated";
-import { SwipeListView } from "react-native-swipe-list-view";
 import { useDispatch, useSelector } from "react-redux";
+import CustomMenu from "./CustomMenu";
+import EditStoredTextDialog from "./EditStoredTextDialog";
+
 export default function RecentList({
   starred,
   onPress,
@@ -33,8 +54,20 @@ export default function RecentList({
   const colorScheme = useColorScheme();
 
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === "dark");
+  const [isLongPressing, setIsLongPressing] = useState(false);
 
-  const listRef = useRef<SwipeListView<StoredText>>(null);
+  const [selectedStoredText, setSelectedStoredText] =
+    useState<StoredText | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [isChangingColorScheme, setIsChangingColorScheme] = useState(false);
 
@@ -46,15 +79,59 @@ export default function RecentList({
     }, 100);
   }, [colorScheme]);
 
-  const shownTexts = recentTexts.filter((f) => {
+  const filteredTexts = recentTexts.filter((f) => {
     if (starred) {
       return f.starred;
     }
     return true;
   });
+  const shownTexts = filteredTexts.sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0),
+  );
+  const parentRef = useRef<View>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handlePressItem = useCallback(
+    (item: StoredText) => {
+      if (isLongPressing) {
+        return;
+      }
+      Keyboard.dismiss();
+      onPress(item);
+    },
+    [isLongPressing, onPress],
+  );
+
+  const handleReorderStoredTexts = (newOrder: StoredText[]) => {
+    try {
+      setIsUpdating(true);
+      const updatedWithOrder = newOrder.map((text, index) => ({
+        ...text,
+        order: index,
+      }));
+      // Dispatch updates for each stored text
+      updatedWithOrder.forEach((text) => {
+        dispatch(updateStoredText(text));
+      });
+    } catch (error) {
+      console.error("Error updating stored texts order:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
-    <View style={style}>
+    <View
+      ref={parentRef}
+      style={style}
+      key="recent-list-container"
+      onTouchStart={(e) => {
+        if (isLongPressing) {
+          e.stopPropagation();
+          e.preventDefault();
+          setIsLongPressing(false);
+        }
+      }}>
       {shownTexts.length === 0 && (
         <View style={[listStyles.emptyContainer]}>
           <Animated.View
@@ -109,34 +186,71 @@ export default function RecentList({
           </Animated.View>
         </View>
       )}
+      <View
+        style={{
+          flexDirection: "row",
+          paddingHorizontal: 10,
+          justifyContent: "flex-end",
+          gap: 5,
+        }}>
+        {selectedIds.length > 0 && (
+          <Button
+            mode="contained"
+            buttonColor={theme.colors.error}
+            onPress={() => {
+              selectedIds.forEach((id) => {
+                dispatch(removeText(id));
+              });
+              setSelectedIds([]);
+            }}>
+            Delete ({selectedIds.length})
+          </Button>
+        )}
+        {isSelecting && (
+          <Button
+            mode="contained"
+            onPress={() => {
+              setIsSelecting(false);
+            }}>
+            <MaterialIcons name="close" size={20} />
+          </Button>
+        )}
+        {!isSelecting && (
+          <Button
+            mode="contained"
+            onPress={() => {
+              setIsSelecting(true);
+            }}>
+            Select
+          </Button>
+        )}
+      </View>
       {!isChangingColorScheme && shownTexts.length > 0 && (
-        <SwipeListView
-          ref={listRef}
+        <DraggableFlatList
           keyboardShouldPersistTaps="handled"
-          style={{
-            display: "flex",
+          containerStyle={{
             flexGrow: 1,
             backgroundColor: "transparent",
           }}
+          refreshControl={
+            <RefreshControl
+              onRefresh={() => {
+                setIsRefreshing(true);
+                setTimeout(() => {
+                  setIsRefreshing(false);
+                }, 1000);
+              }}
+              refreshing={isRefreshing}
+            />
+          }
+          onDragEnd={({ data }) => {
+            handleReorderStoredTexts(data);
+            setIsDragging(false);
+          }}
+          scrollEnabled={!isDragging && !isUpdating}
           data={shownTexts}
           keyExtractor={(item) => item.id}
-          rightOpenValue={-75}
-          renderHiddenItem={({ item }) => {
-            return (
-              <View style={listStyles.hiddenContainer}>
-                <IconButton
-                  icon="trash-can-outline"
-                  iconColor="#c93c3c"
-                  size={50}
-                  onPress={() => {
-                    dispatch(removeText(item.id));
-                  }}
-                  style={[listStyles.iconButtonDelete]}
-                />
-              </View>
-            );
-          }}
-          renderItem={({ item }) => {
+          renderItem={({ item, drag, isActive }) => {
             const icon = item.starred ? "star" : "star-outline";
             const color = item.starred ? theme.colors.tertiary : undefined;
 
@@ -153,9 +267,84 @@ export default function RecentList({
                   },
                 ]}
                 titleStyle={listStyles.title}
-                title={item.text}
-                onPress={() => {
-                  onPress(item);
+                title={() => {
+                  return (
+                    <TouchableOpacity
+                      disabled={isActive || isUpdating}
+                      onLongPress={(e) => {
+                        const { pageX, pageY } = e.nativeEvent;
+                        setMenuAnchor({ x: pageX, y: pageY });
+                        setIsLongPressing(true);
+                        setSelectedStoredText(item);
+                      }}>
+                      <Text style={listStyles.title}>{item.text}</Text>
+                    </TouchableOpacity>
+                  );
+                }}
+                onPress={
+                  isLongPressing
+                    ? undefined
+                    : () => {
+                        handlePressItem(item);
+                      }
+                }
+                left={(props) => {
+                  if (!isSelecting) {
+                    return (
+                      <ScaleDecorator>
+                        <TouchableOpacity
+                          disabled={isActive}
+                          onLongPress={() => {
+                            setIsDragging(true);
+                            drag();
+                          }}
+                          onPressOut={() => {
+                            setIsDragging(false);
+                          }}
+                          onPressIn={() => {
+                            setIsDragging(true);
+                            drag();
+                          }}
+                          style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                            paddingHorizontal: 5,
+                            margin: 0,
+                          }}>
+                          <MaterialIcons
+                            name="drag-indicator"
+                            size={25}
+                            {...props}
+                          />
+                        </TouchableOpacity>
+                      </ScaleDecorator>
+                    );
+                  }
+
+                  return (
+                    <TouchableOpacity
+                      onPress={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (selectedIds.includes(item.id)) {
+                          setSelectedIds((prev) =>
+                            prev.filter((id) => id !== item.id),
+                          );
+                        } else {
+                          setSelectedIds((prev) => [...prev, item.id]);
+                        }
+                      }}>
+                      <MaterialIcons
+                        name={
+                          selectedIds.includes(item.id)
+                            ? "check-box"
+                            : "check-box-outline-blank"
+                        }
+                        size={25}
+                        {...props}
+                      />
+                    </TouchableOpacity>
+                  );
                 }}
                 right={() => (
                   <TouchableOpacity
@@ -175,6 +364,123 @@ export default function RecentList({
           }}
         />
       )}
+      <CustomMenu
+        visible={isLongPressing}
+        menuAnchor={menuAnchor}
+        theme={theme}
+        parentRef={parentRef}
+        setIsLongPressing={setIsLongPressing}>
+        <Menu.Item
+          leadingIcon={(props) => (
+            <Icon
+              {...props}
+              color={theme.colors.primary}
+              source="pencil-outline"
+            />
+          )}
+          titleStyle={{ color: theme.colors.primary }}
+          onPress={() => {
+            setIsEditing(true);
+          }}
+          title="Edit"
+        />
+        <Menu.Item
+          leadingIcon={(props) => (
+            <Icon
+              {...props}
+              color={theme.colors.error}
+              source="trash-can-outline"
+            />
+          )}
+          titleStyle={{ color: theme.colors.error }}
+          onPress={() => {
+            setIsDeleting(true);
+          }}
+          title="Delete"
+        />
+        <Menu.Item
+          leadingIcon={(props) => (
+            <Icon
+              {...props}
+              color={theme.colors.onSurface}
+              source="close-circle-outline"
+            />
+          )}
+          titleStyle={{ color: theme.colors.onSurface }}
+          onPress={() => {
+            setIsLongPressing(false);
+          }}
+          title="Cancel"
+        />
+      </CustomMenu>
+
+      <EditStoredTextDialog
+        storedText={selectedStoredText}
+        isEditing={isEditing}
+        setIsEditing={(editing) => {
+          if (!editing) {
+            setSelectedStoredText(null);
+          }
+        }}
+        onCancel={() => {
+          setIsEditing(false);
+          setIsLongPressing(false);
+        }}
+        setText={(text) => {
+          if (selectedStoredText) {
+            dispatch(
+              updatedStoredTextValue({
+                id: selectedStoredText.id,
+                value: text,
+              }),
+            );
+          }
+        }}
+      />
+      <Modal visible={isDeleting} onDismiss={() => setIsDeleting(false)}>
+        <Card
+          style={{
+            marginHorizontal: 20,
+          }}>
+          <Card.Content>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 20,
+                color: theme.colors.onSurface,
+              }}>
+              Are you sure you want to delete this phrase?
+            </Text>
+          </Card.Content>
+          <Card.Actions
+            style={{
+              flexDirection: "row-reverse",
+              justifyContent: "flex-start",
+            }}>
+            <Button
+              icon="close-circle-outline"
+              onPress={() => {
+                setIsDeleting(false);
+                setIsLongPressing(false);
+              }}>
+              No
+            </Button>
+            <Button
+              icon="check-circle-outline"
+              buttonColor={theme.colors.error}
+              onPress={() => {
+                if (selectedStoredText) {
+                  dispatch(removeText(selectedStoredText.id));
+                }
+                setIsDeleting(false);
+                setIsLongPressing(false);
+              }}>
+              Yes
+            </Button>
+          </Card.Actions>
+        </Card>
+      </Modal>
     </View>
   );
 }

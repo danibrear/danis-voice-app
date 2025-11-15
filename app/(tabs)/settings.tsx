@@ -61,10 +61,10 @@ export default function Settings() {
                       labelStyle={{ fontWeight: "bold", fontSize: 20 }}
                       mode="contained"
                       onPress={() => {
-                        dispatch(setPitch(preferences.speechPitch + 0.1));
+                        dispatch(setPitch(preferences.speechPitch - 0.1));
                       }}>
                       <MaterialIcons
-                        name="arrow-upward"
+                        name="arrow-downward"
                         size={20}
                         color={theme.colors.onPrimary}
                       />
@@ -73,10 +73,10 @@ export default function Settings() {
                       labelStyle={{ fontWeight: "bold", fontSize: 20 }}
                       mode="contained"
                       onPress={() => {
-                        dispatch(setPitch(preferences.speechPitch - 0.1));
+                        dispatch(setPitch(preferences.speechPitch + 0.1));
                       }}>
                       <MaterialIcons
-                        name="arrow-downward"
+                        name="arrow-upward"
                         size={20}
                         color={theme.colors.onPrimary}
                       />
@@ -108,10 +108,10 @@ export default function Settings() {
                       labelStyle={{ fontWeight: "bold", fontSize: 20 }}
                       mode="contained"
                       onPress={() => {
-                        dispatch(setRate(preferences.speechRate + 0.1));
+                        dispatch(setRate(preferences.speechRate - 0.1));
                       }}>
                       <MaterialIcons
-                        name="arrow-upward"
+                        name="arrow-downward"
                         size={20}
                         color={theme.colors.onPrimary}
                       />
@@ -120,10 +120,10 @@ export default function Settings() {
                       labelStyle={{ fontWeight: "bold", fontSize: 20 }}
                       mode="contained"
                       onPress={() => {
-                        dispatch(setRate(preferences.speechRate - 0.1));
+                        dispatch(setRate(preferences.speechRate + 0.1));
                       }}>
                       <MaterialIcons
-                        name="arrow-downward"
+                        name="arrow-upward"
                         size={20}
                         color={theme.colors.onPrimary}
                       />

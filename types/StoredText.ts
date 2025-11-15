@@ -3,4 +3,5 @@ export type StoredText = {
   text: string;
   starred: boolean;
   fontSize?: number | null;
+  order?: number | null;
 };

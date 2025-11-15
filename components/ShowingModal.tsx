@@ -5,13 +5,7 @@ import { formStyles } from "@/styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as Speech from "expo-speech";
-import {
-  Button,
-  Dialog,
-  IconButton,
-  TextInput,
-  useTheme,
-} from "react-native-paper";
+import { Button, IconButton, useTheme } from "react-native-paper";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { RootState } from "@/store";
@@ -20,11 +14,9 @@ import { AudioModule } from "expo-audio";
 import { useDispatch, useSelector } from "react-redux";
 
 import * as colors from "@/constants/colorPatterns";
-import {
-  setStoredTextFontSize,
-  updatedStoredTextValue,
-} from "@/store/storedTexts";
+import { setStoredTextFontSize } from "@/store/storedTexts";
 import { StoredText } from "@/types/StoredText";
+import EditStoredTextDialog from "./EditStoredTextDialog";
 
 const WIDTH = Dimensions.get("window").width;
 
@@ -52,7 +44,6 @@ export default function ShowingModal({
 
   const [text, setText] = useState<string>(storedText?.text || "");
 
-  const [newText, setNewText] = useState<string>(storedText?.text || "");
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const [numLines, setNumLines] = useState<number>(6);
@@ -75,7 +66,6 @@ export default function ShowingModal({
   const dispatch = useDispatch();
 
   useEffect(() => {
-    setNewText(storedText ? storedText.text || "" : "");
     setText(storedText ? storedText.text || "" : "");
   }, [storedText]);
 
@@ -553,45 +543,12 @@ export default function ShowingModal({
           )}
         </View>
       </View>
-      <Dialog
-        visible={isEditing}
-        onDismiss={() => {
-          setIsEditing(false);
-        }}>
-        <Dialog.Content>
-          <TextInput
-            mode="outlined"
-            value={newText}
-            onChangeText={setNewText}
-          />
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button
-            mode="contained"
-            style={{ paddingHorizontal: 15 }}
-            onPress={() => {
-              setIsEditing(false);
-              setText(newText);
-              if (storedText) {
-                dispatch(
-                  updatedStoredTextValue({
-                    id: storedText?.id,
-                    value: newText,
-                  }),
-                );
-              }
-            }}>
-            Save
-          </Button>
-          <Button
-            onPress={() => {
-              setIsEditing(false);
-              setNewText(storedText ? storedText.text || "" : "");
-            }}>
-            Cancel
-          </Button>
-        </Dialog.Actions>
-      </Dialog>
+      <EditStoredTextDialog
+        storedText={storedText}
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
+        setText={setText}
+      />
     </Modal>
   );
 }
