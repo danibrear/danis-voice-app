@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from "react";
-import { Modal, Platform, Text, View } from "react-native";
+import { Dimensions, Modal, Platform, Text, View } from "react-native";
 
 import { formStyles } from "@/styles";
 import * as Speech from "expo-speech";
@@ -16,15 +16,7 @@ import { calculateWidthOfWord } from "@/utils/fontSize";
 import { AudioModule } from "expo-audio";
 import { useSelector } from "react-redux";
 
-const colors = [
-  "#EF4444",
-  "#F59E0B",
-  "#EAB308",
-  "#10B981",
-  "#3B82F6",
-  "#8B5CF6",
-  "#EC4899",
-];
+const WIDTH = Dimensions.get("window").width;
 
 export default function ShowingModal({
   text,
@@ -58,54 +50,46 @@ export default function ShowingModal({
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
   const [flashOn, setFlashOn] = useState<boolean>(false);
 
-  const calcFontSize = useCallback(
-    (len: number) => {
-      if (isWeb) {
-        if (!text) {
-          return 100;
-        }
-        if (text.length > 100) {
-          return 40;
-        } else if (text.length > 75) {
-          return 50;
-        } else if (text.length > 20) {
-          return 60;
-        } else if (text.length > 10) {
-          return 75;
-        } else if (text.length > 5) {
-          return 90;
-        }
-        return 100;
-      }
-      if (len > 10) {
-        return 35;
-      }
-      if (len > 7) {
-        return 50;
-      }
-      if (len > 5) {
-        return 65;
-      }
-      return 100;
-    },
-    [isWeb, text],
-  );
-
   useEffect(() => {
-    const words = text ? text.split(/\s+/) : [];
+    if (!text) {
+      return;
+    }
+    const words = text.split(/\s+/);
     const numWords = words.length;
-    const lines = Math.min(numWords, 8);
-    setNumLines(lines);
     let longest = 0;
+    let width = 0;
     words.forEach((word) => {
       const len = calculateWidthOfWord(word, 100);
+      width += len;
       if (len > longest) {
         longest = len;
       }
     });
-    setFontSize(calcFontSize(longest / 100));
-    setDefaultFontSize(calcFontSize(longest / 100));
-  }, [calcFontSize, text]);
+    const averageWordLength = width / 100 / numWords;
+    let lines = 8;
+    const len = numWords * averageWordLength;
+    let webFontSizeAdjustment = isWeb ? 1 : 0;
+    if (len < 10) {
+      lines = 3;
+      webFontSizeAdjustment *= 20;
+    } else if (len < 20) {
+      lines = 4;
+      webFontSizeAdjustment *= 30;
+    } else if (len < 30) {
+      lines = 6;
+      webFontSizeAdjustment *= 40;
+    } else if (len < 40) {
+      lines = 8;
+      webFontSizeAdjustment *= 50;
+    }
+    setNumLines(lines);
+    longest = Math.min(longest, WIDTH * 2);
+    const fs =
+      Math.floor(100 * (WIDTH / longest)) -
+      (averageWordLength + webFontSizeAdjustment);
+    setFontSize(Math.min(100, fs));
+    setDefaultFontSize(fs);
+  }, [text, isWeb]);
 
   useEffect(() => {
     if (!isWeb) {
@@ -153,26 +137,6 @@ export default function ShowingModal({
     };
   }, [isFlashing]);
 
-  const getFloatingButtonPosition = () => {
-    if (isPortrait) {
-      return {
-        top: safeAreaContext?.top || 40,
-        right: safeAreaContext?.right || 20,
-        left: safeAreaContext?.left || 20,
-      };
-    }
-
-    return {
-      top: safeAreaContext?.left || 20,
-      right: safeAreaContext?.bottom || 20,
-      left: safeAreaContext?.top || 40,
-    };
-  };
-
-  const { top, right } = getFloatingButtonPosition();
-
-  const [colorIndex, setColorIndex] = useState<number>(0);
-
   const handleDone = useCallback(() => {
     setHighlight({
       start: 0,
@@ -196,13 +160,6 @@ export default function ShowingModal({
     }, 50);
     return () => clearInterval(checkSpeaking);
   }, [isSpeaking, handleDone]);
-
-  useEffect(() => {
-    if (!isSpeaking) {
-      return;
-    }
-    setColorIndex((prev) => (prev + 1) % colors.length);
-  }, [highlight, isSpeaking]);
 
   const renderPlayPause = () => {
     const buttons = [];
@@ -359,8 +316,8 @@ export default function ShowingModal({
               flexDirection: "column",
               gap: 2,
               position: "absolute",
-              top,
-              left: right,
+              top: 0,
+              left: 5,
               zIndex: 10,
             }}>
             <IconButton
@@ -381,8 +338,8 @@ export default function ShowingModal({
               flexDirection: "column",
               gap: 2,
               position: "absolute",
-              top,
-              right,
+              top: 0,
+              right: 5,
               zIndex: 10,
             }}>
             <IconButton
@@ -426,22 +383,16 @@ export default function ShowingModal({
               numberOfLines={numLines}
               minimumFontScale={0.5}
               style={{
-                flexShrink: 1,
                 fontSize: fontSize,
                 width: "98%",
                 fontWeight: "bold",
                 textAlign: "center",
-                verticalAlign: "middle",
                 color: isFlashing ? (flashOn ? "white" : "black") : "white",
-              }}
-              textBreakStrategy="balanced">
+              }}>
               {text?.slice(0, highlight.start)}
               <Text
                 style={{
-                  color: colors[colorIndex],
-                  textShadowColor: colors[colorIndex],
-                  textShadowRadius: 2,
-                  textShadowOffset: { width: 1, height: 1 },
+                  color: theme.colors.tertiary,
                 }}>
                 {text?.slice(highlight.start, highlight.end)}
               </Text>
