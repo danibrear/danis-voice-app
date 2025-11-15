@@ -62,6 +62,29 @@ export const storedTextsSlice = createSlice({
       }
     },
 
+    setStoredTextFontSize: (
+      state,
+      action: PayloadAction<{ id: string; fontSize: number | null }>,
+    ) => {
+      const index = state.recentTexts.findIndex(
+        (t) => t.id === action.payload.id,
+      );
+      console.log(
+        "Setting font size for text id:",
+        action.payload.id,
+        "to",
+        action.payload.fontSize,
+        index,
+      );
+      if (index !== -1) {
+        if (action.payload.fontSize === null) {
+          delete state.recentTexts[index].fontSize;
+          return;
+        }
+        state.recentTexts[index].fontSize = action.payload.fontSize;
+      }
+    },
+
     clearValues: () => {
       return initialState;
     },
@@ -77,6 +100,7 @@ export const {
   addStoredText,
   updateStoredText,
   removeText,
+  setStoredTextFontSize,
 } = storedTextsSlice.actions;
 
 export default storedTextsSlice.reducer;

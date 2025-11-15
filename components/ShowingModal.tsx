@@ -4,32 +4,37 @@ import { Dimensions, Modal, Platform, Text, View } from "react-native";
 import { formStyles } from "@/styles";
 import * as Speech from "expo-speech";
 import { Button, IconButton, useTheme } from "react-native-paper";
-import {
-  SafeAreaInsetsContext,
-  SafeAreaView,
-} from "react-native-safe-area-context";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import * as ScreenOrientation from "expo-screen-orientation";
 
 import { RootState } from "@/store";
 import { calculateWidthOfWord } from "@/utils/fontSize";
 import { AudioModule } from "expo-audio";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+
+import * as colors from "@/constants/colorPatterns";
+import { setStoredTextFontSize } from "@/store/storedTexts";
+import { StoredText } from "@/types/StoredText";
 
 const WIDTH = Dimensions.get("window").width;
 
 export default function ShowingModal({
+  storedText,
   text,
   onDone,
 }: {
+  storedText: StoredText | null;
   text?: string | null;
   onDone: () => void;
 }) {
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
-  const [fontSize, setFontSize] = useState<number>(100);
-  const [defaultFontSize, setDefaultFontSize] = useState<number>(100);
+  const [fontSize, setFontSize] = useState<number>(storedText?.fontSize || 100);
+  const [defaultFontSize, setDefaultFontSize] = useState<number>(
+    storedText?.fontSize || 100,
+  );
 
   const [highlight, setHighlight] = useState<{ start: number; end: number }>({
     start: 0,
@@ -49,6 +54,43 @@ export default function ShowingModal({
 
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
   const [flashOn, setFlashOn] = useState<boolean>(false);
+
+  const [colorIndex, setColorIndex] = useState<number>(-1);
+  const [highlightColor, setHighlightColor] = useState<string>(
+    theme.colors.tertiary,
+  );
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (
+      !isSpeaking ||
+      !preferences.colors ||
+      highlight.start === highlight.end
+    ) {
+      return;
+    }
+    setColorIndex(
+      (idx) => (idx + 1) % (preferences.colors ? preferences.colors.length : 1),
+    );
+  }, [isSpeaking, highlight, preferences.colors]);
+
+  useEffect(() => {
+    const pattern = preferences.colors;
+    const allColors = colors.allColors;
+    if (pattern && allColors) {
+      const colorsForPattern = allColors.find(
+        (c) => c.name === pattern,
+      )?.colors;
+      if (!colorsForPattern) {
+        setHighlightColor(theme.colors.tertiary);
+        return;
+      }
+      setHighlightColor(colorsForPattern[colorIndex % colorsForPattern.length]);
+      return;
+    }
+    setHighlightColor(theme.colors.tertiary);
+  }, [colorIndex, preferences.colors, theme.colors.tertiary]);
 
   useEffect(() => {
     if (!text) {
@@ -87,9 +129,12 @@ export default function ShowingModal({
     const fs =
       Math.floor(100 * (WIDTH / longest)) -
       (averageWordLength + webFontSizeAdjustment);
-    setFontSize(Math.min(100, fs));
-    setDefaultFontSize(fs);
-  }, [text, isWeb]);
+    const minFs = Math.min(100, fs);
+    if (!storedText?.fontSize) {
+      setFontSize(minFs);
+    }
+    setDefaultFontSize(minFs);
+  }, [text, storedText?.fontSize, isWeb]);
 
   useEffect(() => {
     if (!isWeb) {
@@ -136,6 +181,14 @@ export default function ShowingModal({
       }
     };
   }, [isFlashing]);
+
+  const handleSetFontSize = async (size: number | null) => {
+    setFontSize(size || defaultFontSize);
+    if (!storedText) {
+      return;
+    }
+    dispatch(setStoredTextFontSize({ id: storedText?.id, fontSize: size }));
+  };
 
   const handleDone = useCallback(() => {
     setHighlight({
@@ -215,6 +268,7 @@ export default function ShowingModal({
           labelStyle={formStyles.bigButton}
           onPress={() => {
             setIsSpeaking(true);
+            setColorIndex(-1);
             AudioModule.setAudioModeAsync({
               playsInSilentMode: true,
             });
@@ -290,17 +344,19 @@ export default function ShowingModal({
         backgroundColor: "transparent",
         alignSelf: "center",
       }}>
-      <SafeAreaView
+      <View
         style={{
           flex: 1,
           alignSelf: "center",
           width: "100%",
+
           backgroundColor: isFlashing
             ? flashOn
               ? "rgba(0,0,0,.9)"
               : "transparent"
             : "rgba(0,0,0,.9)",
-          paddingTop: safeAreaContext?.top,
+
+          paddingTop: isPortrait ? safeAreaContext?.top : 5,
           paddingBottom: safeAreaContext?.bottom,
           position: "relative",
         }}>
@@ -317,7 +373,7 @@ export default function ShowingModal({
               gap: 2,
               position: "absolute",
               top: 0,
-              left: 5,
+              left: isPortrait ? 5 : safeAreaContext?.top,
               zIndex: 10,
             }}>
             <IconButton
@@ -339,7 +395,7 @@ export default function ShowingModal({
               gap: 2,
               position: "absolute",
               top: 0,
-              right: 5,
+              right: isPortrait ? 5 : safeAreaContext?.top,
               zIndex: 10,
             }}>
             <IconButton
@@ -347,7 +403,7 @@ export default function ShowingModal({
               containerColor={theme.colors.tertiary}
               iconColor="white"
               size={22}
-              onPress={() => setFontSize((size) => Math.min(150, size + 5))}
+              onPress={() => handleSetFontSize(Math.min(150, fontSize + 5))}
               mode="contained"
             />
             <IconButton
@@ -355,7 +411,7 @@ export default function ShowingModal({
               size={22}
               containerColor={theme.colors.tertiary}
               iconColor="white"
-              onPress={() => setFontSize((size) => Math.max(20, size - 5))}
+              onPress={() => handleSetFontSize(Math.max(20, fontSize - 5))}
               mode="contained"
             />
             {fontSize !== defaultFontSize && (
@@ -364,7 +420,7 @@ export default function ShowingModal({
                 size={22}
                 containerColor={theme.dark ? "#fff" : "#333"}
                 iconColor={theme.colors.tertiary}
-                onPress={() => setFontSize(defaultFontSize)}
+                onPress={() => handleSetFontSize(null)}
                 mode="contained"
               />
             )}
@@ -392,7 +448,13 @@ export default function ShowingModal({
               {text?.slice(0, highlight.start)}
               <Text
                 style={{
-                  color: theme.colors.tertiary,
+                  color:
+                    highlightColor === "#ffffff" ? "black" : highlightColor,
+                  backgroundColor:
+                    highlightColor === "#ffffff"
+                      ? highlightColor
+                      : "transparent",
+                  borderRadius: 10,
                 }}>
                 {text?.slice(highlight.start, highlight.end)}
               </Text>
@@ -443,7 +505,7 @@ export default function ShowingModal({
             </View>
           )}
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }

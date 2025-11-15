@@ -8,6 +8,8 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 export default function TabTwoScreen() {
   const [showText, setShowText] = useState<string | null>(null);
   const safeAreaContext = useContext(SafeAreaInsetsContext);
+
+  const [storedText, setStoredText] = useState<StoredText | null>(null);
   return (
     <View style={coreStyles.container}>
       <View
@@ -22,9 +24,11 @@ export default function TabTwoScreen() {
           style={{ flexGrow: 1 }}
           onPress={(item: StoredText) => {
             setShowText(item.text);
+            setStoredText(item);
           }}
         />
         <ShowingModal
+          storedText={storedText}
           text={showText}
           onDone={() => {
             setShowText(null);

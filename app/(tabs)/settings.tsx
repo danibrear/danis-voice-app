@@ -1,9 +1,17 @@
+import { allColors } from "@/constants/colorPatterns";
 import { RootState } from "@/store";
-import { setPitch, setRate } from "@/store/preferences";
+import { setColors, setPitch, setRate } from "@/store/preferences";
 import { coreStyles } from "@/styles";
 import * as WebBrowser from "expo-web-browser";
 import { TouchableOpacity, View } from "react-native";
-import { Button, Divider, Icon, Text, useTheme } from "react-native-paper";
+import {
+  Button,
+  Checkbox,
+  Divider,
+  Icon,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -14,10 +22,10 @@ export default function Settings() {
   return (
     <View style={coreStyles.container}>
       <SafeAreaView style={coreStyles.container}>
-        <View style={{ padding: 20 }}>
+        <View style={{ padding: 10 }}>
           <Text
             style={{
-              fontSize: 30,
+              fontSize: 25,
               marginBottom: 10,
             }}>
             Pitch: {(preferences.speechPitch * 100).toFixed(0)}%
@@ -47,10 +55,10 @@ export default function Settings() {
               Pitch Up
             </Button>
           </View>
-          <Divider style={{ marginVertical: 30 }} />
+          <Divider style={{ marginVertical: 10 }} />
           <Text
             style={{
-              fontSize: 30,
+              fontSize: 25,
               marginBottom: 10,
             }}>
             Rate: {(preferences.speechRate * 100).toFixed(0)}%
@@ -80,6 +88,94 @@ export default function Settings() {
               Rate Up
             </Button>
           </View>
+          <Divider style={{ marginVertical: 10 }} />
+          <Text style={{ fontWeight: "bold" }}>
+            What Colors would you like for the highlight?
+          </Text>
+          {allColors.map(({ name, colors }, index) => (
+            <TouchableOpacity
+              key={`color-pattern-${index}`}
+              onPress={() => {
+                dispatch(setColors(name));
+              }}
+              style={{
+                marginTop: 10,
+                padding: 10,
+                borderRadius: 10,
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 5,
+                backgroundColor: theme.colors.surface,
+              }}>
+              <Checkbox.Android
+                status={preferences.colors === name ? "checked" : "unchecked"}
+              />
+              <View
+                style={{
+                  width: 1,
+                  height: 20,
+                  marginRight: 5,
+                  backgroundColor: theme.colors.onSurface,
+                }}
+              />
+              <View style={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                {colors.map((colorPattern, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      backgroundColor: colorPattern,
+                      borderColor: colorPattern.includes("#fff")
+                        ? "#aaa"
+                        : "transparent",
+                      borderWidth: 1,
+                      height: 20,
+                      width: 20,
+                    }}
+                  />
+                ))}
+              </View>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            onPress={() => {
+              dispatch(setColors("default"));
+            }}
+            style={{
+              marginTop: 10,
+              padding: 10,
+              borderRadius: 10,
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 5,
+              backgroundColor: theme.colors.surface,
+            }}>
+            <Checkbox.Android
+              status={
+                !preferences.colors || preferences.colors === "default"
+                  ? "checked"
+                  : "unchecked"
+              }
+            />
+            <View
+              style={{
+                width: 1,
+                height: 20,
+                marginRight: 5,
+                backgroundColor: theme.colors.onSurface,
+              }}
+            />
+            <View
+              style={{
+                backgroundColor: theme.colors.tertiary,
+                height: 20,
+                width: 20,
+              }}
+            />
+          </TouchableOpacity>
         </View>
         <View
           style={{

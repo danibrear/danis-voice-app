@@ -7,6 +7,7 @@ export type PreferencesState = {
   speechRate: number;
   speechPitch: number;
   preferredVoice?: string;
+  colors?: string;
 };
 
 const initialState: PreferencesState = {
@@ -41,6 +42,10 @@ export const preferencesSlice = createSlice({
       state.darkModeEnabled = action.payload;
     },
 
+    setColors: (state, action: PayloadAction<string>) => {
+      state.colors = action.payload;
+    },
+
     clearValues: () => {
       return initialState;
     },
@@ -55,6 +60,7 @@ export const {
   setRate,
   setPreferredVoice,
   setDarkmodeEnabled,
+  setColors,
 } = preferencesSlice.actions;
 
 export default preferencesSlice.reducer;

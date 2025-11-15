@@ -28,6 +28,7 @@ export default function HomeScreen() {
   const dispatch = useDispatch();
   const theme = useTheme();
   const [error, setError] = useState<string | null>(null);
+  const [storedText, setStoredText] = useState<StoredText | null>(null);
 
   const safeAreaContext = useContext(SafeAreaInsetsContext);
   const opacity = useSharedValue(0.5);
@@ -79,9 +80,11 @@ export default function HomeScreen() {
           style={{ flexGrow: 1, backgroundColor: "transparent" }}
           onPress={(item: StoredText) => {
             setShowText(item.text);
+            setStoredText(item);
           }}
         />
         <ShowingModal
+          storedText={storedText}
           text={showText}
           onDone={() => {
             setShowText(null);
