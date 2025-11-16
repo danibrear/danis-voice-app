@@ -12,6 +12,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
+  Platform,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -83,6 +84,7 @@ export default function RecentList({
     }
     return true;
   });
+  const isWeb = Platform.OS === "web";
   const shownTexts = filteredTexts.sort(
     (a, b) => (a.order ?? 0) - (b.order ?? 0),
   );
@@ -321,17 +323,31 @@ export default function RecentList({
                   );
                 }}
                 right={() => (
-                  <TouchableOpacity
-                    onPress={() => {
-                      Keyboard.dismiss();
-                      if (item.starred) {
-                        dispatch(unstarText(item.id));
-                      } else {
-                        dispatch(starText(item.id));
-                      }
-                    }}>
-                    <List.Icon color={color} icon={icon} />
-                  </TouchableOpacity>
+                  <>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Keyboard.dismiss();
+                        if (item.starred) {
+                          dispatch(unstarText(item.id));
+                        } else {
+                          dispatch(starText(item.id));
+                        }
+                      }}>
+                      <List.Icon color={color} icon={icon} />
+                    </TouchableOpacity>
+                    {isWeb && (
+                      <TouchableOpacity
+                        style={{ marginLeft: 10 }}
+                        onPress={() => {
+                          dispatch(removeText(item.id));
+                        }}>
+                        <List.Icon
+                          color={theme.colors.onSurface}
+                          icon="trash-can-outline"
+                        />
+                      </TouchableOpacity>
+                    )}
+                  </>
                 )}
               />
             );

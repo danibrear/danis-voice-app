@@ -3,7 +3,7 @@ import { Dimensions, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type CustomMenuProps = {
+export type CustomMenuProps = {
   menuAnchor: { x: number; y: number } | null;
   setIsLongPressing: (value: boolean) => void;
   children?: React.ReactNode | React.ReactNode[];

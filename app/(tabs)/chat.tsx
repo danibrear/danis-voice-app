@@ -1,3 +1,4 @@
+import CrossView from "@/components/CrossView";
 import CustomMenu from "@/components/CustomMenu";
 import ThemedView from "@/components/themed/ThemedView";
 import { RootState } from "@/store";
@@ -6,7 +7,7 @@ import { coreStyles } from "@/styles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import * as Speech from "expo-speech";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
 import {
   Button,
@@ -31,6 +32,8 @@ export default function ChatPage() {
   const dispatch = useDispatch();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const parentRef = useRef(null);
 
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(
@@ -74,8 +77,17 @@ export default function ChatPage() {
 
   return (
     <ThemedView style={[coreStyles.container, { position: "relative" }]}>
-      <View
+      <CrossView
+        /* @ts-expect-error */
+        ref={parentRef}
         onTouchStart={(e) => {
+          if (menuMessageIdx !== null) {
+            e.stopPropagation();
+            e.preventDefault();
+            setMenuMessageIdx(null);
+          }
+        }}
+        onClick={(e) => {
           if (menuMessageIdx !== null) {
             e.stopPropagation();
             e.preventDefault();
@@ -204,7 +216,9 @@ export default function ChatPage() {
             </View>
           )}
         </View>
+        <Text>{menuMessageIdx}</Text>
         <CustomMenu
+          parentRef={parentRef}
           visible={menuMessageIdx !== null}
           menuAnchor={menuAnchor}
           setIsLongPressing={function (value: boolean): void {
@@ -235,7 +249,7 @@ export default function ChatPage() {
             title="Delete"
           />
         </CustomMenu>
-      </View>
+      </CrossView>
 
       <KeyboardAvoidingView
         behavior="padding"
