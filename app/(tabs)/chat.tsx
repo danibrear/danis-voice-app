@@ -182,38 +182,57 @@ export default function ChatPage() {
               }}>
               <IconButton
                 onPress={() => setAngle(90)}
+                mode={angle === 90 ? "contained" : undefined}
                 icon={(props) => (
-                  <MaterialIcons name="rotate-left" {...props} color="white" />
+                  <MaterialIcons
+                    name="rotate-left"
+                    {...props}
+                    color={angle === 90 ? theme.colors.tertiary : "white"}
+                  />
                 )}
                 size={30}
               />
               <IconButton
                 onPress={() => setAngle(180)}
+                mode={angle === 180 ? "contained" : undefined}
                 icon={(props) => (
-                  <MaterialIcons name="arrow-upward" {...props} color="white" />
+                  <MaterialIcons
+                    name="arrow-upward"
+                    {...props}
+                    color={angle === 180 ? theme.colors.tertiary : "white"}
+                  />
                 )}
                 size={30}
               />
               <IconButton
                 onPress={() => setAngle(0)}
+                mode={angle === 0 ? "contained" : undefined}
                 icon={(props) => (
                   <MaterialIcons
                     name="arrow-downward"
                     {...props}
-                    color="white"
+                    color={angle === 0 ? theme.colors.tertiary : "white"}
                   />
                 )}
                 size={30}
               />
               <IconButton
                 onPress={() => setAngle(-90)}
+                mode={angle === -90 ? "contained" : undefined}
                 icon={(props) => (
-                  <MaterialIcons name="rotate-right" {...props} color="white" />
+                  <MaterialIcons
+                    name="rotate-right"
+                    {...props}
+                    color={angle === -90 ? theme.colors.tertiary : "white"}
+                  />
                 )}
                 size={30}
               />
               <IconButton
-                onPress={() => setIsShowMode(false)}
+                onPress={() => {
+                  setIsShowMode(false);
+                  setAngle(0);
+                }}
                 icon={(props) => (
                   <MaterialIcons name="close" {...props} color="white" />
                 )}
