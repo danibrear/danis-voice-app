@@ -469,6 +469,7 @@ export default function ShowingModal({
               justifyContent: "center",
               alignContent: "center",
               flexGrow: 1,
+              flexDirection: "column",
             }}>
             {!!text && (
               <Text

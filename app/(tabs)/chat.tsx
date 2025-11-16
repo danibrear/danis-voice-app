@@ -40,6 +40,10 @@ export default function ChatPage() {
   const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(
     null,
   );
+  const [lastMessage, setLastMessage] = useState<string | null>(null);
+  const [isShowMode, setIsShowMode] = useState(false);
+
+  const [angle, setAngle] = useState(0);
 
   const handleSendMessage = async () => {
     if (input.trim() === "") {
@@ -50,6 +54,12 @@ export default function ChatPage() {
     setMessages(newMessages);
     setInput("");
   };
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      setLastMessage(messages[messages.length - 1]);
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (!isSpeaking || messages.length === 0) {
@@ -74,7 +84,27 @@ export default function ChatPage() {
       pitch: preferences.speechPitch,
       rate: preferences.speechRate,
     });
+    setLastMessage(message);
     setIsSpeaking(true);
+  };
+
+  const getFontSize = () => {
+    if (angle === 180) {
+      if (lastMessage) {
+        if (lastMessage.length > 100) {
+          return 25;
+        }
+        if (lastMessage.length > 50) {
+          return 30;
+        }
+        return 40;
+      }
+      return 50;
+    }
+    if (angle === 0) {
+      return 100;
+    }
+    return 80;
   };
 
   return (
@@ -103,6 +133,94 @@ export default function ChatPage() {
             marginBottom: 0,
           },
         ]}>
+        {isShowMode && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "black",
+              zIndex: 1000,
+              paddingTop: safeAreaInsets?.top,
+            }}>
+            <View
+              style={{
+                flexDirection: "column",
+                justifyContent: "center",
+                alignContent: "center",
+                alignItems: "center",
+                flex: 1,
+              }}>
+              <Text
+                adjustsFontSizeToFit={true}
+                numberOfLines={3}
+                allowFontScaling={true}
+                style={{
+                  transform: [
+                    { rotate: `${angle}deg` },
+                    { scaleY: angle === 180 ? 4 : 1 },
+                  ],
+                  color: "white",
+                  fontSize: getFontSize(),
+                  textAlign: "center",
+                  marginHorizontal: 10,
+                  fontWeight: "bold",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignContent: "center",
+                  alignItems: "center",
+                }}>
+                {input.trim().length === 0 ? lastMessage : input.trim()}
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around",
+              }}>
+              <IconButton
+                onPress={() => setAngle(90)}
+                icon={(props) => (
+                  <MaterialIcons name="rotate-left" {...props} color="white" />
+                )}
+                size={30}
+              />
+              <IconButton
+                onPress={() => setAngle(180)}
+                icon={(props) => (
+                  <MaterialIcons name="arrow-upward" {...props} color="white" />
+                )}
+                size={30}
+              />
+              <IconButton
+                onPress={() => setAngle(0)}
+                icon={(props) => (
+                  <MaterialIcons
+                    name="arrow-downward"
+                    {...props}
+                    color="white"
+                  />
+                )}
+                size={30}
+              />
+              <IconButton
+                onPress={() => setAngle(-90)}
+                icon={(props) => (
+                  <MaterialIcons name="rotate-right" {...props} color="white" />
+                )}
+                size={30}
+              />
+              <IconButton
+                onPress={() => setIsShowMode(false)}
+                icon={(props) => (
+                  <MaterialIcons name="close" {...props} color="white" />
+                )}
+              />
+            </View>
+          </View>
+        )}
         <View style={{ position: "absolute", bottom: 5, right: 5, zIndex: 3 }}>
           {isSpeaking && (
             <Button
@@ -176,12 +294,22 @@ export default function ChatPage() {
           )}
           {messages.length > 0 && (
             <View style={{ flex: 1 }}>
-              <View style={{ alignItems: "flex-start" }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}>
                 <Button
                   onPress={() => {
                     setMessages([]);
                   }}>
                   Clear Chat
+                </Button>
+                <Button
+                  onPress={() => {
+                    setIsShowMode(true);
+                  }}>
+                  Show Mode
                 </Button>
               </View>
 
