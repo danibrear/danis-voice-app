@@ -272,6 +272,7 @@ export default function ChatPage() {
             flexGrow: 1,
             alignItems: "center",
             flexWrap: "nowrap",
+            width: "100%",
           }}>
           <View style={{ flex: 1, marginBottom: 3 }}>
             <TextInput
