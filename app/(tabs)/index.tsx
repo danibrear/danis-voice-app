@@ -55,6 +55,7 @@ export default function HomeScreen() {
     }, 600);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   return (
     <ThemedView
       style={[

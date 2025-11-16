@@ -11,12 +11,16 @@ import { Stack } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import * as Updates from "expo-updates";
+import { useEffect, useState } from "react";
 import { Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
+  Button,
+  Dialog,
   PaperProvider,
   ThemeProvider as RNPThemeProvider,
+  Text,
 } from "react-native-paper";
 import "react-native-reanimated";
 import { Provider as ReduxProvider } from "react-redux";
@@ -34,6 +38,8 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
   useEffect(() => {
     if (Platform.OS === "web") {
       return;
@@ -42,6 +48,21 @@ export default function RootLayout() {
     setTimeout(() => {
       SplashScreen.hideAsync();
     }, 2000);
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      return;
+    }
+    const interval = setInterval(() => {
+      Updates.checkForUpdateAsync().then(async (update) => {
+        if (update.isAvailable) {
+          setUpdateAvailable(true);
+        }
+      });
+    }, 60 * 60 * 1000); // Check every hour
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -76,6 +97,33 @@ export default function RootLayout() {
                     />
                   </Stack>
                 </View>
+                <Dialog visible={updateAvailable}>
+                  <Dialog.Content>
+                    <Text>
+                      There is an update available. Please restart the app to
+                      apply the update.
+                    </Text>
+                  </Dialog.Content>
+                  <Dialog.Actions>
+                    <Button
+                      mode="contained"
+                      labelStyle={{
+                        fontSize: 14,
+                        fontWeight: "bold",
+                      }}
+                      onPress={async () => {
+                        try {
+                          setUpdateAvailable(false);
+                          await Updates.fetchUpdateAsync();
+                          await Updates.reloadAsync();
+                        } catch (e) {
+                          console.log("[ERROR] Error updating app:", e);
+                        }
+                      }}>
+                      RESTART
+                    </Button>
+                  </Dialog.Actions>
+                </Dialog>
               </View>
             </RNPThemeProvider>
           </PaperProvider>
