@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+// TODO: need to fix this once this has fully been removed
 import { Swipeable } from "react-native-gesture-handler";
 import { List, useTheme } from "react-native-paper";
 import { useDispatch } from "react-redux";
@@ -61,7 +62,7 @@ export default function RecentListItem({
     <Swipeable
       onEnded={(e) => {
         const endValue = e.nativeEvent.translationX as number;
-        if (endValue < -150) {
+        if (endValue < -100) {
           dispatch(removeText(item.id));
         }
       }}
