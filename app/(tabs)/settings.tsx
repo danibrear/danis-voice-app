@@ -262,15 +262,16 @@ export default function Settings() {
               <Text style={{ fontWeight: "bold", marginVertical: 5 }}>
                 What voice would you like to use?
               </Text>
-              {preferredVoice && (
-                <View
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 10,
-                  }}>
+
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                }}>
+                {preferredVoice && (
                   <Text
                     style={{
                       fontWeight: "bold",
@@ -280,15 +281,15 @@ export default function Settings() {
                     }}>
                     {preferredVoice.name} ({preferredVoice.language})
                   </Text>
-                  <Button
-                    onPress={() => {
-                      setIsChoosingVoice(true);
-                    }}>
-                    Change Voice
-                  </Button>
-                </View>
-              )}
-              {!preferredVoice && <Text>Using Default</Text>}
+                )}
+                {!preferredVoice && <Text>Using Default</Text>}
+                <Button
+                  onPress={() => {
+                    setIsChoosingVoice(true);
+                  }}>
+                  Change Voice
+                </Button>
+              </View>
             </View>
             <Divider style={{ marginVertical: 10 }} />
             <Text style={{ fontWeight: "bold", marginVertical: 5 }}>
