@@ -1,8 +1,6 @@
 import { RootState } from "@/store";
 import {
   removeText,
-  starText,
-  unstarText,
   updatedStoredTextValue,
   updateStoredText,
 } from "@/store/storedTexts";
@@ -12,29 +10,19 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
-  Platform,
   RefreshControl,
   Text,
-  TouchableOpacity,
   useColorScheme,
   View,
   ViewStyle,
 } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
-import {
-  Button,
-  Card,
-  Icon,
-  List,
-  Menu,
-  Modal,
-  useTheme,
-} from "react-native-paper";
+import { Button, Card, Icon, Menu, Modal, useTheme } from "react-native-paper";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { useDispatch, useSelector } from "react-redux";
 import CustomMenu from "./CustomMenu";
-import DragControl from "./DragControl";
 import EditStoredTextDialog from "./EditStoredTextDialog";
+import RecentListItem from "./RecentListItem";
 
 export default function RecentList({
   starred,
@@ -84,7 +72,6 @@ export default function RecentList({
     }
     return true;
   });
-  const isWeb = Platform.OS === "web";
   const shownTexts = filteredTexts.sort(
     (a, b) => (a.order ?? 0) - (b.order ?? 0),
   );
@@ -261,94 +248,34 @@ export default function RecentList({
 
             const bgColor = isDarkMode ? theme.colors.background : "#fff";
             return (
-              <List.Item
-                onLongPress={(e) => {
-                  const { pageX, pageY } = e.nativeEvent;
-                  setMenuAnchor({ x: pageX, y: pageY });
-                  setIsLongPressing(true);
-                  setSelectedStoredText(item);
-                }}
-                onPress={
-                  isLongPressing || isSelecting
-                    ? undefined
-                    : () => {
-                        handlePressItem(item);
-                      }
-                }
-                style={[
-                  listStyles.listItem,
-                  {
-                    backgroundColor: bgColor,
-                    borderBottomColor: isDarkMode ? "#555" : "#ccc",
-                    borderBottomWidth: 0.5,
-                  },
-                ]}
-                titleStyle={listStyles.title}
-                title={item.text}
-                left={(props) => {
-                  if (!isSelecting) {
-                    return (
-                      <DragControl
-                        drag={drag}
-                        isActive={isActive}
-                        setIsDragging={setIsDragging}
-                        {...props}
-                      />
+              <RecentListItem
+                item={item}
+                isDarkMode={isDarkMode}
+                bgColor={bgColor}
+                color={color || theme.colors.onSurface}
+                icon={icon}
+                handlePressItem={handlePressItem}
+                setIsLongPressing={setIsLongPressing}
+                selectedIds={selectedIds}
+                isLongPressing={isLongPressing}
+                isSelecting={isSelecting}
+                isActive={isActive}
+                setIsDragging={setIsDragging}
+                drag={drag}
+                setMenuAnchor={setMenuAnchor}
+                setSelectedStoredText={setSelectedStoredText}
+                setSelectedIds={setSelectedIds}
+                onSelectItem={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (selectedIds.includes(item.id)) {
+                    setSelectedIds((prev) =>
+                      prev.filter((id) => id !== item.id),
                     );
+                  } else {
+                    setSelectedIds((prev) => [...prev, item.id]);
                   }
-
-                  return (
-                    <TouchableOpacity
-                      onPress={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (selectedIds.includes(item.id)) {
-                          setSelectedIds((prev) =>
-                            prev.filter((id) => id !== item.id),
-                          );
-                        } else {
-                          setSelectedIds((prev) => [...prev, item.id]);
-                        }
-                      }}>
-                      <MaterialIcons
-                        name={
-                          selectedIds.includes(item.id)
-                            ? "check-box"
-                            : "check-box-outline-blank"
-                        }
-                        size={25}
-                        {...props}
-                      />
-                    </TouchableOpacity>
-                  );
                 }}
-                right={() => (
-                  <>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Keyboard.dismiss();
-                        if (item.starred) {
-                          dispatch(unstarText(item.id));
-                        } else {
-                          dispatch(starText(item.id));
-                        }
-                      }}>
-                      <List.Icon color={color} icon={icon} />
-                    </TouchableOpacity>
-                    {isWeb && (
-                      <TouchableOpacity
-                        style={{ marginLeft: 10 }}
-                        onPress={() => {
-                          dispatch(removeText(item.id));
-                        }}>
-                        <List.Icon
-                          color={theme.colors.onSurface}
-                          icon="trash-can-outline"
-                        />
-                      </TouchableOpacity>
-                    )}
-                  </>
-                )}
               />
             );
           }}
