@@ -12,6 +12,7 @@ import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
 import {
   Button,
   Card,
+  Divider,
   IconButton,
   Menu,
   Text,
@@ -69,6 +70,7 @@ export default function ChatPage() {
       playsInSilentMode: true,
     });
     Speech.speak(message, {
+      voice: preferences.preferredVoice,
       pitch: preferences.speechPitch,
       rate: preferences.speechRate,
     });
@@ -130,12 +132,45 @@ export default function ChatPage() {
                 <Text
                   style={{
                     textAlign: "center",
-                    marginVertical: 20,
+                    marginTop: 10,
                     color: theme.colors.onSurfaceVariant,
                   }}>
                   Chat lets you speak messages quickly without saving them to
                   your recent list.
                 </Text>
+                <Divider style={{ marginVertical: 10 }} />
+                <Text style={{ textAlign: "center" }}>
+                  Just type your message below and hit send to hear it spoken
+                  aloud.
+                </Text>
+
+                <Text
+                  style={{
+                    textAlign: "right",
+                    marginTop: 20,
+                  }}>{`Thank you for using my voice app!`}</Text>
+                <View
+                  style={{
+                    marginTop: 5,
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    gap: 3,
+                  }}>
+                  <MaterialIcons
+                    name="favorite"
+                    size={15}
+                    color={theme.colors.tertiary}
+                  />
+                  <Text
+                    style={{
+                      textAlign: "right",
+                      fontWeight: "200",
+                    }}>
+                    DaniB
+                  </Text>
+                </View>
               </Card.Content>
             </Card>
           )}
@@ -297,12 +332,15 @@ export default function ChatPage() {
               style={{ flexShrink: 1 }}
             />
           </View>
-          <Button
+          <IconButton
             mode="contained"
+            containerColor={theme.colors.primary}
+            iconColor={theme.colors.onPrimary}
+            disabled={input.trim() === ""}
+            icon={(props) => <MaterialIcons name="arrow-upward" {...props} />}
             style={{ marginLeft: 10 }}
-            onPress={handleSendMessage}>
-            Send
-          </Button>
+            onPress={handleSendMessage}
+          />
         </View>
       </KeyboardAvoidingView>
     </ThemedView>

@@ -1,19 +1,28 @@
 import ThemedView from "@/components/themed/ThemedView";
 import { allColors } from "@/constants/colorPatterns";
 import { RootState } from "@/store";
-import { setColors, setPitch, setRate } from "@/store/preferences";
+import {
+  setColors,
+  setPitch,
+  setPreferredVoice,
+  setRate,
+} from "@/store/preferences";
 import { coreStyles } from "@/styles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import * as Speech from "expo-speech";
 import * as WebBrowser from "expo-web-browser";
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Keyboard, ScrollView, TouchableOpacity, View } from "react-native";
 import {
   Button,
   Checkbox,
+  Dialog,
   Divider,
   Icon,
+  IconButton,
   Text,
+  TextInput,
   useTheme,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +32,64 @@ export default function Settings() {
   const dispatch = useDispatch();
   const preferences = useSelector((state: RootState) => state.preferences);
   const theme = useTheme();
+  const [voices, setVoices] = useState<Speech.Voice[]>([]);
+  const [isChoosingVoice, setIsChoosingVoice] = useState(false);
+  const [isTestingVoice, setIsTestingVoice] = useState<string | null>(null);
+
+  const [filter, setFilter] = useState("");
+
+  useEffect(() => {
+    Speech.getAvailableVoicesAsync().then((availableVoices) => {
+      setVoices(availableVoices);
+    });
+  }, []);
+
+  useEffect(() => {
+    let interval;
+    if (!isTestingVoice) {
+      return;
+    }
+    interval = setInterval(() => {
+      Speech.isSpeakingAsync().then((speaking) => {
+        if (!speaking && isTestingVoice) {
+          setIsTestingVoice(null);
+        }
+      });
+    }, 25);
+    return () => clearInterval(interval);
+  }, [isTestingVoice]);
+
+  const preferredVoice = useMemo(
+    () =>
+      voices.find((voice) => {
+        return voice.identifier === preferences.preferredVoice;
+      }),
+    [voices, preferences.preferredVoice],
+  );
+  const sortedVoiceByName = useMemo(() => {
+    return voices.sort((a, b) => {
+      if (a.name < b.name) {
+        return -1;
+      }
+      if (a.name > b.name) {
+        return 1;
+      }
+      return 0;
+    });
+  }, [voices]);
+
+  const filteredVoices = useMemo(() => {
+    if (!filter || filter.trim() === "") {
+      return sortedVoiceByName;
+    }
+    return sortedVoiceByName.filter((voice) => {
+      return (
+        voice.name.toLowerCase().includes(filter.toLowerCase()) ||
+        voice.language.toLowerCase().includes(filter.toLowerCase()) ||
+        voice.identifier.toLowerCase().includes(filter.toLowerCase())
+      );
+    });
+  }, [filter, sortedVoiceByName]);
   return (
     <ThemedView style={coreStyles.container}>
       <SafeAreaView style={coreStyles.container}>
@@ -159,6 +226,7 @@ export default function Settings() {
                       playsInSilentMode: true,
                     });
                     Speech.speak("Made with love by Dani", {
+                      voice: preferences.preferredVoice,
                       pitch: preferences.speechPitch,
                       rate: preferences.speechRate,
                     });
@@ -187,6 +255,40 @@ export default function Settings() {
                   </View>
                 </Button>
               </View>
+            </View>
+
+            <View>
+              <Divider style={{ marginVertical: 10 }} />
+              <Text style={{ fontWeight: "bold", marginVertical: 5 }}>
+                What voice would you like to use?
+              </Text>
+              {preferredVoice && (
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 10,
+                  }}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: 20,
+                      display: "flex",
+                      flexShrink: 1,
+                    }}>
+                    {preferredVoice.name} ({preferredVoice.language})
+                  </Text>
+                  <Button
+                    onPress={() => {
+                      setIsChoosingVoice(true);
+                    }}>
+                    Change Voice
+                  </Button>
+                </View>
+              )}
+              {!preferredVoice && <Text>Using Default</Text>}
             </View>
             <Divider style={{ marginVertical: 10 }} />
             <Text style={{ fontWeight: "bold", marginVertical: 5 }}>
@@ -310,6 +412,100 @@ export default function Settings() {
           <View style={{ height: 200 }}></View>
         </ScrollView>
       </SafeAreaView>
+
+      <Dialog
+        visible={isChoosingVoice}
+        onDismiss={() => setIsChoosingVoice(false)}>
+        <Dialog.Title>Choose a Voice</Dialog.Title>
+        <Dialog.Content>
+          <TextInput
+            mode="outlined"
+            autoCorrect={false}
+            autoCapitalize="none"
+            keyboardType="default"
+            placeholder="Filter voices..."
+            value={filter}
+            onChangeText={(text) => setFilter(text)}
+            style={{
+              marginBottom: 10,
+            }}
+          />
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            style={{
+              maxHeight: 400,
+            }}>
+            {filteredVoices.map((voice, index) => (
+              <View
+                key={`voice-option-dialog-${index}`}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  backgroundColor: theme.colors.surface,
+                  borderBottomColor: theme.colors.onSurfaceDisabled,
+                  borderBottomWidth: 1,
+                }}>
+                <TouchableOpacity
+                  style={{
+                    display: "flex",
+                    flexGrow: 1,
+                  }}
+                  onPress={() => {
+                    dispatch(setPreferredVoice(voice.identifier));
+                    setIsChoosingVoice(false);
+                    setFilter("");
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      color:
+                        voice.identifier === preferences.preferredVoice
+                          ? theme.colors.tertiary
+                          : theme.colors.onSurface,
+                    }}>
+                    {voice.identifier === preferences.preferredVoice
+                      ? "> "
+                      : ""}
+                    {voice.name} ({voice.language})
+                  </Text>
+                </TouchableOpacity>
+                <IconButton
+                  icon={
+                    isTestingVoice === voice.identifier ? "stop" : "volume-high"
+                  }
+                  size={20}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    AudioModule.setAudioModeAsync({
+                      playsInSilentMode: true,
+                    });
+                    if (isTestingVoice === voice.identifier) {
+                      Speech.stop();
+                      setIsTestingVoice(null);
+                      return;
+                    }
+                    if (isTestingVoice && isTestingVoice !== voice.identifier) {
+                      Speech.stop();
+                    }
+                    Speech.speak("This is a voice test.", {
+                      voice: voice.identifier,
+                      pitch: preferences.speechPitch,
+                      rate: preferences.speechRate,
+                    });
+                    setIsTestingVoice(voice.identifier);
+                  }}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        </Dialog.Content>
+        <Dialog.Actions>
+          <Button onPress={() => setIsChoosingVoice(false)}>Close</Button>
+        </Dialog.Actions>
+      </Dialog>
     </ThemedView>
   );
 }

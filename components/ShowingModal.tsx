@@ -281,6 +281,7 @@ export default function ShowingModal({
             });
 
             Speech.speak(text || "", {
+              voice: preferences.preferredVoice,
               rate: preferences.speechRate,
               pitch: preferences.speechPitch,
               onDone: () => {
