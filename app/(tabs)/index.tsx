@@ -93,7 +93,11 @@ export default function HomeScreen() {
         />
       </View>
       <KeyboardAvoidingView
-        style={{ flexShrink: 1, zIndex: 2 }}
+        style={{
+          flexShrink: 1,
+          zIndex: 2,
+          backgroundColor: theme.colors.surface,
+        }}
         behavior="padding">
         <View style={[spacingStyles.px5, { marginBottom: 10 }]}>
           {error && (
@@ -148,7 +152,7 @@ export default function HomeScreen() {
           <Button
             mode="contained"
             style={{
-              marginTop: 10,
+              marginTop: 5,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",

@@ -43,6 +43,15 @@ export const storedTextsSlice = createSlice({
       const mergedText = existing
         ? { ...existing, ...action.payload }
         : action.payload;
+
+      if (
+        mergedText.order === null ||
+        mergedText.order === undefined ||
+        mergedText.order < 0 ||
+        mergedText.order > state.recentTexts.length
+      ) {
+        mergedText.order = state.recentTexts.length;
+      }
       state.recentTexts.push(mergedText);
     },
 

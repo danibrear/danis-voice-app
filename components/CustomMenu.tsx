@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Dimensions, View } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type CustomMenuProps = {
   menuAnchor: { x: number; y: number } | null;
-  theme: any;
   setIsLongPressing: (value: boolean) => void;
   children?: React.ReactNode | React.ReactNode[];
   visible?: boolean;
@@ -14,7 +14,9 @@ type CustomMenuProps = {
 const { height, width } = Dimensions.get("window");
 
 export default function CustomMenu(props: CustomMenuProps) {
-  const { menuAnchor, theme, visible } = props;
+  const { menuAnchor, visible } = props;
+
+  const theme = useTheme();
   const [menuWidth, setMenuWidth] = useState(0);
   const [menuHeight, setMenuHeight] = useState(0);
   const safeAreaInsets = useSafeAreaInsets();

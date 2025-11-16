@@ -59,7 +59,6 @@ export default function RecentList({
     useState<StoredText | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  // const [isMovingWeb, setIsMovingWeb] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(
@@ -116,25 +115,6 @@ export default function RecentList({
       console.error("Error updating stored texts order:", error);
     } finally {
       setIsUpdating(false);
-    }
-  };
-
-  const handleWebAction = (dir: "up" | "down", item: StoredText) => {
-    const currentIndex = shownTexts.findIndex((t) => t.id === item.id);
-    if (currentIndex === -1) return;
-
-    let newIndex = currentIndex;
-    if (dir === "up" && currentIndex > 0) {
-      newIndex = currentIndex - 1;
-    } else if (dir === "down" && currentIndex < shownTexts.length - 1) {
-      newIndex = currentIndex + 1;
-    }
-
-    if (newIndex !== currentIndex) {
-      const newOrder = [...shownTexts];
-      const [movedItem] = newOrder.splice(currentIndex, 1);
-      newOrder.splice(newIndex, 0, movedItem);
-      handleReorderStoredTexts(newOrder);
     }
   };
 
@@ -254,6 +234,7 @@ export default function RecentList({
             flexGrow: 1,
             backgroundColor: "transparent",
           }}
+          ListFooterComponent={<View style={{ height: 200 }} />}
           refreshControl={
             <RefreshControl
               onRefresh={() => {
@@ -277,7 +258,6 @@ export default function RecentList({
             const color = item.starred ? theme.colors.tertiary : undefined;
 
             const bgColor = isDarkMode ? theme.colors.background : "#fff";
-
             return (
               <List.Item
                 onLongPress={(e) => {
@@ -286,6 +266,13 @@ export default function RecentList({
                   setIsLongPressing(true);
                   setSelectedStoredText(item);
                 }}
+                onPress={
+                  isLongPressing || isSelecting
+                    ? undefined
+                    : () => {
+                        handlePressItem(item);
+                      }
+                }
                 style={[
                   listStyles.listItem,
                   {
@@ -296,20 +283,10 @@ export default function RecentList({
                 ]}
                 titleStyle={listStyles.title}
                 title={item.text}
-                onPress={
-                  isLongPressing
-                    ? undefined
-                    : () => {
-                        handlePressItem(item);
-                      }
-                }
                 left={(props) => {
                   if (!isSelecting) {
                     return (
                       <DragControl
-                        onWebAction={(dir) => {
-                          handleWebAction(dir, item);
-                        }}
                         drag={drag}
                         isActive={isActive}
                         setIsDragging={setIsDragging}
@@ -364,7 +341,6 @@ export default function RecentList({
       <CustomMenu
         visible={isLongPressing}
         menuAnchor={menuAnchor}
-        theme={theme}
         parentRef={parentRef}
         setIsLongPressing={setIsLongPressing}>
         <Menu.Item

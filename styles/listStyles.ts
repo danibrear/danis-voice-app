@@ -59,6 +59,7 @@ export const listStyles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    transform: [{ translateY: "-25%" }],
   },
   emptyText: {
     fontSize: 24,
