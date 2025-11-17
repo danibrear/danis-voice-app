@@ -306,23 +306,30 @@ export default function ChatPage() {
             justifyContent: messages.length === 0 ? "center" : "flex-start",
           }}>
           {messages.length === 0 && (
-            <Card style={{ margin: 20, borderRadius: 10, alignSelf: "center" }}>
+            <Card
+              style={{
+                marginHorizontal: 10,
+                borderRadius: 10,
+                alignSelf: "center",
+              }}
+              contentStyle={{
+                padding: 0,
+              }}>
               <Card.Content>
                 <Text
                   style={{
                     textAlign: "center",
-                    marginTop: 10,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: "bold",
                     color: theme.colors.onSurfaceVariant,
                   }}>
                   Chat lets you {`"speak"`} messages quickly without saving them
                   to your recent list.
                 </Text>
-                <Divider style={{ marginVertical: 10 }} />
+                <Divider style={{ marginVertical: 5 }} />
                 <Text style={{ fontWeight: "bold" }}>Normal mode:</Text>
                 <Text>You see a list of your messages in order.</Text>
-                <Divider style={{ marginVertical: 10 }} />
+                <Divider style={{ marginVertical: 5 }} />
                 <Text style={{ fontWeight: "bold" }}>Show mode:</Text>
                 <Text>
                   Displays the current message in a large font for others to
@@ -335,53 +342,56 @@ export default function ChatPage() {
                   * Rotate buttons change the orientation of the text to reduce
                   the need to turn your device.
                 </Text>
-                <Text style={{ fontWeight: "300", marginTop: 10 }}>
-                  NOTE: Text facing away from you is stretched to make it easier
-                  to read at an angle.
-                </Text>
-                <Divider style={{ marginTop: 10 }} />
-                <TouchableOpacity
-                  onPress={() => {
-                    setIsShowMode((s) => !s);
-                  }}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}>
-                  <Checkbox.Android
-                    status={isShowMode ? "checked" : "unchecked"}
-                  />
-                  <Text>Show mode?</Text>
-                </TouchableOpacity>
-
-                <Text
-                  style={{
-                    textAlign: "right",
-                    marginTop: 20,
-                  }}>{`Thank you for using my app!`}</Text>
                 <View
                   style={{
-                    marginTop: 5,
-                    display: "flex",
                     flexDirection: "row",
-                    justifyContent: "flex-end",
+                    justifyContent: "space-between",
                     alignItems: "center",
-                    gap: 3,
+                    marginTop: 5,
                   }}>
-                  <MaterialIcons
-                    name="favorite"
-                    size={15}
-                    color={theme.colors.tertiary}
-                  />
-                  <Text
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsShowMode((s) => !s);
+                    }}
                     style={{
-                      textAlign: "right",
-                      fontFamily: "Helvetica Neue",
-                      fontStyle: "italic",
-                      fontWeight: "300",
+                      flexDirection: "row",
+                      alignItems: "center",
                     }}>
-                    DaniB
-                  </Text>
+                    <Checkbox.Android
+                      status={isShowMode ? "checked" : "unchecked"}
+                    />
+                    <Text>Show mode?</Text>
+                  </TouchableOpacity>
+
+                  <View>
+                    <Text
+                      style={{
+                        textAlign: "right",
+                      }}>{`Thank you for using my app!`}</Text>
+                    <View
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "flex-end",
+                        alignItems: "center",
+                        gap: 3,
+                      }}>
+                      <MaterialIcons
+                        name="favorite"
+                        size={15}
+                        color={theme.colors.tertiary}
+                      />
+                      <Text
+                        style={{
+                          textAlign: "right",
+                          fontFamily: "Helvetica Neue",
+                          fontStyle: "italic",
+                          fontWeight: "300",
+                        }}>
+                        DaniB
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               </Card.Content>
             </Card>
