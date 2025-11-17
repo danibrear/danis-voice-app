@@ -25,11 +25,7 @@ import {
   TextInput,
   useTheme,
 } from "react-native-paper";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 // @ts-expect-error this is a static asset
@@ -56,24 +52,6 @@ export default function ChatPage() {
 
   const [angle, setAngle] = useState(0);
   const messagesEndRef = useRef<ScrollView>(null);
-  const opacity = useSharedValue(0.5);
-
-  const animatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-    };
-  }, []);
-  useEffect(() => {
-    if (messages.length > 0 && opacity.value < 0.2) {
-      return;
-    }
-    opacity.value = withTiming(0.9, { duration: 600 });
-
-    setTimeout(() => {
-      opacity.value = withTiming(0.1, { duration: 600 });
-    }, 600);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages.length]);
 
   const handleSendMessage = async () => {
     if (input.trim() === "") {
@@ -477,6 +455,7 @@ export default function ChatPage() {
                       />
                       <View
                         style={{
+                          zIndex: 100,
                           backgroundColor: theme.colors.background,
                           borderWidth: 1,
                           borderColor: theme.colors.outline,
@@ -514,16 +493,16 @@ export default function ChatPage() {
           source={Logo}
           style={[
             {
+              display: messages.length === 0 ? "none" : "flex",
               position: "absolute",
               width: "80%",
-              height: messages.length === 0 ? "25%" : "80%",
+              height: "80%",
               left: "10%",
               top: "10%",
               resizeMode: "contain",
-              opacity: 0.1,
+              opacity: 0.05,
               zIndex: 1,
             },
-            animatedStyles,
           ]}
         />
       </CrossView>
