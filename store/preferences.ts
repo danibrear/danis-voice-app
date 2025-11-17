@@ -8,6 +8,7 @@ export type PreferencesState = {
   speechPitch: number;
   preferredVoice?: string;
   colors?: string;
+  chatReturnKeySendsMessage?: boolean;
 };
 
 const initialState: PreferencesState = {
@@ -15,6 +16,7 @@ const initialState: PreferencesState = {
   speechRate: 1.0,
   speechPitch: 1.0,
   preferredVoice: undefined,
+  chatReturnKeySendsMessage: false,
 };
 
 export const preferencesSlice = createSlice({
@@ -26,6 +28,9 @@ export const preferencesSlice = createSlice({
       action: PayloadAction<Partial<PreferencesState>>,
     ) => {
       return { ...state, ...action.payload };
+    },
+    setChatReturnKeySendsMessage: (state, action: PayloadAction<boolean>) => {
+      state.chatReturnKeySendsMessage = action.payload;
     },
 
     setPitch: (state, action: PayloadAction<number>) => {
@@ -61,6 +66,7 @@ export const {
   setPreferredVoice,
   setDarkmodeEnabled,
   setColors,
+  setChatReturnKeySendsMessage,
 } = preferencesSlice.actions;
 
 export default preferencesSlice.reducer;

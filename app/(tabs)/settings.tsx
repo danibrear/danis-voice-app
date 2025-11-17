@@ -2,6 +2,7 @@ import ThemedView from "@/components/themed/ThemedView";
 import { allColors } from "@/constants/colorPatterns";
 import { RootState } from "@/store";
 import {
+  setChatReturnKeySendsMessage,
   setColors,
   setPitch,
   setPreferredVoice,
@@ -37,6 +38,8 @@ export default function Settings() {
   const [isTestingVoice, setIsTestingVoice] = useState<string | null>(null);
 
   const [filter, setFilter] = useState("");
+
+  const [voicesOrder, setVoicesOrder] = useState<"language" | "name">("name");
 
   useEffect(() => {
     Speech.getAvailableVoicesAsync().then((availableVoices) => {
@@ -78,18 +81,51 @@ export default function Settings() {
     });
   }, [voices]);
 
+  const voicesByLanguage = useMemo(() => {
+    const grouped: { [language: string]: Speech.Voice[] } = {};
+    sortedVoiceByName.forEach((voice) => {
+      if (!grouped[voice.language]) {
+        grouped[voice.language] = [];
+      }
+      grouped[voice.language].push(voice);
+    });
+    return grouped;
+  }, [sortedVoiceByName]);
+
+  const selectedVoices = useMemo(() => {
+    if (voicesOrder === "name") {
+      return sortedVoiceByName;
+    } else {
+      const groupedVoices = voicesByLanguage;
+      const result: Speech.Voice[] = [];
+      Object.keys(groupedVoices).forEach((language) => {
+        const sorted = groupedVoices[language].sort((a, b) => {
+          if (a.name < b.name) {
+            return -1;
+          }
+          if (a.name > b.name) {
+            return 1;
+          }
+          return 0;
+        });
+        result.push(...sorted);
+      });
+      return result;
+    }
+  }, [voicesByLanguage, sortedVoiceByName, voicesOrder]);
+
   const filteredVoices = useMemo(() => {
     if (!filter || filter.trim() === "") {
-      return sortedVoiceByName;
+      return selectedVoices;
     }
-    return sortedVoiceByName.filter((voice) => {
+    return selectedVoices.filter((voice) => {
       return (
         voice.name.toLowerCase().includes(filter.toLowerCase()) ||
         voice.language.toLowerCase().includes(filter.toLowerCase()) ||
         voice.identifier.toLowerCase().includes(filter.toLowerCase())
       );
     });
-  }, [filter, sortedVoiceByName]);
+  }, [filter, selectedVoices]);
   return (
     <ThemedView style={coreStyles.container}>
       <SafeAreaView style={coreStyles.container}>
@@ -292,6 +328,30 @@ export default function Settings() {
               </View>
             </View>
             <Divider style={{ marginVertical: 10 }} />
+            <View>
+              <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
+                Return key sends message in chat
+              </Text>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 1 }}>
+                <Checkbox.Android
+                  status={
+                    preferences.chatReturnKeySendsMessage
+                      ? "checked"
+                      : "unchecked"
+                  }
+                  onPress={() => {
+                    dispatch(
+                      setChatReturnKeySendsMessage(
+                        !preferences.chatReturnKeySendsMessage,
+                      ),
+                    );
+                  }}
+                />
+                <Text>{preferences.chatReturnKeySendsMessage ? "ON" : ""}</Text>
+              </View>
+            </View>
+            <Divider style={{ marginVertical: 10 }} />
             <Text style={{ fontWeight: "bold", marginVertical: 5 }}>
               What colors would you like for the highlight?
             </Text>
@@ -431,6 +491,27 @@ export default function Settings() {
               marginBottom: 10,
             }}
           />
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 10,
+              marginBottom: 10,
+            }}>
+            <Button
+              style={{ width: "50%" }}
+              mode={voicesOrder === "name" ? "contained" : "text"}
+              onPress={() => setVoicesOrder("name")}>
+              By Name
+            </Button>
+            <Button
+              style={{ width: "50%" }}
+              mode={voicesOrder === "language" ? "contained" : "text"}
+              onPress={() => setVoicesOrder("language")}>
+              By Language
+            </Button>
+          </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
             style={{
@@ -491,11 +572,14 @@ export default function Settings() {
                     if (isTestingVoice && isTestingVoice !== voice.identifier) {
                       Speech.stop();
                     }
-                    Speech.speak("This is a voice test.", {
-                      voice: voice.identifier,
-                      pitch: preferences.speechPitch,
-                      rate: preferences.speechRate,
-                    });
+                    Speech.speak(
+                      "The quick brown fox jumps over the lazy dog.",
+                      {
+                        voice: voice.identifier,
+                        pitch: preferences.speechPitch,
+                        rate: preferences.speechRate,
+                      },
+                    );
                     setIsTestingVoice(voice.identifier);
                   }}
                 />

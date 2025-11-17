@@ -1,3 +1,4 @@
+import { FontAwesome } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
@@ -45,7 +46,7 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color }) => (
-            <Icon size={28} source="ruler" color={color} />
+            <FontAwesome size={28} name="cog" color={color} />
           ),
         }}
       />

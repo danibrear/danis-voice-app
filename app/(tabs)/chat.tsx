@@ -4,14 +4,21 @@ import ThemedView from "@/components/themed/ThemedView";
 import { RootState } from "@/store";
 import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
-import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import * as Speech from "expo-speech";
 import { useEffect, useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   Button,
   Card,
+  Checkbox,
   Divider,
   IconButton,
   Menu,
@@ -33,6 +40,7 @@ export default function ChatPage() {
   const dispatch = useDispatch();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const parentRef = useRef(null);
 
@@ -44,6 +52,7 @@ export default function ChatPage() {
   const [isShowMode, setIsShowMode] = useState(false);
 
   const [angle, setAngle] = useState(0);
+  const messagesEndRef = useRef<ScrollView>(null);
 
   const handleSendMessage = async () => {
     if (input.trim() === "") {
@@ -53,6 +62,9 @@ export default function ChatPage() {
     const newMessages = [...messages, input.trim()];
     setMessages(newMessages);
     setInput("");
+    setTimeout(() => {
+      messagesEndRef.current?.scrollToEnd({ animated: true });
+    }, 50);
   };
 
   useEffect(() => {
@@ -133,7 +145,7 @@ export default function ChatPage() {
             marginBottom: 0,
           },
         ]}>
-        {isShowMode && (
+        {isShowMode && (messages.length > 0 || input.trim().length > 0) && (
           <View
             style={{
               position: "absolute",
@@ -155,7 +167,7 @@ export default function ChatPage() {
               }}>
               <Text
                 adjustsFontSizeToFit={true}
-                numberOfLines={3}
+                numberOfLines={angle === 180 ? 2 : 3}
                 allowFontScaling={true}
                 style={{
                   transform: [
@@ -241,20 +253,50 @@ export default function ChatPage() {
           </View>
         )}
         <View style={{ position: "absolute", bottom: 5, right: 5, zIndex: 3 }}>
-          {isSpeaking && (
+          {isPaused && (
             <Button
               mode="outlined"
-              icon={(props) => (
-                <MaterialIcons name={"stop-circle"} {...props} />
-              )}
+              icon={(props) => <MaterialIcons name={"play-arrow"} {...props} />}
               onPress={() => {
-                if (isSpeaking) {
-                  Speech.stop();
-                  setIsSpeaking(false);
+                if (isPaused) {
+                  Speech.resume();
+                  setIsSpeaking(true);
+                  setIsPaused(false);
                 }
               }}>
-              Stop
+              Resume
             </Button>
+          )}
+          {isSpeaking && (
+            <View style={{ flexDirection: "row", gap: 5 }}>
+              <Button
+                mode="outlined"
+                contentStyle={{ backgroundColor: theme.colors.surface }}
+                icon={(props) => <MaterialIcons name={"pause"} {...props} />}
+                onPress={() => {
+                  if (isSpeaking) {
+                    Speech.pause();
+                    setIsSpeaking(false);
+                    setIsPaused(true);
+                  }
+                }}>
+                Pause
+              </Button>
+              <Button
+                mode="outlined"
+                contentStyle={{ backgroundColor: theme.colors.surface }}
+                icon={(props) => (
+                  <MaterialIcons name={"stop-circle"} {...props} />
+                )}
+                onPress={() => {
+                  if (isSpeaking) {
+                    Speech.stop();
+                    setIsSpeaking(false);
+                  }
+                }}>
+                Stop
+              </Button>
+            </View>
           )}
         </View>
         <View
@@ -270,22 +312,50 @@ export default function ChatPage() {
                   style={{
                     textAlign: "center",
                     marginTop: 10,
+                    fontSize: 18,
+                    fontWeight: "bold",
                     color: theme.colors.onSurfaceVariant,
                   }}>
-                  Chat lets you speak messages quickly without saving them to
-                  your recent list.
+                  Chat lets you {`"speak"`} messages quickly without saving them
+                  to your recent list.
                 </Text>
                 <Divider style={{ marginVertical: 10 }} />
+                <Text style={{ fontWeight: "bold" }}>Normal mode:</Text>
+                <Text>You see a list of your messages in order.</Text>
+                <Divider style={{ marginVertical: 10 }} />
+                <Text style={{ fontWeight: "bold" }}>Show mode:</Text>
                 <Text style={{ textAlign: "center" }}>
-                  Just type your message below and hit send to hear it spoken
-                  aloud.
+                  You can show the message on screen with
+                  <Text style={{ fontWeight: "bold" }}> Show mode</Text>. This
+                  displays the current message in a large font.
                 </Text>
+                <Text style={{ textAlign: "center", marginTop: 10 }}>
+                  Use the rotate buttons to change the orientation of the text
+                  on screen.{" "}
+                  <Text style={{ fontWeight: "bold" }}>
+                    Use the box below to get started!
+                  </Text>
+                </Text>
+                <Divider style={{ marginTop: 10 }} />
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsShowMode((s) => !s);
+                  }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}>
+                  <Checkbox.Android
+                    status={isShowMode ? "checked" : "unchecked"}
+                  />
+                  <Text>Show mode?</Text>
+                </TouchableOpacity>
 
                 <Text
                   style={{
                     textAlign: "right",
                     marginTop: 20,
-                  }}>{`Thank you for using my voice app!`}</Text>
+                  }}>{`Thank you for using my app!`}</Text>
                 <View
                   style={{
                     marginTop: 5,
@@ -303,7 +373,9 @@ export default function ChatPage() {
                   <Text
                     style={{
                       textAlign: "right",
-                      fontWeight: "200",
+                      fontFamily: "Helvetica Neue",
+                      fontStyle: "italic",
+                      fontWeight: "300",
                     }}>
                     DaniB
                   </Text>
@@ -317,6 +389,7 @@ export default function ChatPage() {
                 style={{
                   flexDirection: "row",
                   justifyContent: "space-between",
+                  paddingHorizontal: 10,
                 }}>
                 <Button
                   onPress={() => {
@@ -325,6 +398,10 @@ export default function ChatPage() {
                   Clear Chat
                 </Button>
                 <Button
+                  icon={(props) => (
+                    <FontAwesome6 name="display" {...props} size={20} />
+                  )}
+                  mode="outlined"
                   onPress={() => {
                     setIsShowMode(true);
                   }}>
@@ -334,6 +411,7 @@ export default function ChatPage() {
 
               <ScrollView
                 keyboardShouldPersistTaps="handled"
+                ref={messagesEndRef}
                 style={{
                   flexGrow: 1,
                 }}>
@@ -353,6 +431,18 @@ export default function ChatPage() {
                         marginVertical: 5,
                       }}>
                       <IconButton
+                        size={12}
+                        icon={(props) => (
+                          <FontAwesome6 name="display" {...props} size={20} />
+                        )}
+                        onPress={() => {
+                          setLastMessage(message);
+                          Keyboard.dismiss();
+                          setIsShowMode(true);
+                        }}
+                      />
+                      <IconButton
+                        size={10}
                         icon={(props) => (
                           <MaterialIcons name="replay" {...props} size={25} />
                         )}
@@ -365,12 +455,13 @@ export default function ChatPage() {
                           backgroundColor: theme.colors.background,
                           borderWidth: 1,
                           borderColor: theme.colors.outline,
-                          paddingHorizontal: 10,
-                          paddingVertical: 15,
+                          paddingHorizontal: 15,
+                          paddingVertical: 10,
                           marginVertical: 5,
                           borderRadius: 50,
                           padding: 0,
                           flexShrink: 1,
+                          boxShadow: `0 2px 2px ${theme.colors.surfaceDisabled}`,
                         }}>
                         <Text>{message}</Text>
                       </View>
@@ -393,7 +484,7 @@ export default function ChatPage() {
                     </View>
                   ))}
                 </View>
-                <View style={{ height: 200 }} />
+                <View style={{ height: 150 }} />
               </ScrollView>
             </View>
           )}
@@ -457,27 +548,47 @@ export default function ChatPage() {
             width: "100%",
           }}>
           <View style={{ flex: 1, marginBottom: 3 }}>
-            <TextInput
-              mode="outlined"
-              placeholder="Message..."
-              value={input}
-              onChangeText={(t) => {
-                if (t === "\n") {
-                  setInput("");
-                  Keyboard.dismiss();
-                  return;
-                }
-                if (t.includes("\n")) {
-                  handleSendMessage();
-                  return;
-                }
-                setInput(t);
-              }}
-              multiline
-              returnKeyType="send"
-              outlineStyle={{ borderRadius: 8 }}
-              style={{ flexShrink: 1 }}
-            />
+            <View
+              style={{
+                position: "relative",
+                flexDirection: "row",
+                alignItems: "center",
+                flexGrow: 1,
+              }}>
+              <TextInput
+                mode="outlined"
+                clearButtonMode="always"
+                placeholder="Message..."
+                value={input}
+                onChangeText={(t) => {
+                  if (t === "\n") {
+                    setInput("");
+                    Keyboard.dismiss();
+                    return;
+                  }
+                  if (
+                    preferences.chatReturnKeySendsMessage &&
+                    t.endsWith("\n")
+                  ) {
+                    handleSendMessage();
+                    return;
+                  }
+                  setInput(t);
+                }}
+                multiline
+                returnKeyType="send"
+                outlineStyle={{ borderRadius: 8 }}
+                style={{ flexGrow: 1, paddingRight: 5 }}
+              />
+              <IconButton
+                disabled={input.trim().length === 0}
+                style={{ position: "absolute", right: -10, top: -10 }}
+                icon={(props) => (
+                  <FontAwesome name="close" {...props} size={20} />
+                )}
+                onPress={() => setInput("")}
+              />
+            </View>
           </View>
           <IconButton
             mode="contained"
