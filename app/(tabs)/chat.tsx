@@ -49,6 +49,7 @@ export default function ChatPage() {
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [isShowMode, setIsShowMode] = useState(false);
+  const [keyboardActive, setKeyboardActive] = useState(false);
 
   const [angle, setAngle] = useState(0);
   const messagesEndRef = useRef<ScrollView>(null);
@@ -65,6 +66,10 @@ export default function ChatPage() {
       messagesEndRef.current?.scrollToEnd({ animated: true });
     }, 50);
   };
+
+  useEffect(() => {
+    setKeyboardActive(Keyboard.isVisible());
+  }, []);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -326,22 +331,35 @@ export default function ChatPage() {
                   Chat lets you {`"speak"`} messages quickly without saving them
                   to your recent list.
                 </Text>
-                <Divider style={{ marginVertical: 5 }} />
-                <Text style={{ fontWeight: "bold" }}>Normal mode:</Text>
-                <Text>You see a list of your messages in order.</Text>
-                <Divider style={{ marginVertical: 5 }} />
-                <Text style={{ fontWeight: "bold" }}>Show mode:</Text>
-                <Text>
-                  Displays the current message in a large font for others to
-                  read.
-                </Text>
-                <Text
-                  style={{
-                    marginTop: 3,
-                  }}>
-                  * Rotate buttons change the orientation of the text to reduce
-                  the need to turn your device.
-                </Text>
+                {keyboardActive && (
+                  <Button
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setKeyboardActive(false);
+                    }}>
+                    Read More
+                  </Button>
+                )}
+                {!keyboardActive && (
+                  <View>
+                    <Divider style={{ marginVertical: 5 }} />
+                    <Text style={{ fontWeight: "bold" }}>Normal mode:</Text>
+                    <Text>You see a list of your messages in order.</Text>
+                    <Divider style={{ marginVertical: 5 }} />
+                    <Text style={{ fontWeight: "bold" }}>Show mode:</Text>
+                    <Text>
+                      Displays the current message in a large font for others to
+                      read.
+                    </Text>
+                    <Text
+                      style={{
+                        marginTop: 3,
+                      }}>
+                      * Rotate buttons change the orientation of the text to
+                      reduce the need to turn your device.
+                    </Text>
+                  </View>
+                )}
                 <View
                   style={{
                     flexDirection: "row",
@@ -554,6 +572,14 @@ export default function ChatPage() {
                 clearButtonMode="always"
                 placeholder="Message..."
                 value={input}
+                onFocus={() => {
+                  console.log("focus");
+                  setKeyboardActive(true);
+                }}
+                onBlur={() => {
+                  console.log("blur");
+                  setKeyboardActive(false);
+                }}
                 onChangeText={(t) => {
                   if (t === "\n") {
                     setInput("");
