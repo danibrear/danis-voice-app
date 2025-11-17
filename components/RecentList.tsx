@@ -17,10 +17,17 @@ import {
   ViewStyle,
 } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
-import { Button, Card, Icon, Menu, Modal, useTheme } from "react-native-paper";
+import {
+  Button,
+  Card,
+  Dialog,
+  Icon,
+  Menu,
+  Modal,
+  useTheme,
+} from "react-native-paper";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { useDispatch, useSelector } from "react-redux";
-import CustomMenu from "./CustomMenu";
 import EditStoredTextDialog from "./EditStoredTextDialog";
 import RecentListItem from "./RecentListItem";
 
@@ -50,9 +57,6 @@ export default function RecentList({
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(
-    null,
-  );
   const [isDragging, setIsDragging] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -262,7 +266,6 @@ export default function RecentList({
                 isActive={isActive}
                 setIsDragging={setIsDragging}
                 drag={drag}
-                setMenuAnchor={setMenuAnchor}
                 setSelectedStoredText={setSelectedStoredText}
                 setSelectedIds={setSelectedIds}
                 onSelectItem={(e) => {
@@ -281,54 +284,6 @@ export default function RecentList({
           }}
         />
       )}
-      <CustomMenu
-        visible={isLongPressing}
-        menuAnchor={menuAnchor}
-        parentRef={parentRef}
-        setIsLongPressing={setIsLongPressing}>
-        <Menu.Item
-          leadingIcon={(props) => (
-            <Icon
-              {...props}
-              color={theme.colors.primary}
-              source="pencil-outline"
-            />
-          )}
-          titleStyle={{ color: theme.colors.primary }}
-          onPress={() => {
-            setIsEditing(true);
-          }}
-          title="Edit"
-        />
-        <Menu.Item
-          leadingIcon={(props) => (
-            <Icon
-              {...props}
-              color={theme.colors.error}
-              source="trash-can-outline"
-            />
-          )}
-          titleStyle={{ color: theme.colors.error }}
-          onPress={() => {
-            setIsDeleting(true);
-          }}
-          title="Delete"
-        />
-        <Menu.Item
-          leadingIcon={(props) => (
-            <Icon
-              {...props}
-              color={theme.colors.onSurface}
-              source="close-circle-outline"
-            />
-          )}
-          titleStyle={{ color: theme.colors.onSurface }}
-          onPress={() => {
-            setIsLongPressing(false);
-          }}
-          title="Cancel"
-        />
-      </CustomMenu>
 
       <EditStoredTextDialog
         storedText={selectedStoredText}
@@ -397,6 +352,63 @@ export default function RecentList({
           </Card.Actions>
         </Card>
       </Modal>
+      <Dialog
+        visible={isLongPressing}
+        onDismiss={() => setIsLongPressing(false)}>
+        <Dialog.Content>
+          <Text
+            style={{
+              marginBottom: 10,
+              textAlign: "center",
+              fontSize: 18,
+              fontWeight: "bold",
+            }}>
+            {selectedStoredText?.text}
+          </Text>
+          <Menu.Item
+            leadingIcon={(props) => (
+              <Icon
+                {...props}
+                color={theme.colors.primary}
+                source="pencil-outline"
+              />
+            )}
+            titleStyle={{ color: theme.colors.primary }}
+            onPress={() => {
+              setIsEditing(true);
+            }}
+            title="Edit"
+          />
+          <Menu.Item
+            leadingIcon={(props) => (
+              <Icon
+                {...props}
+                color={theme.colors.error}
+                source="trash-can-outline"
+              />
+            )}
+            titleStyle={{ color: theme.colors.error }}
+            onPress={() => {
+              setIsDeleting(true);
+            }}
+            title="Delete"
+          />
+          <Menu.Item
+            leadingIcon={(props) => (
+              <Icon
+                {...props}
+                color={theme.colors.onSurface}
+                source="close-circle-outline"
+              />
+            )}
+            titleStyle={{ color: theme.colors.onSurface }}
+            onPress={() => {
+              setIsLongPressing(false);
+            }}
+            title="Cancel"
+          />
+        </Dialog.Content>
+      </Dialog>
     </View>
   );
 }

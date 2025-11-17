@@ -1,5 +1,4 @@
 import CrossView from "@/components/CrossView";
-import CustomMenu from "@/components/CustomMenu";
 import ThemedView from "@/components/themed/ThemedView";
 import { RootState } from "@/store";
 import { createStoredText } from "@/store/storedTexts";
@@ -19,15 +18,22 @@ import {
   Button,
   Card,
   Checkbox,
+  Dialog,
   Divider,
   IconButton,
-  Menu,
   Text,
   TextInput,
   useTheme,
 } from "react-native-paper";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
+// @ts-expect-error this is a static asset
+import Logo from "../../assets/images/splash-icon.png";
 export default function ChatPage() {
   const theme = useTheme();
 
@@ -45,14 +51,29 @@ export default function ChatPage() {
   const parentRef = useRef(null);
 
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
-  const [menuAnchor, setMenuAnchor] = useState<{ x: number; y: number } | null>(
-    null,
-  );
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [isShowMode, setIsShowMode] = useState(false);
 
   const [angle, setAngle] = useState(0);
   const messagesEndRef = useRef<ScrollView>(null);
+  const opacity = useSharedValue(0.5);
+
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    };
+  }, []);
+  useEffect(() => {
+    if (messages.length > 0 && opacity.value < 0.2) {
+      return;
+    }
+    opacity.value = withTiming(0.9, { duration: 600 });
+
+    setTimeout(() => {
+      opacity.value = withTiming(0.1, { duration: 600 });
+    }, 600);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length]);
 
   const handleSendMessage = async () => {
     if (input.trim() === "") {
@@ -324,17 +345,20 @@ export default function ChatPage() {
                 <Text>You see a list of your messages in order.</Text>
                 <Divider style={{ marginVertical: 10 }} />
                 <Text style={{ fontWeight: "bold" }}>Show mode:</Text>
-                <Text style={{ textAlign: "center" }}>
-                  You can show the message on screen with
-                  <Text style={{ fontWeight: "bold" }}> Show mode</Text>. This
-                  displays the current message in a large font.
+                <Text>
+                  Displays the current message in a large font for others to
+                  read.
                 </Text>
-                <Text style={{ textAlign: "center", marginTop: 10 }}>
-                  Use the rotate buttons to change the orientation of the text
-                  on screen.{" "}
-                  <Text style={{ fontWeight: "bold" }}>
-                    Use the box below to get started!
-                  </Text>
+                <Text
+                  style={{
+                    marginTop: 3,
+                  }}>
+                  * Rotate buttons change the orientation of the text to reduce
+                  the need to turn your device.
+                </Text>
+                <Text style={{ fontWeight: "300", marginTop: 10 }}>
+                  NOTE: Text facing away from you is stretched to make it easier
+                  to read at an angle.
                 </Text>
                 <Divider style={{ marginTop: 10 }} />
                 <TouchableOpacity
@@ -390,6 +414,7 @@ export default function ChatPage() {
                   flexDirection: "row",
                   justifyContent: "space-between",
                   paddingHorizontal: 10,
+                  zIndex: 2,
                 }}>
                 <Button
                   onPress={() => {
@@ -475,10 +500,6 @@ export default function ChatPage() {
                         )}
                         onPress={(event) => {
                           setMenuMessageIdx(index);
-                          setMenuAnchor({
-                            x: event.nativeEvent.pageX,
-                            y: event.nativeEvent.pageY,
-                          });
                         }}
                       />
                     </View>
@@ -489,39 +510,22 @@ export default function ChatPage() {
             </View>
           )}
         </View>
-        <Text>{menuMessageIdx}</Text>
-        <CustomMenu
-          parentRef={parentRef}
-          visible={menuMessageIdx !== null}
-          menuAnchor={menuAnchor}
-          setIsLongPressing={function (value: boolean): void {
-            return;
-          }}>
-          <Menu.Item
-            onPress={() => {
-              dispatch(
-                createStoredText({
-                  id: new Date().getTime().toString(),
-                  text: messages[menuMessageIdx ?? 0],
-                  starred: false,
-                  order: -1,
-                }),
-              );
-              setMenuMessageIdx(null);
-            }}
-            title="Save to Recents"
-          />
-          <Menu.Item
-            onPress={() => {
-              const newMessages = messages.filter(
-                (_, i) => i !== menuMessageIdx,
-              );
-              setMessages(newMessages);
-              setMenuMessageIdx(null);
-            }}
-            title="Delete"
-          />
-        </CustomMenu>
+        <Animated.Image
+          source={Logo}
+          style={[
+            {
+              position: "absolute",
+              width: "80%",
+              height: messages.length === 0 ? "25%" : "80%",
+              left: "10%",
+              top: "10%",
+              resizeMode: "contain",
+              opacity: 0.1,
+              zIndex: 1,
+            },
+            animatedStyles,
+          ]}
+        />
       </CrossView>
 
       <KeyboardAvoidingView
@@ -601,6 +605,45 @@ export default function ChatPage() {
           />
         </View>
       </KeyboardAvoidingView>
+      <Dialog visible={menuMessageIdx !== null}>
+        <Dialog.Content style={{ flexDirection: "column", gap: 10 }}>
+          <Text
+            style={{
+              fontWeight: "bold",
+              marginBottom: 10,
+              textAlign: "center",
+            }}>{`"${messages[menuMessageIdx ?? 0]}"`}</Text>
+          <Button
+            mode="contained"
+            style={{ flexGrow: 1 }}
+            onPress={() => {
+              dispatch(
+                createStoredText({
+                  id: new Date().getTime().toString(),
+                  text: messages[menuMessageIdx ?? 0],
+                  starred: false,
+                  order: -1,
+                }),
+              );
+              setMenuMessageIdx(null);
+            }}>
+            Save to Recents
+          </Button>
+          <Button
+            mode="contained"
+            style={{ flexGrow: 1 }}
+            onPress={() => {
+              const newMessages = messages.filter(
+                (_, i) => i !== menuMessageIdx,
+              );
+              setMessages(newMessages);
+              setMenuMessageIdx(null);
+            }}>
+            Delete
+          </Button>
+          <Button onPress={() => setMenuMessageIdx(null)}>Cancel</Button>
+        </Dialog.Content>
+      </Dialog>
     </ThemedView>
   );
 }

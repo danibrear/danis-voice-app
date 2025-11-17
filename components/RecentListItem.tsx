@@ -32,7 +32,6 @@ export default function RecentListItem({
   drag,
   isActive,
   setIsDragging,
-  setMenuAnchor,
 }: {
   item: StoredText;
   isDarkMode: boolean;
@@ -50,7 +49,6 @@ export default function RecentListItem({
   drag: () => void;
   isActive: boolean;
   setIsDragging: (dragging: boolean) => void;
-  setMenuAnchor: (anchor: { x: number; y: number }) => void;
 }) {
   const dispatch = useDispatch();
 
@@ -73,9 +71,7 @@ export default function RecentListItem({
         </View>
       )}>
       <List.Item
-        onLongPress={(e) => {
-          const { pageX, pageY } = e.nativeEvent;
-          setMenuAnchor({ x: pageX, y: pageY });
+        onLongPress={(_e) => {
           setIsLongPressing(true);
           setSelectedStoredText(item);
         }}
