@@ -385,8 +385,7 @@ export default function Settings() {
                   dispatch(setColors(name));
                 }}
                 style={{
-                  marginTop: 10,
-                  padding: 10,
+                  padding: 5,
                   borderRadius: 10,
                   display: "flex",
                   flexDirection: "row",
@@ -429,8 +428,7 @@ export default function Settings() {
                 dispatch(setColors("default"));
               }}
               style={{
-                marginTop: 10,
-                padding: 10,
+                padding: 5,
                 borderRadius: 10,
                 display: "flex",
                 flexDirection: "row",
