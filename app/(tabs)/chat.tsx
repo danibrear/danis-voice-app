@@ -178,7 +178,7 @@ export default function ChatPage() {
                     { rotate: `${angle}deg` },
                     { scaleY: angle === 180 ? 3 : 1 },
                   ],
-                  lineHeight: angle === 180 ? 50 : 100,
+                  lineHeight: angle === 180 ? 55 : 100,
                   color: "white",
                   fontSize: getFontSize(),
                   textAlign: "center",
