@@ -9,11 +9,12 @@ import {
   setRate,
 } from "@/store/preferences";
 import { coreStyles } from "@/styles";
-import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import * as Speech from "expo-speech";
+import * as Updates from "expo-updates";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Keyboard, ScrollView, TouchableOpacity, View } from "react-native";
 import {
   Button,
@@ -22,6 +23,7 @@ import {
   Divider,
   Icon,
   IconButton,
+  Snackbar,
   Text,
   TextInput,
   useTheme,
@@ -40,6 +42,12 @@ export default function Settings() {
   const [filter, setFilter] = useState("");
 
   const [voicesOrder, setVoicesOrder] = useState<"language" | "name">("name");
+
+  const [info, setInfo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const [isCheckingForUpdates, setIsCheckingForUpdates] = useState(false);
 
   useEffect(() => {
     Speech.getAvailableVoicesAsync().then((availableVoices) => {
@@ -61,6 +69,22 @@ export default function Settings() {
     }, 25);
     return () => clearInterval(interval);
   }, [isTestingVoice]);
+
+  const resetStatusMessages = useCallback(() => {
+    setError(null);
+    setInfo(null);
+    setSuccess(null);
+  }, []);
+
+  useEffect(() => {
+    if (!info && !success && !error) {
+      return;
+    }
+    const interval = setTimeout(() => {
+      resetStatusMessages();
+    }, 3000);
+    return () => clearTimeout(interval);
+  }, [info, success, error, resetStatusMessages]);
 
   const preferredVoice = useMemo(
     () =>
@@ -329,9 +353,6 @@ export default function Settings() {
             </View>
             <Divider style={{ marginVertical: 10 }} />
             <View>
-              <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
-                Return key sends message in chat
-              </Text>
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 1 }}>
                 <Checkbox.Android
@@ -348,7 +369,9 @@ export default function Settings() {
                     );
                   }}
                 />
-                <Text>{preferences.chatReturnKeySendsMessage ? "ON" : ""}</Text>
+                <Text style={{ fontWeight: "bold" }}>
+                  Return key sends message in chat
+                </Text>
               </View>
             </View>
             <Divider style={{ marginVertical: 10 }} />
@@ -470,6 +493,40 @@ export default function Settings() {
               </Text>
             </TouchableOpacity>
           </View>
+          <Button
+            mode="outlined"
+            loading={isCheckingForUpdates}
+            icon={(props) => <FontAwesome name="refresh" {...props} />}
+            style={{
+              marginTop: 10,
+              alignSelf: "center",
+            }}
+            onPress={() => {
+              resetStatusMessages();
+              setIsCheckingForUpdates(true);
+              Updates.checkForUpdateAsync()
+                .then(async (update) => {
+                  if (update.isAvailable) {
+                    setInfo("Update available. Downloading...");
+                    const reloaded = await Updates.fetchUpdateAsync();
+                    if (reloaded.isNew) {
+                      await Updates.reloadAsync();
+                    }
+                  } else {
+                    setInfo("The app is up to date.");
+                  }
+                })
+                .catch((e) => {
+                  setError(
+                    "Error checking for updates. Please try again later.",
+                  );
+                })
+                .finally(() => {
+                  setIsCheckingForUpdates(false);
+                });
+            }}>
+            Check for App Updates
+          </Button>
           <View style={{ height: 200 }}></View>
         </ScrollView>
       </SafeAreaView>
@@ -587,10 +644,45 @@ export default function Settings() {
             ))}
           </ScrollView>
         </Dialog.Content>
-        <Dialog.Actions>
+        <Dialog.Actions style={{ justifyContent: "space-between" }}>
+          <Button
+            icon={(props) => <FontAwesome name="refresh" {...props} />}
+            onPress={() => {
+              resetStatusMessages();
+              Speech.getAvailableVoicesAsync()
+                .then((availableVoices) => {
+                  setVoices(availableVoices);
+                  setSuccess("Voices refreshed successfully");
+                })
+                .catch((e) => {
+                  setError("Error refreshing voices: " + e.message);
+                });
+            }}>
+            Refresh Voices
+          </Button>
           <Button onPress={() => setIsChoosingVoice(false)}>Close</Button>
         </Dialog.Actions>
       </Dialog>
+      <Snackbar
+        visible={info !== null}
+        onDismiss={() => setInfo(null)}
+        duration={3000}>
+        {info}
+      </Snackbar>
+      <Snackbar
+        visible={error !== null}
+        onDismiss={() => setError(null)}
+        duration={5000}
+        style={{ backgroundColor: theme.colors.error }}>
+        {error}
+      </Snackbar>
+      <Snackbar
+        visible={success !== null}
+        onDismiss={() => setSuccess(null)}
+        duration={3000}
+        style={{ backgroundColor: theme.colors.primary }}>
+        {success}
+      </Snackbar>
     </ThemedView>
   );
 }
