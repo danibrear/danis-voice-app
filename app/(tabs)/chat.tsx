@@ -171,12 +171,12 @@ export default function ChatPage() {
               }}>
               <Text
                 adjustsFontSizeToFit={true}
-                numberOfLines={angle === 180 ? 2 : 3}
+                numberOfLines={3}
                 allowFontScaling={true}
                 style={{
                   transform: [
                     { rotate: `${angle}deg` },
-                    { scaleY: angle === 180 ? 4 : 1 },
+                    { scaleY: angle === 180 ? 3 : 1 },
                   ],
                   lineHeight: angle === 180 ? 40 : 100,
                   color: "white",
