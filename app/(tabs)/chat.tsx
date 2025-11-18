@@ -6,7 +6,7 @@ import { coreStyles } from "@/styles";
 import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import * as Speech from "expo-speech";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -30,10 +30,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 // @ts-expect-error this is a static asset
 import Logo from "../../assets/images/splash-icon.png";
+
+type Message = {
+  text: string;
+  fontSize: number | null;
+};
+
+const FLIP_SCALE = 2;
 export default function ChatPage() {
   const theme = useTheme();
 
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
 
   const preferences = useSelector((state: RootState) => state.preferences);
@@ -49,27 +56,15 @@ export default function ChatPage() {
   const containerRef = useRef<View>(null);
 
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
-  const [lastMessage, setLastMessage] = useState<string | null>(null);
+  const [lastMessage, setLastMessage] = useState<Message | null>(null);
   const [isShowMode, setIsShowMode] = useState(true);
 
   const [showRotateOptions, setShowRotateOptions] = useState(true);
   const [showTapInstructions, setShowTapInstructions] = useState(true);
+  const [fontSize, setFontSize] = useState<number | null>(null);
 
   const [angle, setAngle] = useState(0);
   const messagesEndRef = useRef<ScrollView>(null);
-
-  const handleSendMessage = async () => {
-    if (input.trim() === "") {
-      return;
-    }
-    await handleSay(input.trim());
-    const newMessages = [...messages, input.trim()];
-    setMessages(newMessages);
-    setInput("");
-    setTimeout(() => {
-      messagesEndRef.current?.scrollToEnd({ animated: true });
-    }, 50);
-  };
 
   useEffect(() => {
     if (
@@ -106,11 +101,39 @@ export default function ChatPage() {
     return () => clearInterval(interval);
   }, [isSpeaking, messages]);
 
-  const handleSay = async (message: string) => {
+  const handleSetFontSize = (size: number) => {
+    setFontSize(size);
+  };
+
+  const handleSendMessage = async () => {
+    if (input.trim() === "") {
+      return;
+    }
+    await handleSay({
+      text: input.trim(),
+      fontSize: fontSize,
+    });
+    const newMessages = [
+      ...messages,
+      { text: input.trim(), fontSize: fontSize },
+    ];
+    setLastMessage({
+      text: input.trim(),
+      fontSize: fontSize,
+    });
+    setMessages(newMessages);
+    setInput("");
+    setFontSize(null);
+    setTimeout(() => {
+      messagesEndRef.current?.scrollToEnd({ animated: true });
+    }, 50);
+  };
+
+  const handleSay = async (message: Message) => {
     AudioModule.setAudioModeAsync({
       playsInSilentMode: true,
     });
-    Speech.speak(message, {
+    Speech.speak(message.text, {
       voice: preferences.preferredVoice,
       pitch: preferences.speechPitch,
       rate: preferences.speechRate,
@@ -119,25 +142,9 @@ export default function ChatPage() {
     setIsSpeaking(true);
   };
 
-  const getFontSize = () => {
-    if (angle === 180) {
-      if (lastMessage) {
-        if (lastMessage.length > 100) {
-          return 25;
-        }
-        if (lastMessage.length > 50) {
-          return 30;
-        }
-        return 40;
-      }
-      return 50;
-    }
-    if (angle === 0) {
-      return 100;
-    }
-    return 80;
-  };
-
+  const menuMessage = useMemo(() => {
+    return messages[menuMessageIdx ?? 0];
+  }, [menuMessageIdx, messages]);
   return (
     <ThemedView style={[coreStyles.container, { position: "relative" }]}>
       <CrossView
@@ -198,7 +205,7 @@ export default function ChatPage() {
                   paddingHorizontal: 10,
                   zIndex: 1001,
                 }}>
-                Tap text to show/hide rotate options
+                Tap text to show/hide text options
               </Animated.Text>
             )}
             <View
@@ -209,28 +216,25 @@ export default function ChatPage() {
                 alignContent: "center",
                 alignItems: "center",
                 flex: 1,
-                paddingBottom:
-                  angle === 180 ? 75 : Math.abs(angle) === 90 ? 50 : 0,
-                paddingTop:
-                  angle === 180 ? 50 : Math.abs(angle) === 90 ? 25 : 0,
-                paddingHorizontal: Math.abs(angle) === 90 ? 50 : 0,
+                paddingBottom: angle === 180 ? 75 : 0,
+                paddingTop: angle === 180 ? 50 : 0,
+                paddingHorizontal: 0,
               }}
               onTouchStart={() => {
                 setShowRotateOptions((s) => !s);
               }}>
               <Text
                 adjustsFontSizeToFit={true}
-                numberOfLines={angle === 180 ? 3 : angle === 0 ? 6 : 4}
+                numberOfLines={angle === 180 ? 3 : 6}
                 allowFontScaling={true}
                 style={{
                   transform: [
                     { rotate: `${angle}deg` },
                     {
-                      scaleY: angle === 180 ? 3 : 1,
+                      scaleY: angle === 180 ? FLIP_SCALE : 1,
                     },
                   ],
                   color: "white",
-                  fontSize: getFontSize(),
                   textAlign: "center",
                   marginHorizontal: 10,
                   fontWeight: "bold",
@@ -238,8 +242,12 @@ export default function ChatPage() {
                   justifyContent: "center",
                   alignContent: "center",
                   alignItems: "center",
+                  fontSize:
+                    input.trim() !== ""
+                      ? fontSize ?? 100
+                      : lastMessage?.fontSize ?? 100,
                 }}>
-                {input.trim().length === 0 ? lastMessage : input.trim()}
+                {input.trim() !== "" ? input.trim() : lastMessage?.text}
               </Text>
             </View>
             {showRotateOptions && (
@@ -257,18 +265,6 @@ export default function ChatPage() {
                   justifyContent: "space-around",
                   backgroundColor: "rgba(0,0,0,0.1)",
                 }}>
-                <IconButton
-                  onPress={() => setAngle(90)}
-                  mode={angle === 90 ? "contained" : undefined}
-                  icon={(props) => (
-                    <MaterialIcons
-                      name="rotate-left"
-                      {...props}
-                      color={angle === 90 ? theme.colors.tertiary : "white"}
-                    />
-                  )}
-                  size={30}
-                />
                 <IconButton
                   onPress={() => setAngle(180)}
                   mode={angle === 180 ? "contained" : undefined}
@@ -294,16 +290,28 @@ export default function ChatPage() {
                   size={30}
                 />
                 <IconButton
-                  onPress={() => setAngle(-90)}
-                  mode={angle === -90 ? "contained" : undefined}
-                  icon={(props) => (
-                    <MaterialIcons
-                      name="rotate-right"
-                      {...props}
-                      color={angle === -90 ? theme.colors.tertiary : "white"}
-                    />
-                  )}
+                  icon="magnify-plus"
+                  iconColor="white"
                   size={30}
+                  onPress={() => {
+                    if (fontSize === null) {
+                      setFontSize(100);
+                      return;
+                    }
+                    handleSetFontSize(Math.min(200, fontSize + 15));
+                  }}
+                />
+                <IconButton
+                  icon="magnify-minus"
+                  iconColor="white"
+                  size={30}
+                  onPress={() => {
+                    if (fontSize === null) {
+                      setFontSize(100);
+                      return;
+                    }
+                    handleSetFontSize(Math.max(20, fontSize - 15));
+                  }}
                 />
                 <IconButton
                   onPress={() => {
@@ -318,53 +326,58 @@ export default function ChatPage() {
             )}
           </View>
         )}
-        <View style={{ position: "absolute", bottom: 5, right: 5, zIndex: 3 }}>
-          {isPaused && (
-            <Button
-              mode="outlined"
-              icon={(props) => <MaterialIcons name={"play-arrow"} {...props} />}
-              onPress={() => {
-                if (isPaused) {
-                  Speech.resume();
-                  setIsSpeaking(true);
-                  setIsPaused(false);
-                }
-              }}>
-              Resume
-            </Button>
-          )}
-          {isSpeaking && (
-            <View style={{ flexDirection: "row", gap: 5 }}>
+        {(isPaused || isSpeaking) && (
+          <View
+            style={{ position: "absolute", bottom: 5, right: 5, zIndex: 3 }}>
+            {isPaused && (
               <Button
                 mode="outlined"
-                contentStyle={{ backgroundColor: theme.colors.surface }}
-                icon={(props) => <MaterialIcons name={"pause"} {...props} />}
-                onPress={() => {
-                  if (isSpeaking) {
-                    Speech.pause();
-                    setIsSpeaking(false);
-                    setIsPaused(true);
-                  }
-                }}>
-                Pause
-              </Button>
-              <Button
-                mode="outlined"
-                contentStyle={{ backgroundColor: theme.colors.surface }}
                 icon={(props) => (
-                  <MaterialIcons name={"stop-circle"} {...props} />
+                  <MaterialIcons name={"play-arrow"} {...props} />
                 )}
                 onPress={() => {
-                  if (isSpeaking) {
-                    Speech.stop();
-                    setIsSpeaking(false);
+                  if (isPaused) {
+                    Speech.resume();
+                    setIsSpeaking(true);
+                    setIsPaused(false);
                   }
                 }}>
-                Stop
+                Resume
               </Button>
-            </View>
-          )}
-        </View>
+            )}
+            {isSpeaking && (
+              <View style={{ flexDirection: "row", gap: 5 }}>
+                <Button
+                  mode="outlined"
+                  contentStyle={{ backgroundColor: theme.colors.surface }}
+                  icon={(props) => <MaterialIcons name={"pause"} {...props} />}
+                  onPress={() => {
+                    if (isSpeaking) {
+                      Speech.pause();
+                      setIsSpeaking(false);
+                      setIsPaused(true);
+                    }
+                  }}>
+                  Pause
+                </Button>
+                <Button
+                  mode="outlined"
+                  contentStyle={{ backgroundColor: theme.colors.surface }}
+                  icon={(props) => (
+                    <MaterialIcons name={"stop-circle"} {...props} />
+                  )}
+                  onPress={() => {
+                    if (isSpeaking) {
+                      Speech.stop();
+                      setIsSpeaking(false);
+                    }
+                  }}>
+                  Stop
+                </Button>
+              </View>
+            )}
+          </View>
+        )}
         <View
           style={{
             flexGrow: 1,
@@ -464,6 +477,22 @@ export default function ChatPage() {
               </Card.Content>
             </Card>
           )}
+          <Animated.Image
+            source={Logo}
+            style={[
+              {
+                display: messages.length === 0 ? "none" : "flex",
+                position: "absolute",
+                width: "80%",
+                height: "80%",
+                left: "10%",
+                top: "10%",
+                resizeMode: "contain",
+                opacity: 0.05,
+                zIndex: 1,
+              },
+            ]}
+          />
           {messages.length > 0 && (
             <View style={{ flex: 1 }}>
               <View
@@ -513,18 +542,8 @@ export default function ChatPage() {
                         marginVertical: 5,
                       }}>
                       <IconButton
-                        size={12}
-                        icon={(props) => (
-                          <FontAwesome6 name="display" {...props} size={20} />
-                        )}
-                        onPress={() => {
-                          setLastMessage(message);
-                          Keyboard.dismiss();
-                          setIsShowMode(true);
-                        }}
-                      />
-                      <IconButton
-                        size={10}
+                        mode="outlined"
+                        style={{ zIndex: 9999, position: "relative" }}
                         icon={(props) => (
                           <MaterialIcons name="replay" {...props} size={25} />
                         )}
@@ -546,7 +565,7 @@ export default function ChatPage() {
                           flexShrink: 1,
                           boxShadow: `0 2px 2px ${theme.colors.surfaceDisabled}`,
                         }}>
-                        <Text>{message}</Text>
+                        <Text>{message.text}</Text>
                       </View>
                       <IconButton
                         icon={(props) => (
@@ -568,22 +587,6 @@ export default function ChatPage() {
             </View>
           )}
         </View>
-        <Animated.Image
-          source={Logo}
-          style={[
-            {
-              display: messages.length === 0 ? "none" : "flex",
-              position: "absolute",
-              width: "80%",
-              height: "80%",
-              left: "10%",
-              top: "10%",
-              resizeMode: "contain",
-              opacity: 0.05,
-              zIndex: 1,
-            },
-          ]}
-        />
       </CrossView>
 
       <KeyboardAvoidingView
@@ -623,6 +626,9 @@ export default function ChatPage() {
                 placeholder="Message..."
                 value={input}
                 onChangeText={(t) => {
+                  if (t.trim().length === 0) {
+                    setFontSize(null);
+                  }
                   if (t === "\n") {
                     setInput("");
                     Keyboard.dismiss();
@@ -665,28 +671,32 @@ export default function ChatPage() {
       </KeyboardAvoidingView>
       <Dialog visible={menuMessageIdx !== null}>
         <Dialog.Content style={{ flexDirection: "column", gap: 10 }}>
-          <Text
-            style={{
-              fontWeight: "bold",
-              marginBottom: 10,
-              textAlign: "center",
-            }}>{`"${messages[menuMessageIdx ?? 0]}"`}</Text>
-          <Button
-            mode="contained"
-            style={{ flexGrow: 1 }}
-            onPress={() => {
-              dispatch(
-                createStoredText({
-                  id: new Date().getTime().toString(),
-                  text: messages[menuMessageIdx ?? 0],
-                  starred: false,
-                  order: -1,
-                }),
-              );
-              setMenuMessageIdx(null);
-            }}>
-            Save to Recents
-          </Button>
+          {menuMessage && (
+            <Text
+              style={{
+                fontWeight: "bold",
+                marginBottom: 10,
+                textAlign: "center",
+              }}>{`"${menuMessage.text}"`}</Text>
+          )}
+          {menuMessage && (
+            <Button
+              mode="contained"
+              style={{ flexGrow: 1 }}
+              onPress={() => {
+                dispatch(
+                  createStoredText({
+                    id: new Date().getTime().toString(),
+                    text: menuMessage.text,
+                    starred: false,
+                    order: -1,
+                  }),
+                );
+                setMenuMessageIdx(null);
+              }}>
+              Save to Recents
+            </Button>
+          )}
           <Button
             mode="contained"
             style={{ flexGrow: 1 }}
