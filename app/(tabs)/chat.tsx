@@ -34,7 +34,7 @@ type Message = {
   fontSize: number | null;
 };
 
-const FLIP_SCALE = 2;
+const FLIP_SCALE = 1.5;
 export default function ChatPage() {
   const theme = useTheme();
 
@@ -67,7 +67,6 @@ export default function ChatPage() {
   const messagesEndRef = useRef<ScrollView>(null);
 
   const hasProcessedChange = useRef(false);
-  const [containerHeight, setContainerHeight] = useState(0);
 
   useEffect(() => {
     if (
@@ -219,9 +218,6 @@ export default function ChatPage() {
                 paddingTop: angle === 180 ? 50 : 0,
                 paddingHorizontal: 0,
               }}
-              onLayout={(e) => {
-                setContainerHeight(e.nativeEvent.layout.height);
-              }}
               onTouchStart={() => {
                 setShowRotateOptions((s) => !s);
               }}>
@@ -236,7 +232,7 @@ export default function ChatPage() {
                   if (!hasProcessedChange.current) {
                     if (maxCharHeight >= 50 && numLines > 2) {
                       setNumLines((n) => n - 1);
-                    } else if (maxCharHeight < 30 && numLines < 4) {
+                    } else if (maxCharHeight < 30 && numLines < 6) {
                       setNumLines((n) => n + 1);
                     }
                     hasProcessedChange.current = true;
