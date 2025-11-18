@@ -28,7 +28,6 @@ import {
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
-// @ts-expect-error this is a static asset
 
 type Message = {
   text: string;
@@ -62,8 +61,12 @@ export default function ChatPage() {
   const [showTapInstructions, setShowTapInstructions] = useState(true);
   const [fontSize, setFontSize] = useState<number | null>(null);
 
+  const [numLines, setNumLines] = useState(3);
+
   const [angle, setAngle] = useState(0);
   const messagesEndRef = useRef<ScrollView>(null);
+
+  const hasProcessedChange = useRef(false);
 
   useEffect(() => {
     if (
@@ -101,7 +104,6 @@ export default function ChatPage() {
   }, [isSpeaking, messages]);
 
   const handleSetFontSize = (size: number) => {
-    console.log("fon size set to", size);
     setFontSize(size);
   };
 
@@ -109,10 +111,7 @@ export default function ChatPage() {
     if (input.trim() === "") {
       return;
     }
-    await handleSay({
-      text: input.trim(),
-      fontSize: fontSize,
-    });
+    await handleSay(input.trim());
     const newMessages = [
       ...messages,
       { text: input.trim(), fontSize: fontSize },
@@ -129,16 +128,15 @@ export default function ChatPage() {
     }, 50);
   };
 
-  const handleSay = async (message: Message) => {
+  const handleSay = async (messageText: string) => {
     AudioModule.setAudioModeAsync({
       playsInSilentMode: true,
     });
-    Speech.speak(message.text, {
+    Speech.speak(messageText, {
       voice: preferences.preferredVoice,
       pitch: preferences.speechPitch,
       rate: preferences.speechRate,
     });
-    setLastMessage(message);
     setIsSpeaking(true);
   };
 
@@ -225,8 +223,23 @@ export default function ChatPage() {
               }}>
               <Text
                 adjustsFontSizeToFit={true}
-                numberOfLines={angle === 180 ? 3 : 6}
+                numberOfLines={angle === 180 ? numLines : 6}
                 allowFontScaling={true}
+                onTextLayout={(e) => {
+                  const maxCharHeight = Math.max(
+                    ...e.nativeEvent.lines.map((l) => l.height),
+                  );
+                  if (!hasProcessedChange.current) {
+                    if (maxCharHeight >= 50 && numLines > 3) {
+                      setNumLines(3);
+                    } else if (maxCharHeight < 20 && numLines < 5) {
+                      setNumLines((n) => n + 1);
+                    } else if (maxCharHeight < 40 && numLines < 4) {
+                      setNumLines(4);
+                    }
+                    hasProcessedChange.current = true;
+                  }
+                }}
                 style={{
                   transform: [
                     { rotate: `${angle}deg` },
@@ -242,7 +255,7 @@ export default function ChatPage() {
                   justifyContent: "center",
                   alignContent: "center",
                   alignItems: "center",
-                  fontSize: fontSize ?? 100,
+                  fontSize: fontSize ?? 60,
                 }}>
                 {input.trim() !== "" ? input.trim() : lastMessage?.text}
               </Text>
@@ -308,6 +321,19 @@ export default function ChatPage() {
                       return;
                     }
                     handleSetFontSize(Math.max(20, fontSize - 10));
+                  }}
+                />
+                <IconButton
+                  icon="magnify-remove-outline"
+                  iconColor={
+                    fontSize === null ? "white" : theme.colors.tertiary
+                  }
+                  style={{
+                    opacity: fontSize === null ? 0.333 : 1,
+                  }}
+                  size={30}
+                  onPress={() => {
+                    setFontSize(null);
                   }}
                 />
                 <IconButton
@@ -529,7 +555,7 @@ export default function ChatPage() {
                           <MaterialIcons name="replay" {...props} size={25} />
                         )}
                         onPress={() => {
-                          handleSay(message);
+                          handleSay(message.text);
                         }}
                       />
                       <View
@@ -607,6 +633,7 @@ export default function ChatPage() {
                 placeholder="Message..."
                 value={input}
                 onChangeText={(t) => {
+                  hasProcessedChange.current = false;
                   if (t.trim().length === 0) {
                     setFontSize(null);
                   }
