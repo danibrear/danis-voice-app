@@ -67,6 +67,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef<ScrollView>(null);
 
   const hasProcessedChange = useRef(false);
+  const [containerHeight, setContainerHeight] = useState(0);
 
   useEffect(() => {
     if (
@@ -218,6 +219,9 @@ export default function ChatPage() {
                 paddingTop: angle === 180 ? 50 : 0,
                 paddingHorizontal: 0,
               }}
+              onLayout={(e) => {
+                setContainerHeight(e.nativeEvent.layout.height);
+              }}
               onTouchStart={() => {
                 setShowRotateOptions((s) => !s);
               }}>
@@ -230,12 +234,10 @@ export default function ChatPage() {
                     ...e.nativeEvent.lines.map((l) => l.height),
                   );
                   if (!hasProcessedChange.current) {
-                    if (maxCharHeight >= 50 && numLines > 3) {
-                      setNumLines(3);
-                    } else if (maxCharHeight < 20 && numLines < 5) {
+                    if (maxCharHeight >= 50 && numLines > 2) {
+                      setNumLines((n) => n - 1);
+                    } else if (maxCharHeight < 30 && numLines < 4) {
                       setNumLines((n) => n + 1);
-                    } else if (maxCharHeight < 40 && numLines < 4) {
-                      setNumLines(4);
                     }
                     hasProcessedChange.current = true;
                   }
@@ -632,6 +634,7 @@ export default function ChatPage() {
                 clearButtonMode="always"
                 placeholder="Message..."
                 value={input}
+                numberOfLines={2}
                 onChangeText={(t) => {
                   hasProcessedChange.current = false;
                   if (t.trim().length === 0) {
