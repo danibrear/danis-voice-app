@@ -25,7 +25,7 @@ import {
   TextInput,
   useTheme,
 } from "react-native-paper";
-import Animated from "react-native-reanimated";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 // @ts-expect-error this is a static asset
@@ -46,10 +46,14 @@ export default function ChatPage() {
 
   const parentRef = useRef(null);
 
+  const containerRef = useRef<View>(null);
+
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
-  const [isShowMode, setIsShowMode] = useState(false);
-  const [keyboardActive, setKeyboardActive] = useState(false);
+  const [isShowMode, setIsShowMode] = useState(true);
+
+  const [showRotateOptions, setShowRotateOptions] = useState(true);
+  const [showTapInstructions, setShowTapInstructions] = useState(true);
 
   const [angle, setAngle] = useState(0);
   const messagesEndRef = useRef<ScrollView>(null);
@@ -68,8 +72,19 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
-    setKeyboardActive(Keyboard.isVisible());
-  }, []);
+    if (
+      isShowMode &&
+      showTapInstructions &&
+      (messages.length > 0 || input.trim().length > 0)
+    ) {
+      setTimeout(() => {
+        setShowTapInstructions(false);
+      }, 4000);
+    }
+    if (!isShowMode || (input.trim().length === 0 && messages.length === 0)) {
+      setShowTapInstructions(true);
+    }
+  }, [input, isShowMode, messages.length, showTapInstructions]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -160,25 +175,60 @@ export default function ChatPage() {
               backgroundColor: "black",
               zIndex: 1000,
               paddingTop: safeAreaInsets?.top,
+              alignItems: "center",
             }}>
+            {showTapInstructions && (
+              <Animated.Text
+                entering={FadeInDown.duration(500)
+                  .delay(250)
+                  .springify()
+                  .damping(25)
+                  .mass(5)}
+                style={{
+                  color: "white",
+                  position: "absolute",
+                  top: safeAreaInsets?.top! - 10,
+                  right: 0,
+                  left: 0,
+                  textAlign: "center",
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  backgroundColor: "rgba(0,0,0,0.5)",
+                  paddingVertical: 5,
+                  paddingHorizontal: 10,
+                  zIndex: 1001,
+                }}>
+                Tap text to show/hide rotate options
+              </Animated.Text>
+            )}
             <View
+              ref={containerRef}
               style={{
                 flexDirection: "column",
                 justifyContent: "center",
                 alignContent: "center",
                 alignItems: "center",
                 flex: 1,
+                paddingBottom:
+                  angle === 180 ? 75 : Math.abs(angle) === 90 ? 50 : 0,
+                paddingTop:
+                  angle === 180 ? 50 : Math.abs(angle) === 90 ? 25 : 0,
+                paddingHorizontal: Math.abs(angle) === 90 ? 50 : 0,
+              }}
+              onTouchStart={() => {
+                setShowRotateOptions((s) => !s);
               }}>
               <Text
                 adjustsFontSizeToFit={true}
-                numberOfLines={3}
+                numberOfLines={angle === 180 ? 3 : angle === 0 ? 6 : 4}
                 allowFontScaling={true}
                 style={{
                   transform: [
                     { rotate: `${angle}deg` },
-                    { scaleY: angle === 180 ? 3 : 1 },
+                    {
+                      scaleY: angle === 180 ? 3 : 1,
+                    },
                   ],
-                  lineHeight: angle === 180 ? 55 : 100,
                   color: "white",
                   fontSize: getFontSize(),
                   textAlign: "center",
@@ -192,69 +242,80 @@ export default function ChatPage() {
                 {input.trim().length === 0 ? lastMessage : input.trim()}
               </Text>
             </View>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-around",
-              }}>
-              <IconButton
-                onPress={() => setAngle(90)}
-                mode={angle === 90 ? "contained" : undefined}
-                icon={(props) => (
-                  <MaterialIcons
-                    name="rotate-left"
-                    {...props}
-                    color={angle === 90 ? theme.colors.tertiary : "white"}
-                  />
-                )}
-                size={30}
-              />
-              <IconButton
-                onPress={() => setAngle(180)}
-                mode={angle === 180 ? "contained" : undefined}
-                icon={(props) => (
-                  <MaterialIcons
-                    name="arrow-upward"
-                    {...props}
-                    color={angle === 180 ? theme.colors.tertiary : "white"}
-                  />
-                )}
-                size={30}
-              />
-              <IconButton
-                onPress={() => setAngle(0)}
-                mode={angle === 0 ? "contained" : undefined}
-                icon={(props) => (
-                  <MaterialIcons
-                    name="arrow-downward"
-                    {...props}
-                    color={angle === 0 ? theme.colors.tertiary : "white"}
-                  />
-                )}
-                size={30}
-              />
-              <IconButton
-                onPress={() => setAngle(-90)}
-                mode={angle === -90 ? "contained" : undefined}
-                icon={(props) => (
-                  <MaterialIcons
-                    name="rotate-right"
-                    {...props}
-                    color={angle === -90 ? theme.colors.tertiary : "white"}
-                  />
-                )}
-                size={30}
-              />
-              <IconButton
-                onPress={() => {
-                  setIsShowMode(false);
-                  setAngle(0);
-                }}
-                icon={(props) => (
-                  <MaterialIcons name="close" {...props} color="white" />
-                )}
-              />
-            </View>
+            {showRotateOptions && (
+              <Animated.View
+                entering={FadeInDown.duration(500)
+                  .springify()
+                  .damping(15)
+                  .mass(0.5)}
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  flexDirection: "row",
+                  justifyContent: "space-around",
+                  backgroundColor: "rgba(0,0,0,0.1)",
+                }}>
+                <IconButton
+                  onPress={() => setAngle(90)}
+                  mode={angle === 90 ? "contained" : undefined}
+                  icon={(props) => (
+                    <MaterialIcons
+                      name="rotate-left"
+                      {...props}
+                      color={angle === 90 ? theme.colors.tertiary : "white"}
+                    />
+                  )}
+                  size={30}
+                />
+                <IconButton
+                  onPress={() => setAngle(180)}
+                  mode={angle === 180 ? "contained" : undefined}
+                  icon={(props) => (
+                    <MaterialIcons
+                      name="arrow-upward"
+                      {...props}
+                      color={angle === 180 ? theme.colors.tertiary : "white"}
+                    />
+                  )}
+                  size={30}
+                />
+                <IconButton
+                  onPress={() => setAngle(0)}
+                  mode={angle === 0 ? "contained" : undefined}
+                  icon={(props) => (
+                    <MaterialIcons
+                      name="arrow-downward"
+                      {...props}
+                      color={angle === 0 ? theme.colors.tertiary : "white"}
+                    />
+                  )}
+                  size={30}
+                />
+                <IconButton
+                  onPress={() => setAngle(-90)}
+                  mode={angle === -90 ? "contained" : undefined}
+                  icon={(props) => (
+                    <MaterialIcons
+                      name="rotate-right"
+                      {...props}
+                      color={angle === -90 ? theme.colors.tertiary : "white"}
+                    />
+                  )}
+                  size={30}
+                />
+                <IconButton
+                  onPress={() => {
+                    setIsShowMode(false);
+                    setAngle(0);
+                  }}
+                  icon={(props) => (
+                    <MaterialIcons name="close" {...props} color="white" />
+                  )}
+                />
+              </Animated.View>
+            )}
           </View>
         )}
         <View style={{ position: "absolute", bottom: 5, right: 5, zIndex: 3 }}>
@@ -331,35 +392,24 @@ export default function ChatPage() {
                   Chat lets you {`"speak"`} messages quickly without saving them
                   to your recent list.
                 </Text>
-                {keyboardActive && (
-                  <Button
-                    onPress={() => {
-                      Keyboard.dismiss();
-                      setKeyboardActive(false);
+                <View>
+                  <Divider style={{ marginVertical: 5 }} />
+                  <Text style={{ fontWeight: "bold" }}>Normal mode:</Text>
+                  <Text>You see a list of your messages in order.</Text>
+                  <Divider style={{ marginVertical: 5 }} />
+                  <Text style={{ fontWeight: "bold" }}>Show mode:</Text>
+                  <Text>
+                    Displays the current message in a large font for others to
+                    read.
+                  </Text>
+                  <Text
+                    style={{
+                      marginTop: 3,
                     }}>
-                    Read More
-                  </Button>
-                )}
-                {!keyboardActive && (
-                  <View>
-                    <Divider style={{ marginVertical: 5 }} />
-                    <Text style={{ fontWeight: "bold" }}>Normal mode:</Text>
-                    <Text>You see a list of your messages in order.</Text>
-                    <Divider style={{ marginVertical: 5 }} />
-                    <Text style={{ fontWeight: "bold" }}>Show mode:</Text>
-                    <Text>
-                      Displays the current message in a large font for others to
-                      read.
-                    </Text>
-                    <Text
-                      style={{
-                        marginTop: 3,
-                      }}>
-                      * Rotate buttons change the orientation of the text to
-                      reduce the need to turn your device.
-                    </Text>
-                  </View>
-                )}
+                    * Rotate buttons change the orientation of the text to
+                    reduce the need to turn your device.
+                  </Text>
+                </View>
                 <View
                   style={{
                     flexDirection: "row",
@@ -572,14 +622,6 @@ export default function ChatPage() {
                 clearButtonMode="always"
                 placeholder="Message..."
                 value={input}
-                onFocus={() => {
-                  console.log("focus");
-                  setKeyboardActive(true);
-                }}
-                onBlur={() => {
-                  console.log("blur");
-                  setKeyboardActive(false);
-                }}
                 onChangeText={(t) => {
                   if (t === "\n") {
                     setInput("");
