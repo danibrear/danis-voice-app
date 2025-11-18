@@ -29,7 +29,6 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 // @ts-expect-error this is a static asset
-import Logo from "../../assets/images/splash-icon.png";
 
 type Message = {
   text: string;
@@ -102,6 +101,7 @@ export default function ChatPage() {
   }, [isSpeaking, messages]);
 
   const handleSetFontSize = (size: number) => {
+    console.log("fon size set to", size);
     setFontSize(size);
   };
 
@@ -242,10 +242,7 @@ export default function ChatPage() {
                   justifyContent: "center",
                   alignContent: "center",
                   alignItems: "center",
-                  fontSize:
-                    input.trim() !== ""
-                      ? fontSize ?? 100
-                      : lastMessage?.fontSize ?? 100,
+                  fontSize: fontSize ?? 100,
                 }}>
                 {input.trim() !== "" ? input.trim() : lastMessage?.text}
               </Text>
@@ -298,7 +295,7 @@ export default function ChatPage() {
                       setFontSize(100);
                       return;
                     }
-                    handleSetFontSize(Math.min(200, fontSize + 15));
+                    handleSetFontSize(Math.min(200, fontSize + 10));
                   }}
                 />
                 <IconButton
@@ -310,7 +307,7 @@ export default function ChatPage() {
                       setFontSize(100);
                       return;
                     }
-                    handleSetFontSize(Math.max(20, fontSize - 15));
+                    handleSetFontSize(Math.max(20, fontSize - 10));
                   }}
                 />
                 <IconButton
@@ -477,22 +474,6 @@ export default function ChatPage() {
               </Card.Content>
             </Card>
           )}
-          <Animated.Image
-            source={Logo}
-            style={[
-              {
-                display: messages.length === 0 ? "none" : "flex",
-                position: "absolute",
-                width: "80%",
-                height: "80%",
-                left: "10%",
-                top: "10%",
-                resizeMode: "contain",
-                opacity: 0.05,
-                zIndex: 1,
-              },
-            ]}
-          />
           {messages.length > 0 && (
             <View style={{ flex: 1 }}>
               <View
