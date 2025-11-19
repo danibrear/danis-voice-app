@@ -7,17 +7,10 @@ import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import * as Speech from "expo-speech";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  ScrollView,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
 import {
   Button,
   Card,
-  Checkbox,
   Dialog,
   Divider,
   IconButton,
@@ -40,6 +33,7 @@ export default function ChatPage() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [displayMessage, setDisplayMessage] = useState<Message | null>(null);
 
   const preferences = useSelector((state: RootState) => state.preferences);
 
@@ -54,7 +48,6 @@ export default function ChatPage() {
   const containerRef = useRef<View>(null);
 
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
-  const [lastMessage, setLastMessage] = useState<Message | null>(null);
   const [isShowMode, setIsShowMode] = useState(true);
 
   const [showRotateOptions, setShowRotateOptions] = useState(true);
@@ -84,12 +77,6 @@ export default function ChatPage() {
   }, [input, isShowMode, messages.length, showTapInstructions]);
 
   useEffect(() => {
-    if (messages.length > 0) {
-      setLastMessage(messages[messages.length - 1]);
-    }
-  }, [messages]);
-
-  useEffect(() => {
     if (!isSpeaking || messages.length === 0) {
       setIsSpeaking(false);
       return;
@@ -102,6 +89,14 @@ export default function ChatPage() {
     }, 50);
     return () => clearInterval(interval);
   }, [isSpeaking, messages]);
+
+  useEffect(() => {
+    if (displayMessage && input.trim() !== "") {
+      setDisplayMessage(null);
+      setFontSize(null);
+      setShowRotateOptions(true);
+    }
+  }, [input, displayMessage]);
 
   const handleSetFontSize = (size: number) => {
     setFontSize(size);
@@ -116,13 +111,12 @@ export default function ChatPage() {
       ...messages,
       { text: input.trim(), fontSize: fontSize },
     ];
-    setLastMessage({
+    setDisplayMessage({
       text: input.trim(),
       fontSize: fontSize,
     });
     setMessages(newMessages);
     setInput("");
-    setFontSize(null);
     setTimeout(() => {
       messagesEndRef.current?.scrollToEnd({ animated: true });
     }, 50);
@@ -181,20 +175,23 @@ export default function ChatPage() {
               zIndex: 1000,
               paddingTop: safeAreaInsets?.top,
               alignItems: "center",
+            }}
+            onTouchStart={() => {
+              setShowRotateOptions((s) => !s);
             }}>
             {showTapInstructions && (
               <Animated.Text
                 entering={FadeInDown.duration(500)
-                  .delay(250)
+                  .delay(200)
                   .springify()
                   .damping(25)
-                  .mass(5)}
+                  .mass(2)}
                 style={{
                   color: "white",
                   position: "absolute",
                   top: safeAreaInsets?.top! - 10,
-                  right: 0,
-                  left: 0,
+                  right: 100,
+                  left: 100,
                   textAlign: "center",
                   fontSize: 18,
                   fontWeight: "bold",
@@ -203,8 +200,23 @@ export default function ChatPage() {
                   paddingHorizontal: 10,
                   zIndex: 1001,
                 }}>
-                Tap text to show/hide text options
+                Tap text to show/hide options
               </Animated.Text>
+            )}
+            {messages.length > 0 && (
+              <IconButton
+                onPress={() => {
+                  setIsShowMode(false);
+                }}
+                icon={(props) => (
+                  <FontAwesome name="list" {...props} color="white" />
+                )}
+                style={{
+                  position: "absolute",
+                  top: safeAreaInsets?.top,
+                  right: 0,
+                }}
+              />
             )}
             <View
               ref={containerRef}
@@ -217,9 +229,6 @@ export default function ChatPage() {
                 paddingBottom: angle === 180 ? 75 : 0,
                 paddingTop: angle === 180 ? 50 : 0,
                 paddingHorizontal: 0,
-              }}
-              onTouchStart={() => {
-                setShowRotateOptions((s) => !s);
               }}>
               <Text
                 adjustsFontSizeToFit={true}
@@ -253,9 +262,9 @@ export default function ChatPage() {
                   justifyContent: "center",
                   alignContent: "center",
                   alignItems: "center",
-                  fontSize: fontSize ?? 60,
+                  fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
                 }}>
-                {input.trim() !== "" ? input.trim() : lastMessage?.text}
+                {input.trim() !== "" ? input.trim() : displayMessage?.text}
               </Text>
             </View>
             {showRotateOptions && (
@@ -272,6 +281,10 @@ export default function ChatPage() {
                   flexDirection: "row",
                   justifyContent: "space-around",
                   backgroundColor: "rgba(0,0,0,0.1)",
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                 }}>
                 <IconButton
                   onPress={() => setAngle(180)}
@@ -336,11 +349,12 @@ export default function ChatPage() {
                 />
                 <IconButton
                   onPress={() => {
-                    setIsShowMode(false);
-                    setAngle(0);
+                    setDisplayMessage(null);
+                    setInput("");
                   }}
+                  size={30}
                   icon={(props) => (
-                    <MaterialIcons name="close" {...props} color="white" />
+                    <FontAwesome name="window-close" {...props} color="white" />
                   )}
                 />
               </Animated.View>
@@ -426,45 +440,18 @@ export default function ChatPage() {
                   Chat lets you {`"speak"`} messages quickly without saving them
                   to your recent list.
                 </Text>
-                <View>
-                  <Divider style={{ marginVertical: 5 }} />
-                  <Text style={{ fontWeight: "bold" }}>Normal mode:</Text>
-                  <Text>You see a list of your messages in order.</Text>
-                  <Divider style={{ marginVertical: 5 }} />
-                  <Text style={{ fontWeight: "bold" }}>Show mode:</Text>
-                  <Text>
-                    Displays the current message in a large font for others to
-                    read.
-                  </Text>
-                  <Text
-                    style={{
-                      marginTop: 3,
-                    }}>
-                    * Rotate buttons change the orientation of the text to
-                    reduce the need to turn your device.
-                  </Text>
-                </View>
+                <Divider style={{ marginVertical: 10 }} />
+                <Text>
+                  * Use the arrows to flip your text for quick viewing by anyone
+                  facing you.
+                </Text>
                 <View
                   style={{
                     flexDirection: "row",
-                    justifyContent: "space-between",
+                    justifyContent: "flex-end",
                     alignItems: "center",
                     marginTop: 5,
                   }}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setIsShowMode((s) => !s);
-                    }}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                    }}>
-                    <Checkbox.Android
-                      status={isShowMode ? "checked" : "unchecked"}
-                    />
-                    <Text>Show mode?</Text>
-                  </TouchableOpacity>
-
                   <View>
                     <Text
                       style={{
@@ -510,6 +497,8 @@ export default function ChatPage() {
                 <Button
                   onPress={() => {
                     setMessages([]);
+                    setIsShowMode(true);
+                    setShowRotateOptions(true);
                   }}>
                   Clear Chat
                 </Button>
