@@ -27,6 +27,16 @@ type Message = {
   fontSize: number | null;
 };
 
+const WORD_COUNT_MIN_MAX_LINES = {
+  5: { min: 2, max: 3 },
+  15: { min: 3, max: 4 },
+  20: { min: 4, max: 5 },
+  25: { min: 5, max: 6 },
+  35: { min: 6, max: 7 },
+  60: { min: 7, max: 8 },
+  80: { min: 8, max: 9 },
+};
+
 const FLIP_SCALE = 1.5;
 export default function ChatPage() {
   const theme = useTheme();
@@ -98,6 +108,26 @@ export default function ChatPage() {
     }
   }, [input, displayMessage]);
 
+  useEffect(() => {
+    const words = input.trim().split(" ");
+    for (const [wordCountStr, lineLimits] of Object.entries(
+      WORD_COUNT_MIN_MAX_LINES,
+    )) {
+      const wordCount = parseInt(wordCountStr, 10);
+      console.log(
+        `Checking word count limit: ${wordCount}, current words: ${words.length}, current numLines: ${numLines}`,
+      );
+      if (words.length <= wordCount && numLines > lineLimits.min) {
+        setNumLines(lineLimits.min);
+        return;
+      }
+      if (words.length > wordCount && numLines < lineLimits.max) {
+        setNumLines(lineLimits.max);
+        return;
+      }
+    }
+  }, [input, numLines]);
+
   const handleSetFontSize = (size: number) => {
     setFontSize(size);
   };
@@ -137,6 +167,13 @@ export default function ChatPage() {
   const menuMessage = useMemo(() => {
     return messages[menuMessageIdx ?? 0];
   }, [menuMessageIdx, messages]);
+
+  const averageWordLength = useMemo(() => {
+    const words = input.trim().split(" ");
+    if (words.length === 0) return 0;
+    const totalLength = words.reduce((acc, word) => acc + word.length, 0);
+    return totalLength / words.length;
+  }, [input]);
   return (
     <ThemedView style={[coreStyles.container, { position: "relative" }]}>
       <CrossView
@@ -177,7 +214,11 @@ export default function ChatPage() {
               alignItems: "center",
             }}
             onTouchStart={() => {
-              setShowRotateOptions((s) => !s);
+              if (input.trim() === "" && displayMessage === null) {
+                setShowRotateOptions(true);
+              } else {
+                setShowRotateOptions((s) => !s);
+              }
             }}>
             {showTapInstructions && (
               <Animated.Text
@@ -232,21 +273,8 @@ export default function ChatPage() {
               }}>
               <Text
                 adjustsFontSizeToFit={true}
-                numberOfLines={angle === 180 ? numLines : 6}
+                numberOfLines={numLines}
                 allowFontScaling={true}
-                onTextLayout={(e) => {
-                  const maxCharHeight = Math.max(
-                    ...e.nativeEvent.lines.map((l) => l.height),
-                  );
-                  if (!hasProcessedChange.current) {
-                    if (maxCharHeight >= 50 && numLines > 2) {
-                      setNumLines((n) => n - 1);
-                    } else if (maxCharHeight < 30 && numLines < 6) {
-                      setNumLines((n) => n + 1);
-                    }
-                    hasProcessedChange.current = true;
-                  }
-                }}
                 style={{
                   transform: [
                     { rotate: `${angle}deg` },
@@ -349,6 +377,9 @@ export default function ChatPage() {
                 />
                 <IconButton
                   onPress={() => {
+                    if (input.trim() === "" && displayMessage === null) {
+                      Keyboard.dismiss();
+                    }
                     setDisplayMessage(null);
                     setInput("");
                   }}
@@ -418,6 +449,9 @@ export default function ChatPage() {
             flexGrow: 1,
 
             justifyContent: messages.length === 0 ? "center" : "flex-start",
+          }}
+          onTouchStart={() => {
+            Keyboard.dismiss();
           }}>
           {messages.length === 0 && (
             <Card
@@ -508,6 +542,7 @@ export default function ChatPage() {
                   )}
                   mode="outlined"
                   onPress={() => {
+                    setShowRotateOptions(true);
                     setIsShowMode(true);
                   }}>
                   Show Mode
