@@ -339,7 +339,10 @@ export default function Settings() {
                       display: "flex",
                       flexShrink: 1,
                     }}>
-                    {preferredVoice.name} ({preferredVoice.language})
+                    {preferredVoice.name} ({preferredVoice.language}){" "}
+                    {preferredVoice.quality !== "Default"
+                      ? `- ${preferredVoice.quality}`
+                      : ""}
                   </Text>
                 )}
                 {!preferredVoice && <Text>Using Default</Text>}
@@ -484,8 +487,8 @@ export default function Settings() {
                 paddingHorizontal: 50,
                 paddingVertical: 25,
                 borderColor: theme.colors.tertiary,
-                borderWidth: 1,
-                borderRadius: 10,
+                borderWidth: 5,
+                borderRadius: 100,
                 backgroundColor: theme.colors.surface,
               }}>
               <Text
@@ -597,31 +600,60 @@ export default function Settings() {
                   style={{
                     display: "flex",
                     flexGrow: 1,
+                    flexShrink: 1,
+                    paddingLeft: 5,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
                   }}
                   onPress={() => {
                     dispatch(setPreferredVoice(voice.identifier));
                     setIsChoosingVoice(false);
                     setFilter("");
                   }}>
+                  {voice.identifier === preferences.preferredVoice && (
+                    <MaterialIcons
+                      name="check"
+                      size={22}
+                      color={theme.colors.tertiary}
+                    />
+                  )}
                   <Text
+                    numberOfLines={1}
                     style={{
+                      display: "flex",
                       fontSize: 16,
                       fontWeight: "bold",
+                      alignItems: "center",
+                      flexDirection: "row",
+                      gap: 5,
+
                       color:
                         voice.identifier === preferences.preferredVoice
                           ? theme.colors.tertiary
                           : theme.colors.onSurface,
                     }}>
-                    {voice.identifier === preferences.preferredVoice
-                      ? "> "
-                      : ""}
-                    {voice.name} ({voice.language})
+                    {voice.name} ({voice.language}){" "}
                   </Text>
+                  {voice.quality !== "Default" && (
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "bold",
+                        color: theme.colors.onSurfaceVariant,
+                      }}>
+                      Quality: {voice.quality}
+                    </Text>
+                  )}
                 </TouchableOpacity>
                 <IconButton
                   icon={
                     isTestingVoice === voice.identifier ? "stop" : "volume-high"
                   }
+                  style={{
+                    display: "flex",
+                    flexShrink: 1,
+                  }}
                   size={20}
                   onPress={() => {
                     Keyboard.dismiss();
