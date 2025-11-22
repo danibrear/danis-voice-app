@@ -32,12 +32,10 @@ import EditStoredTextDialog from "./EditStoredTextDialog";
 import RecentListItem from "./RecentListItem";
 
 export default function RecentList({
-  starred,
   onPress,
   style,
 }: {
   onPress: (item: StoredText) => void;
-  starred?: boolean;
   style?: ViewStyle;
 }) {
   const { recentTexts } = useSelector((state: RootState) => state.storedTexts);
@@ -50,6 +48,7 @@ export default function RecentList({
 
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === "dark");
   const [isLongPressing, setIsLongPressing] = useState(false);
+  const [starredOnly, setStarredOnly] = useState(false);
 
   const [selectedStoredText, setSelectedStoredText] =
     useState<StoredText | null>(null);
@@ -71,7 +70,7 @@ export default function RecentList({
   }, [colorScheme]);
 
   const filteredTexts = recentTexts.filter((f) => {
-    if (starred) {
+    if (starredOnly) {
       return f.starred;
     }
     return true;
@@ -158,7 +157,7 @@ export default function RecentList({
                   color: isDarkMode ? "#dbdbdb" : "#555",
                   marginBottom: 10,
                 }}>
-                No{starred ? " starred" : ""} phrases
+                No phrases
               </Text>
 
               <Text
@@ -169,7 +168,7 @@ export default function RecentList({
                   textAlign: "center",
                   marginBottom: 10,
                 }}>
-                {!starred
+                {!starredOnly
                   ? "Use the box below to add some"
                   : "Tap the star icon on phrases"}
               </Text>
@@ -177,49 +176,71 @@ export default function RecentList({
           </Animated.View>
         </View>
       )}
-      {shownTexts && shownTexts.length > 0 && (
-        <View
-          style={{
-            flexDirection: "row",
-            paddingHorizontal: 10,
-            justifyContent: "flex-end",
-            gap: 5,
-          }}>
-          {selectedIds.length > 0 && (
-            <Button
-              mode="contained"
-              buttonColor={theme.colors.error}
-              onPress={() => {
-                selectedIds.forEach((id) => {
-                  dispatch(removeText(id));
-                });
-                setSelectedIds([]);
-                setIsSelecting(false);
-              }}>
-              Delete ({selectedIds.length})
-            </Button>
-          )}
-          {isSelecting && (
-            <Button
-              mode="contained"
-              onPress={() => {
-                setIsSelecting(false);
-                setSelectedIds([]);
-              }}>
-              <MaterialIcons name="close" size={20} />
-            </Button>
-          )}
-          {!isSelecting && (
-            <Button
-              mode="contained"
-              onPress={() => {
-                setIsSelecting(true);
-              }}>
-              Select
-            </Button>
-          )}
-        </View>
-      )}
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 5,
+        }}>
+        <Button
+          mode="outlined"
+          onPress={() => {
+            setStarredOnly((s) => !s);
+          }}
+          icon={(props) => (
+            <MaterialIcons
+              name={starredOnly ? "star" : "star-outline"}
+              {...props}
+            />
+          )}>
+          Starred
+        </Button>
+        {shownTexts && shownTexts.length > 0 && (
+          <View
+            style={{
+              flexDirection: "row",
+              paddingHorizontal: 10,
+              justifyContent: "flex-end",
+              gap: 5,
+            }}>
+            {selectedIds.length > 0 && (
+              <Button
+                mode="contained"
+                buttonColor={theme.colors.error}
+                onPress={() => {
+                  selectedIds.forEach((id) => {
+                    dispatch(removeText(id));
+                  });
+                  setSelectedIds([]);
+                  setIsSelecting(false);
+                }}>
+                Delete ({selectedIds.length})
+              </Button>
+            )}
+            {isSelecting && (
+              <Button
+                mode="contained"
+                onPress={() => {
+                  setIsSelecting(false);
+                  setSelectedIds([]);
+                }}>
+                <MaterialIcons name="close" size={20} />
+              </Button>
+            )}
+            {!isSelecting && (
+              <Button
+                mode="contained"
+                onPress={() => {
+                  setIsSelecting(true);
+                }}>
+                Select
+              </Button>
+            )}
+          </View>
+        )}
+      </View>
       {!isChangingColorScheme && shownTexts.length > 0 && (
         <DraggableFlatList
           keyboardShouldPersistTaps="handled"

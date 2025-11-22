@@ -6,7 +6,7 @@ import { coreStyles } from "@/styles";
 import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import * as Speech from "expo-speech";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
 import {
   Button,
@@ -22,9 +22,12 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
+import * as colors from "@/constants/colorPatterns";
+
 type Message = {
   text: string;
   fontSize: number | null;
+  numberOfLines?: number;
 };
 
 const WORD_COUNT_MIN_MAX_LINES = {
@@ -44,6 +47,10 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [displayMessage, setDisplayMessage] = useState<Message | null>(null);
+  const [highlight, setHighlight] = useState<{ start: number; end: number }>({
+    start: 0,
+    end: 0,
+  });
 
   const preferences = useSelector((state: RootState) => state.preferences);
 
@@ -52,8 +59,6 @@ export default function ChatPage() {
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-
-  const parentRef = useRef(null);
 
   const containerRef = useRef<View>(null);
 
@@ -70,6 +75,8 @@ export default function ChatPage() {
   const messagesEndRef = useRef<ScrollView>(null);
 
   const hasProcessedChange = useRef(false);
+  const [colorIndex, setColorIndex] = useState(0);
+  const [highlightColor, setHighlightColor] = useState(theme.colors.tertiary);
 
   useEffect(() => {
     if (
@@ -125,6 +132,46 @@ export default function ChatPage() {
     }
   }, [input, numLines]);
 
+  useEffect(() => {
+    if (
+      !isSpeaking ||
+      !preferences.colors ||
+      highlight.start === highlight.end
+    ) {
+      return;
+    }
+    setColorIndex(
+      (idx) => (idx + 1) % (preferences.colors ? preferences.colors.length : 1),
+    );
+  }, [isSpeaking, highlight, preferences.colors]);
+
+  useEffect(() => {
+    const pattern = preferences.colors;
+    const allColors = colors.allColors;
+    if (pattern && allColors) {
+      const colorsForPattern = allColors.find(
+        (c) => c.name === pattern,
+      )?.colors;
+      if (!colorsForPattern) {
+        setHighlightColor(theme.colors.tertiary);
+        return;
+      }
+      setHighlightColor(colorsForPattern[colorIndex % colorsForPattern.length]);
+      return;
+    }
+    setHighlightColor(theme.colors.tertiary);
+  }, [colorIndex, preferences.colors, theme.colors.tertiary]);
+
+  const handleDone = useCallback(() => {
+    setHighlight({
+      start: 0,
+      end: 0,
+    });
+    setColorIndex(0);
+    setIsSpeaking(false);
+    setIsPaused(false);
+  }, []);
+
   const handleSetFontSize = (size: number) => {
     setFontSize(size);
   };
@@ -141,6 +188,7 @@ export default function ChatPage() {
     setDisplayMessage({
       text: input.trim(),
       fontSize: fontSize,
+      numberOfLines: numLines,
     });
     setMessages(newMessages);
     setInput("");
@@ -153,22 +201,37 @@ export default function ChatPage() {
     AudioModule.setAudioModeAsync({
       playsInSilentMode: true,
     });
+    setIsSpeaking(true);
     Speech.speak(messageText, {
       voice: preferences.preferredVoice,
       pitch: preferences.speechPitch,
       rate: preferences.speechRate,
+      onDone: () => {
+        handleDone();
+      },
+      onError: () => {
+        handleDone();
+      },
+      onBoundary: (e: { charIndex: number; charLength: number }) => {
+        const { charIndex, charLength } = e;
+        setHighlight({
+          start: charIndex,
+          end: charIndex + charLength,
+        });
+      },
     });
-    setIsSpeaking(true);
   };
 
   const menuMessage = useMemo(() => {
     return messages[menuMessageIdx ?? 0];
   }, [menuMessageIdx, messages]);
+
+  const message = useMemo(() => {
+    return input.trim() !== "" ? input.trim() : displayMessage?.text;
+  }, [displayMessage, input]);
   return (
     <ThemedView style={[coreStyles.container, { position: "relative" }]}>
       <CrossView
-        /* @ts-expect-error */
-        ref={parentRef}
         onTouchStart={(e) => {
           if (menuMessageIdx !== null) {
             e.stopPropagation();
@@ -263,7 +326,7 @@ export default function ChatPage() {
               }}>
               <Text
                 adjustsFontSizeToFit={true}
-                numberOfLines={numLines}
+                numberOfLines={displayMessage?.numberOfLines || numLines}
                 allowFontScaling={true}
                 style={{
                   transform: [
@@ -282,7 +345,22 @@ export default function ChatPage() {
                   alignItems: "center",
                   fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
                 }}>
-                {input.trim() !== "" ? input.trim() : displayMessage?.text}
+                {message?.slice(0, highlight.start)}
+                <Text
+                  style={{
+                    color: highlightColor,
+                    textAlign: "center",
+                    marginHorizontal: 10,
+                    fontWeight: "bold",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignContent: "center",
+                    alignItems: "center",
+                    fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
+                  }}>
+                  {message?.slice(highlight.start, highlight.end)}
+                </Text>
+                {message?.slice(highlight.end)}
               </Text>
             </View>
             {showRotateOptions && (
