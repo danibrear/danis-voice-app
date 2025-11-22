@@ -316,21 +316,46 @@ export default function ChatPage() {
                 Tap text to show/hide options
               </Animated.Text>
             )}
-            {messages.length > 0 && (
-              <IconButton
-                onPress={() => {
-                  setIsShowMode(false);
-                }}
-                icon={(props) => (
-                  <FontAwesome name="list" {...props} color="white" />
-                )}
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: safeAreaInsets?.top!,
+                zIndex: 1001,
+              }}>
+              {displayMessage && (
+                <IconButton
+                  mode="contained"
+                  containerColor={theme.colors.onPrimary}
+                  iconColor={theme.colors.primary}
+                  onPress={() => {
+                    handleSay(displayMessage.text);
+                  }}
+                  icon={(props) => <MaterialIcons name="replay" {...props} />}
+                />
+              )}
+              <View
                 style={{
-                  position: "absolute",
-                  top: safeAreaInsets?.top,
-                  right: 0,
-                }}
-              />
-            )}
+                  display: "flex",
+                  flexGrow: 1,
+                  alignItems: "flex-end",
+                }}>
+                {messages.length > 0 && (
+                  <IconButton
+                    onPress={() => {
+                      setIsShowMode(false);
+                    }}
+                    icon={(props) => (
+                      <FontAwesome name="list" {...props} color="white" />
+                    )}
+                  />
+                )}
+              </View>
+            </View>
             <View
               ref={containerRef}
               style={{
