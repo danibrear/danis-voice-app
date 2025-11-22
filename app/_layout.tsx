@@ -72,11 +72,15 @@ export default function RootLayout() {
       return;
     }
     const interval = setInterval(() => {
-      Updates.checkForUpdateAsync().then(async (update) => {
-        if (update.isAvailable) {
-          setUpdateAvailable(true);
-        }
-      });
+      Updates.checkForUpdateAsync()
+        .then(async (update) => {
+          if (update.isAvailable) {
+            setUpdateAvailable(true);
+          }
+        })
+        .catch((e) => {
+          console.log("[ERROR] Error checking for updates:", e);
+        });
     }, 60 * 60 * 1000); // Check every hour
 
     return () => clearInterval(interval);

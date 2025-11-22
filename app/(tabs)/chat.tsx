@@ -18,11 +18,18 @@ import {
   TextInput,
   useTheme,
 } from "react-native-paper";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
 import * as colors from "@/constants/colorPatterns";
+// @ts-expect-error this is a static asset
+import Logo from "../../assets/images/splash-icon.png";
 
 type Message = {
   text: string;
@@ -77,6 +84,25 @@ export default function ChatPage() {
   const hasProcessedChange = useRef(false);
   const [colorIndex, setColorIndex] = useState(0);
   const [highlightColor, setHighlightColor] = useState(theme.colors.tertiary);
+
+  const opacity = useSharedValue(0.5);
+
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!displayMessage) {
+      opacity.value = withTiming(0.75, { duration: 250 });
+
+      setTimeout(() => {
+        opacity.value = withTiming(0.333, { duration: 600 });
+      }, 600);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayMessage]);
 
   useEffect(() => {
     if (
@@ -453,6 +479,24 @@ export default function ChatPage() {
             )}
           </View>
         )}
+        {input.trim() === "" && !displayMessage && messages.length > 0 && (
+          <Animated.Image
+            source={Logo}
+            style={[
+              {
+                position: "absolute",
+                width: "80%",
+                height: "100%",
+                left: "10%",
+                top: "10%",
+                resizeMode: "contain",
+                opacity: 0.1,
+                zIndex: 1000,
+              },
+              animatedStyles,
+            ]}
+          />
+        )}
         {(isPaused || isSpeaking) && (
           <View
             style={{ position: "absolute", bottom: 5, right: 5, zIndex: 3 }}>
@@ -736,7 +780,9 @@ export default function ChatPage() {
                   setInput(t);
                 }}
                 multiline
-                returnKeyType="send"
+                returnKeyType={
+                  preferences.chatReturnKeySendsMessage ? "send" : "done"
+                }
                 outlineStyle={{ borderRadius: 8 }}
                 style={{ flexGrow: 1, paddingRight: 5 }}
               />

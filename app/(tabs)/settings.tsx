@@ -353,7 +353,14 @@ export default function Settings() {
             </View>
             <Divider style={{ marginVertical: 10 }} />
             <View>
-              <View
+              <TouchableOpacity
+                onPress={() => {
+                  dispatch(
+                    setChatReturnKeySendsMessage(
+                      !preferences.chatReturnKeySendsMessage,
+                    ),
+                  );
+                }}
                 style={{ flexDirection: "row", alignItems: "center", gap: 1 }}>
                 <Checkbox.Android
                   status={
@@ -372,7 +379,7 @@ export default function Settings() {
                 <Text style={{ fontWeight: "bold" }}>
                   Return key sends message in chat
                 </Text>
-              </View>
+              </TouchableOpacity>
             </View>
             <Divider style={{ marginVertical: 10 }} />
             <Text style={{ fontWeight: "bold", marginVertical: 5 }}>
