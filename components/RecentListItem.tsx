@@ -135,6 +135,7 @@ export default function RecentListItem({
                 isActive={isActive}
                 setIsDragging={setIsDragging}
                 {...props}
+                size={25}
               />
             );
           }
@@ -171,7 +172,9 @@ export default function RecentListItem({
                     {...props}
                   />
                 )}
-                color={isSpeaking ? theme.colors.tertiary : color}
+                color={
+                  isSpeaking ? theme.colors.tertiary : theme.colors.onSurface
+                }
               />
             </TouchableOpacity>
             <TouchableOpacity

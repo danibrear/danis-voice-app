@@ -202,6 +202,7 @@ export default function ChatPage() {
       playsInSilentMode: true,
     });
     setIsSpeaking(true);
+    setColorIndex(-1);
     Speech.speak(messageText, {
       voice: preferences.preferredVoice,
       pitch: preferences.speechPitch,

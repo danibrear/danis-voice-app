@@ -193,6 +193,7 @@ export default function RecentList({
             <MaterialIcons
               name={starredOnly ? "star" : "star-outline"}
               {...props}
+              color={starredOnly ? theme.colors.tertiary : props.color}
             />
           )}>
           Starred
@@ -232,6 +233,7 @@ export default function RecentList({
             {!isSelecting && (
               <Button
                 mode="contained"
+                icon={(props) => <MaterialIcons {...props} name="check-box" />}
                 onPress={() => {
                   setIsSelecting(true);
                 }}>

@@ -32,7 +32,6 @@ export default function DragControl({
         style={{
           justifyContent: "center",
           alignItems: "center",
-          paddingHorizontal: 5,
           margin: 0,
         }}>
         <MaterialIcons name="drag-indicator" size={25} {...props} />

@@ -387,6 +387,7 @@ export default function Settings() {
                 style={{
                   padding: 5,
                   borderRadius: 10,
+                  marginBottom: 5,
                   display: "flex",
                   flexDirection: "row",
                   flexWrap: "wrap",
@@ -412,9 +413,10 @@ export default function Settings() {
                       style={{
                         backgroundColor: colorPattern,
                         borderColor: colorPattern.includes("#fff")
-                          ? "#aaa"
+                          ? "#dbdbdb"
                           : "transparent",
                         borderWidth: 1,
+                        borderRadius: 2,
                         height: 20,
                         width: 20,
                       }}

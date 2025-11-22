@@ -191,14 +191,12 @@ export default function HomeScreen() {
                 color: theme.colors.onPrimary,
                 fontSize: 18,
                 fontWeight: "bold",
-                flexGrow: 1,
-                width: "100%",
                 textAlign: "center",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
               }}>
-              Show
+              SHOW
             </Text>
           </Button>
         </View>
