@@ -16,20 +16,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Phrases",
           tabBarIcon: ({ color }) => (
-            <Icon size={28} source="home" color={color} />
+            <Icon size={28} source="format-list-bulleted" color={color} />
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="starred"
-        options={{
-          title: "Starred",
-          tabBarIcon: ({ focused, color }) => {
-            const updated = focused ? theme.colors.tertiary : color;
-            return <Icon size={28} source="star" color={updated} />;
-          },
         }}
       />
       <Tabs.Screen

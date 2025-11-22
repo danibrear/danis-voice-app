@@ -60,8 +60,6 @@ export default function ChatPage() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
-  const parentRef = useRef(null);
-
   const containerRef = useRef<View>(null);
 
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
@@ -77,7 +75,6 @@ export default function ChatPage() {
   const messagesEndRef = useRef<ScrollView>(null);
 
   const hasProcessedChange = useRef(false);
-  const preferencesState = useSelector((state: RootState) => state.preferences);
   const [colorIndex, setColorIndex] = useState(0);
   const [highlightColor, setHighlightColor] = useState(theme.colors.tertiary);
 
@@ -124,9 +121,6 @@ export default function ChatPage() {
       WORD_COUNT_MIN_MAX_LINES,
     )) {
       const wordCount = parseInt(wordCountStr, 10);
-      console.log(
-        `Checking word count limit: ${wordCount}, current words: ${words.length}, current numLines: ${numLines}`,
-      );
       if (words.length <= wordCount && numLines > lineLimits.min) {
         setNumLines(lineLimits.min);
         return;
@@ -137,6 +131,19 @@ export default function ChatPage() {
       }
     }
   }, [input, numLines]);
+
+  useEffect(() => {
+    if (
+      !isSpeaking ||
+      !preferences.colors ||
+      highlight.start === highlight.end
+    ) {
+      return;
+    }
+    setColorIndex(
+      (idx) => (idx + 1) % (preferences.colors ? preferences.colors.length : 1),
+    );
+  }, [isSpeaking, highlight, preferences.colors]);
 
   useEffect(() => {
     const pattern = preferences.colors;
@@ -160,6 +167,7 @@ export default function ChatPage() {
       start: 0,
       end: 0,
     });
+    setColorIndex(0);
     setIsSpeaking(false);
     setIsPaused(false);
   }, []);
@@ -193,6 +201,7 @@ export default function ChatPage() {
     AudioModule.setAudioModeAsync({
       playsInSilentMode: true,
     });
+    setIsSpeaking(true);
     Speech.speak(messageText, {
       voice: preferences.preferredVoice,
       pitch: preferences.speechPitch,
@@ -211,7 +220,6 @@ export default function ChatPage() {
         });
       },
     });
-    setIsSpeaking(true);
   };
 
   const menuMessage = useMemo(() => {
@@ -225,8 +233,6 @@ export default function ChatPage() {
   return (
     <ThemedView style={[coreStyles.container, { position: "relative" }]}>
       <CrossView
-        /* @ts-expect-error */
-        ref={parentRef}
         onTouchStart={(e) => {
           if (menuMessageIdx !== null) {
             e.stopPropagation();
@@ -340,11 +346,22 @@ export default function ChatPage() {
                   alignItems: "center",
                   fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
                 }}>
-                <Text>{message?.slice(0, highlight.start)}</Text>
-                <Text style={{ backgroundColor: highlightColor }}>
+                {message?.slice(0, highlight.start)}
+                <Text
+                  style={{
+                    color: highlightColor,
+                    textAlign: "center",
+                    marginHorizontal: 10,
+                    fontWeight: "bold",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignContent: "center",
+                    alignItems: "center",
+                    fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
+                  }}>
                   {message?.slice(highlight.start, highlight.end)}
                 </Text>
-                <Text>{message?.slice(highlight.end)}</Text>
+                {message?.slice(highlight.end)}
               </Text>
             </View>
             {showRotateOptions && (
