@@ -1,12 +1,10 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
-
 import { Icon, useTheme } from "react-native-paper";
 
 export default function TabLayout() {
   const theme = useTheme();
-
   return (
     <Tabs
       screenOptions={{

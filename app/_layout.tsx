@@ -7,6 +7,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import * as QuickActions from "expo-quick-actions";
 import { Stack } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
@@ -24,6 +25,8 @@ import {
 } from "react-native-paper";
 import "react-native-reanimated";
 import { Provider as ReduxProvider } from "react-redux";
+
+import { RouterAction, useQuickActionRouting } from "expo-quick-actions/router";
 export const unstable_settings = {
   anchor: "(tabs)",
 };
@@ -40,6 +43,8 @@ export default function RootLayout() {
 
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
+  useQuickActionRouting();
+
   useEffect(() => {
     if (Platform.OS === "web") {
       return;
@@ -48,6 +53,18 @@ export default function RootLayout() {
     setTimeout(() => {
       SplashScreen.hideAsync();
     }, 2000);
+  }, []);
+
+  useEffect(() => {
+    QuickActions.setItems<RouterAction>([
+      {
+        id: "1",
+        title: "New Chat",
+        subtitle: "Open a quick chat",
+        icon: "message",
+        params: { href: "(tabs)/chat" },
+      },
+    ]);
   }, []);
 
   useEffect(() => {

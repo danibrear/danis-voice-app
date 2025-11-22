@@ -114,9 +114,6 @@ export default function ChatPage() {
       WORD_COUNT_MIN_MAX_LINES,
     )) {
       const wordCount = parseInt(wordCountStr, 10);
-      console.log(
-        `Checking word count limit: ${wordCount}, current words: ${words.length}, current numLines: ${numLines}`,
-      );
       if (words.length <= wordCount && numLines > lineLimits.min) {
         setNumLines(lineLimits.min);
         return;
@@ -167,13 +164,6 @@ export default function ChatPage() {
   const menuMessage = useMemo(() => {
     return messages[menuMessageIdx ?? 0];
   }, [menuMessageIdx, messages]);
-
-  const averageWordLength = useMemo(() => {
-    const words = input.trim().split(" ");
-    if (words.length === 0) return 0;
-    const totalLength = words.reduce((acc, word) => acc + word.length, 0);
-    return totalLength / words.length;
-  }, [input]);
   return (
     <ThemedView style={[coreStyles.container, { position: "relative" }]}>
       <CrossView

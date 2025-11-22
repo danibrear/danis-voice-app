@@ -105,7 +105,7 @@ export default function RecentList({
         dispatch(updateStoredText(text));
       });
     } catch (error) {
-      console.error("Error updating stored texts order:", error);
+      console.log("[ERROR] Error updating stored texts order:", error);
     } finally {
       setIsUpdating(false);
     }

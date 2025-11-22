@@ -20,7 +20,7 @@ export const usePreferences = () => {
           setPreferences(prefsObj);
         }
       } catch (error) {
-        console.error("Failed to load recent words:", error);
+        console.log("[ERROR] Failed to load preferences:", error);
       } finally {
         setIsLoading(false);
       }

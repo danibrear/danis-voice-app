@@ -11,9 +11,13 @@ import {
   View,
 } from "react-native";
 // TODO: need to fix this once this has fully been removed
+import { RootState } from "@/store";
+import { AudioModule } from "expo-audio";
+import * as Speech from "expo-speech";
+import { useEffect, useState } from "react";
 import { Swipeable } from "react-native-gesture-handler";
 import { List, useTheme } from "react-native-paper";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import DragControl from "./DragControl";
 
 export default function RecentListItem({
@@ -55,6 +59,37 @@ export default function RecentListItem({
   const isWeb = Platform.OS === "web";
 
   const theme = useTheme();
+  const preferences = useSelector((state: RootState) => state.preferences);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const handleSay = (item: StoredText) => {
+    try {
+      setIsSpeaking(true);
+      AudioModule.setAudioModeAsync({
+        playsInSilentMode: true,
+      });
+      Speech.speak(item.text, {
+        voice: preferences.preferredVoice,
+        pitch: preferences.speechPitch,
+        rate: preferences.speechRate,
+      });
+    } catch (error) {
+      console.log("[ERROR] Unable to speak text:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!isSpeaking) {
+      return;
+    }
+    const interval = setInterval(async () => {
+      if (!(await Speech.isSpeakingAsync())) {
+        setIsSpeaking(false);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isSpeaking]);
 
   return (
     <Swipeable
@@ -119,7 +154,26 @@ export default function RecentListItem({
           );
         }}
         right={() => (
-          <>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <TouchableOpacity
+              onPress={() => {
+                if (isSpeaking) {
+                  Speech.stop();
+                  setIsSpeaking(false);
+                  return;
+                }
+                handleSay(item);
+              }}>
+              <List.Icon
+                icon={(props) => (
+                  <MaterialIcons
+                    name={isSpeaking ? "stop" : "volume-up"}
+                    {...props}
+                  />
+                )}
+                color={isSpeaking ? theme.colors.tertiary : color}
+              />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
                 Keyboard.dismiss();
@@ -143,7 +197,7 @@ export default function RecentListItem({
                 />
               </TouchableOpacity>
             )}
-          </>
+          </View>
         )}
       />
     </Swipeable>

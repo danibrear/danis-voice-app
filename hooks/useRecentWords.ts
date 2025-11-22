@@ -17,7 +17,7 @@ export const useRecentWords = () => {
         setRecentTexts(JSON.parse(storedWords));
       }
     } catch (error) {
-      console.error("Failed to load recent words:", error);
+      console.log("[ERROR] Failed to load recent words:", error);
     } finally {
       setIsLoading(false);
     }
@@ -32,7 +32,7 @@ export const useRecentWords = () => {
           setRecentTexts(JSON.parse(storedWords));
         }
       } catch (error) {
-        console.error("Failed to load recent words:", error);
+        console.log("[ERROR] Failed to load recent words:", error);
       } finally {
         setIsLoading(false);
       }
@@ -54,7 +54,7 @@ export const useRecentWords = () => {
       setRecentTexts(updatedTexts);
       await AsyncStorage.setItem(KEY, JSON.stringify(updatedTexts));
     } catch (error) {
-      console.error("Failed to save recent word:", error);
+      console.log("[ERROR] Failed to save recent word:", error);
     }
   };
 

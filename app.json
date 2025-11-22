@@ -65,7 +65,8 @@
           "initialOrientation": "DEFAULT",
           "requireFullScreen": true
         }
-      ]
+      ],
+      "expo-quick-actions"
     ],
     "experiments": {
       "typedRoutes": true,
