@@ -167,7 +167,6 @@ export default function ChatPage() {
       start: 0,
       end: 0,
     });
-    setColorIndex(0);
     setIsSpeaking(false);
     setIsPaused(false);
   }, []);

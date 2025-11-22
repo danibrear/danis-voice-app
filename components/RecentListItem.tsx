@@ -135,7 +135,6 @@ export default function RecentListItem({
                 isActive={isActive}
                 setIsDragging={setIsDragging}
                 {...props}
-                size={25}
               />
             );
           }
