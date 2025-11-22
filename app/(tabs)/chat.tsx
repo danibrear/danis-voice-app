@@ -326,13 +326,19 @@ export default function ChatPage() {
                 right: 0,
                 top: safeAreaInsets?.top!,
                 zIndex: 1001,
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
               }}>
               {displayMessage && (
                 <IconButton
                   mode="contained"
                   containerColor={theme.colors.onPrimary}
                   iconColor={theme.colors.primary}
-                  onPress={() => {
+                  onPress={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     handleSay(displayMessage.text);
                   }}
                   icon={(props) => <MaterialIcons name="replay" {...props} />}
