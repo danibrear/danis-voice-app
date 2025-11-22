@@ -133,19 +133,6 @@ export default function ChatPage() {
   }, [input, numLines]);
 
   useEffect(() => {
-    if (
-      !isSpeaking ||
-      !preferences.colors ||
-      highlight.start === highlight.end
-    ) {
-      return;
-    }
-    setColorIndex(
-      (idx) => (idx + 1) % (preferences.colors ? preferences.colors.length : 1),
-    );
-  }, [isSpeaking, highlight, preferences.colors]);
-
-  useEffect(() => {
     const pattern = preferences.colors;
     const allColors = colors.allColors;
     if (pattern && allColors) {
@@ -214,6 +201,12 @@ export default function ChatPage() {
       },
       onBoundary: (e: { charIndex: number; charLength: number }) => {
         const { charIndex, charLength } = e;
+        if (charLength > 0) {
+          setColorIndex(
+            (idx) =>
+              (idx + 1) % (preferences.colors ? preferences.colors.length : 1),
+          );
+        }
         setHighlight({
           start: charIndex,
           end: charIndex + charLength,
