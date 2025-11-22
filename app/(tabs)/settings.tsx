@@ -602,8 +602,7 @@ export default function Settings() {
                     flexGrow: 1,
                     flexShrink: 1,
                     paddingLeft: 5,
-                    flexDirection: "row",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     gap: 5,
                   }}
                   onPress={() => {
@@ -611,40 +610,50 @@ export default function Settings() {
                     setIsChoosingVoice(false);
                     setFilter("");
                   }}>
-                  {voice.identifier === preferences.preferredVoice && (
-                    <MaterialIcons
-                      name="check"
-                      size={22}
-                      color={theme.colors.tertiary}
-                    />
-                  )}
-                  <Text
-                    numberOfLines={1}
+                  <View
                     style={{
                       display: "flex",
-                      fontSize: 16,
-                      fontWeight: "bold",
-                      alignItems: "center",
                       flexDirection: "row",
+                      alignItems: "center",
                       gap: 5,
-
-                      color:
-                        voice.identifier === preferences.preferredVoice
-                          ? theme.colors.tertiary
-                          : theme.colors.onSurface,
                     }}>
-                    {voice.name} ({voice.language}){" "}
-                  </Text>
-                  {voice.quality !== "Default" && (
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "bold",
-                        color: theme.colors.onSurfaceVariant,
-                      }}>
-                      Quality: {voice.quality}
-                    </Text>
-                  )}
+                    {voice.identifier === preferences.preferredVoice && (
+                      <MaterialIcons
+                        name="check"
+                        size={22}
+                        color={theme.colors.tertiary}
+                      />
+                    )}
+                    <View>
+                      <Text
+                        numberOfLines={1}
+                        style={{
+                          display: "flex",
+                          fontSize: 16,
+                          fontWeight: "bold",
+                          alignItems: "center",
+                          flexDirection: "row",
+                          gap: 5,
+
+                          color:
+                            voice.identifier === preferences.preferredVoice
+                              ? theme.colors.tertiary
+                              : theme.colors.onSurface,
+                        }}>
+                        {voice.name} ({voice.language}){" "}
+                      </Text>
+                      {voice.quality !== "Default" && (
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontWeight: "bold",
+                            color: theme.colors.onSurfaceVariant,
+                          }}>
+                          Quality: {voice.quality}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
                 </TouchableOpacity>
                 <IconButton
                   icon={
