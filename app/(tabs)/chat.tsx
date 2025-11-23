@@ -1,13 +1,21 @@
 import CrossView from "@/components/CrossView";
 import ThemedView from "@/components/themed/ThemedView";
+import * as colors from "@/constants/colorPatterns";
 import { RootState } from "@/store";
 import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
 import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
+import * as ScreenOrientation from "expo-screen-orientation";
 import * as Speech from "expo-speech";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
 import {
   Button,
   Card,
@@ -26,8 +34,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
-
-import * as colors from "@/constants/colorPatterns";
 // @ts-expect-error this is a static asset
 import Logo from "../../assets/images/splash-icon.png";
 
@@ -69,6 +75,8 @@ export default function ChatPage() {
 
   const containerRef = useRef<View>(null);
 
+  const [orientation, setOrientation] = useState<string>("PORTRAIT");
+
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
   const [isShowMode, setIsShowMode] = useState(true);
 
@@ -91,6 +99,16 @@ export default function ChatPage() {
     return {
       opacity: opacity.value,
     };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      return;
+    }
+    const unlock = async () => {
+      await ScreenOrientation.unlockAsync();
+    };
+    unlock();
   }, []);
 
   useEffect(() => {
@@ -132,6 +150,18 @@ export default function ChatPage() {
     }, 50);
     return () => clearInterval(interval);
   }, [isSpeaking, messages]);
+
+  useEffect(() => {
+    if (orientation === "LANDSCAPE") {
+      ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.LANDSCAPE_LEFT,
+      );
+    } else {
+      ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      );
+    }
+  }, [orientation]);
 
   useEffect(() => {
     if (displayMessage && input.trim() !== "") {
@@ -348,8 +378,26 @@ export default function ChatPage() {
                 style={{
                   display: "flex",
                   flexGrow: 1,
-                  alignItems: "flex-end",
+                  flexDirection: "row",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
                 }}>
+                <IconButton
+                  icon={(props) => (
+                    <MaterialIcons
+                      name="screen-rotation"
+                      {...props}
+                      color="white"
+                    />
+                  )}
+                  onPress={() => {
+                    if (orientation === "PORTRAIT") {
+                      setOrientation("LANDSCAPE");
+                    } else {
+                      setOrientation("PORTRAIT");
+                    }
+                  }}
+                />
                 {messages.length > 0 && (
                   <IconButton
                     onPress={() => {
@@ -607,8 +655,8 @@ export default function ChatPage() {
                     fontWeight: "bold",
                     color: theme.colors.onSurfaceVariant,
                   }}>
-                  Chat lets you {`"speak"`} messages quickly without saving them
-                  to your recent list.
+                  Chat lets you send messages quickly without saving them to
+                  your recent list.
                 </Text>
                 <Divider style={{ marginVertical: 10 }} />
                 <Text>
@@ -654,6 +702,22 @@ export default function ChatPage() {
                 </View>
               </Card.Content>
             </Card>
+          )}
+          {messages.length === 0 && input.trim() === "" && !displayMessage && (
+            <IconButton
+              mode="outlined"
+              style={{ position: "absolute", bottom: 5, right: 5 }}
+              icon={(props) => (
+                <MaterialIcons name="screen-rotation" {...props} />
+              )}
+              onPress={() => {
+                if (orientation === "PORTRAIT") {
+                  setOrientation("LANDSCAPE");
+                } else {
+                  setOrientation("PORTRAIT");
+                }
+              }}
+            />
           )}
           {messages.length > 0 && (
             <View style={{ flex: 1 }}>

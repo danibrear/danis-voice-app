@@ -184,20 +184,22 @@ export default function RecentList({
           alignItems: "center",
           paddingHorizontal: 5,
         }}>
-        <Button
-          mode="outlined"
-          onPress={() => {
-            setStarredOnly((s) => !s);
-          }}
-          icon={(props) => (
-            <MaterialIcons
-              name={starredOnly ? "star" : "star-outline"}
-              {...props}
-              color={starredOnly ? theme.colors.tertiary : props.color}
-            />
-          )}>
-          Starred
-        </Button>
+        {shownTexts && shownTexts.length > 0 && (
+          <Button
+            mode="outlined"
+            onPress={() => {
+              setStarredOnly((s) => !s);
+            }}
+            icon={(props) => (
+              <MaterialIcons
+                name={starredOnly ? "star" : "star-outline"}
+                {...props}
+                color={starredOnly ? theme.colors.tertiary : props.color}
+              />
+            )}>
+            Starred
+          </Button>
+        )}
         {shownTexts && shownTexts.length > 0 && (
           <View
             style={{
