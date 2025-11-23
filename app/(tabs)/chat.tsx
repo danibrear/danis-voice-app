@@ -9,13 +9,7 @@ import { AudioModule } from "expo-audio";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as Speech from "expo-speech";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  View,
-} from "react-native";
+import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
 import {
   Button,
   Card,
@@ -34,6 +28,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
+
+import { useNavigation } from "expo-router";
 // @ts-expect-error this is a static asset
 import Logo from "../../assets/images/splash-icon.png";
 
@@ -69,6 +65,7 @@ export default function ChatPage() {
 
   const safeAreaInsets = useSafeAreaInsets();
   const dispatch = useDispatch();
+  const navigator = useNavigation();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -102,14 +99,19 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS === "web") {
-      return;
-    }
-    const unlock = async () => {
-      await ScreenOrientation.unlockAsync();
+    navigator.addListener("state", () => {
+      ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      );
+    });
+    return () => {
+      navigator.removeListener("state", () => {
+        ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.PORTRAIT_UP,
+        );
+      });
     };
-    unlock();
-  }, []);
+  }, [navigator]);
 
   useEffect(() => {
     if (!displayMessage) {

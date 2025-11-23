@@ -2,7 +2,6 @@ import { FontAwesome } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 import { Icon, useTheme } from "react-native-paper";
-
 export default function TabLayout() {
   const theme = useTheme();
   return (
@@ -16,7 +15,7 @@ export default function TabLayout() {
         options={{
           title: "Phrases",
           tabBarIcon: ({ color }) => (
-            <Icon size={28} source="format-list-bulleted" color={color} />
+            <Icon size={23} source="format-list-bulleted" color={color} />
           ),
         }}
       />
@@ -25,7 +24,7 @@ export default function TabLayout() {
         options={{
           title: "Chat",
           tabBarIcon: ({ color }) => {
-            return <Icon size={28} source="message" color={color} />;
+            return <Icon size={23} source="message" color={color} />;
           },
         }}
       />
@@ -34,7 +33,7 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="cog" color={color} />
+            <FontAwesome size={23} name="cog" color={color} />
           ),
         }}
       />

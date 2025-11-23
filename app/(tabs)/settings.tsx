@@ -11,6 +11,7 @@ import {
 import { coreStyles } from "@/styles";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
+import * as ScreenOrientation from "expo-screen-orientation";
 import * as Speech from "expo-speech";
 import * as Updates from "expo-updates";
 import * as WebBrowser from "expo-web-browser";
@@ -53,6 +54,16 @@ export default function Settings() {
     Speech.getAvailableVoicesAsync().then((availableVoices) => {
       setVoices(availableVoices);
     });
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await ScreenOrientation.unlockAsync();
+      await ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      );
+    };
+    load();
   }, []);
 
   useEffect(() => {
