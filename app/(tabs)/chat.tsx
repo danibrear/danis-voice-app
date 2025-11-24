@@ -103,6 +103,7 @@ export default function ChatPage() {
       ScreenOrientation.lockAsync(
         ScreenOrientation.OrientationLock.PORTRAIT_UP,
       );
+      setOrientation("PORTRAIT");
     });
     return () => {
       navigator.removeListener("state", () => {
