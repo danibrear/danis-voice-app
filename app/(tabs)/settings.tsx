@@ -11,6 +11,7 @@ import {
 import { coreStyles } from "@/styles";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
+import { useNavigation } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as Speech from "expo-speech";
 import * as Updates from "expo-updates";
@@ -49,6 +50,8 @@ export default function Settings() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [isCheckingForUpdates, setIsCheckingForUpdates] = useState(false);
+
+  const navigate = useNavigation();
 
   useEffect(() => {
     Speech.getAvailableVoicesAsync().then((availableVoices) => {
@@ -168,6 +171,21 @@ export default function Settings() {
           style={{
             flexGrow: 1,
           }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}>
+            <Button
+              icon={(props) => <MaterialIcons {...props} name="info" />}
+              onPress={() => {
+                // @ts-ignore
+                navigate.navigate("about");
+              }}>
+              About
+            </Button>
+          </View>
           <View style={{ padding: 10 }}>
             <View
               style={{
