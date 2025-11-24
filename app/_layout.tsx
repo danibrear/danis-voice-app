@@ -9,7 +9,6 @@ import {
 } from "@react-navigation/native";
 import * as QuickActions from "expo-quick-actions";
 import { Stack } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -46,10 +45,6 @@ export default function RootLayout() {
   useQuickActionRouting();
 
   useEffect(() => {
-    if (Platform.OS === "web") {
-      return;
-    }
-    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     setTimeout(() => {
       SplashScreen.hideAsync();
     }, 2000);

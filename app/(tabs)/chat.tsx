@@ -6,7 +6,6 @@ import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
 import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
-import * as ScreenOrientation from "expo-screen-orientation";
 import * as Speech from "expo-speech";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
@@ -29,7 +28,6 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
-import { useNavigation } from "expo-router";
 // @ts-expect-error this is a static asset
 import Logo from "../../assets/images/splash-icon.png";
 
@@ -65,14 +63,11 @@ export default function ChatPage() {
 
   const safeAreaInsets = useSafeAreaInsets();
   const dispatch = useDispatch();
-  const navigator = useNavigation();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
   const containerRef = useRef<View>(null);
-
-  const [orientation, setOrientation] = useState<string>("PORTRAIT");
 
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
   const [isShowMode, setIsShowMode] = useState(true);
@@ -97,22 +92,6 @@ export default function ChatPage() {
       opacity: opacity.value,
     };
   }, []);
-
-  useEffect(() => {
-    navigator.addListener("state", () => {
-      ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.PORTRAIT_UP,
-      );
-      setOrientation("PORTRAIT");
-    });
-    return () => {
-      navigator.removeListener("state", () => {
-        ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.PORTRAIT_UP,
-        );
-      });
-    };
-  }, [navigator]);
 
   useEffect(() => {
     if (!displayMessage) {
@@ -153,18 +132,6 @@ export default function ChatPage() {
     }, 50);
     return () => clearInterval(interval);
   }, [isSpeaking, messages]);
-
-  useEffect(() => {
-    if (orientation === "LANDSCAPE") {
-      ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT,
-      );
-    } else {
-      ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.PORTRAIT_UP,
-      );
-    }
-  }, [orientation]);
 
   useEffect(() => {
     if (displayMessage && input.trim() !== "") {
@@ -385,22 +352,6 @@ export default function ChatPage() {
                   justifyContent: "flex-end",
                   alignItems: "center",
                 }}>
-                <IconButton
-                  icon={(props) => (
-                    <MaterialIcons
-                      name="screen-rotation"
-                      {...props}
-                      color="white"
-                    />
-                  )}
-                  onPress={() => {
-                    if (orientation === "PORTRAIT") {
-                      setOrientation("LANDSCAPE");
-                    } else {
-                      setOrientation("PORTRAIT");
-                    }
-                  }}
-                />
                 {messages.length > 0 && (
                   <IconButton
                     onPress={() => {
@@ -701,28 +652,6 @@ export default function ChatPage() {
                   </View>
                 </View>
               </Card.Content>
-              <Card.Actions>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                  }}>
-                  <IconButton
-                    mode="outlined"
-                    size={18}
-                    icon={(props) => (
-                      <MaterialIcons name="screen-rotation" {...props} />
-                    )}
-                    onPress={() => {
-                      if (orientation === "PORTRAIT") {
-                        setOrientation("LANDSCAPE");
-                      } else {
-                        setOrientation("PORTRAIT");
-                      }
-                    }}
-                  />
-                </View>
-              </Card.Actions>
             </Card>
           )}
           {messages.length > 0 && (
