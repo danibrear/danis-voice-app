@@ -116,6 +116,12 @@ export default function RootLayout() {
                       name="(tabs)"
                       options={{ headerShown: false }}
                     />
+                    <Stack.Screen
+                      name="about"
+                      options={{
+                        headerShown: false,
+                      }}
+                    />
                   </Stack>
                 </View>
                 <Dialog visible={updateAvailable}>
