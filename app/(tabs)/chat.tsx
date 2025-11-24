@@ -709,6 +709,7 @@ export default function ChatPage() {
                   }}>
                   <IconButton
                     mode="outlined"
+                    size={18}
                     icon={(props) => (
                       <MaterialIcons name="screen-rotation" {...props} />
                     )}
