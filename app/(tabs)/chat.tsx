@@ -157,7 +157,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (orientation === "LANDSCAPE") {
       ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE_LEFT,
+        ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT,
       );
     } else {
       ScreenOrientation.lockAsync(
