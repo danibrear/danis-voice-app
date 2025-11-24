@@ -53,9 +53,17 @@ export default function Settings() {
   const navigate = useNavigation();
 
   useEffect(() => {
-    Speech.getAvailableVoicesAsync().then((availableVoices) => {
-      setVoices(availableVoices);
-    });
+    try {
+      Speech.getAvailableVoicesAsync()
+        .then((availableVoices) => {
+          setVoices(availableVoices);
+        })
+        .catch((e) => {
+          console.log("[ERROR] Getting voices:", e);
+        });
+    } catch (e) {
+      console.log("[ERROR] Getting voices:", e);
+    }
   }, []);
 
   useEffect(() => {
