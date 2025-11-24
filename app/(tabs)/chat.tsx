@@ -634,7 +634,8 @@ export default function ChatPage() {
         <View
           style={{
             flexGrow: 1,
-
+            display: "flex",
+            flexDirection: "row",
             justifyContent: messages.length === 0 ? "center" : "flex-start",
           }}
           onTouchStart={() => {
@@ -646,11 +647,8 @@ export default function ChatPage() {
                 marginHorizontal: 10,
                 borderRadius: 10,
                 alignSelf: "center",
-              }}
-              contentStyle={{
-                padding: 0,
               }}>
-              <Card.Content>
+              <Card.Content style={{ padding: 0 }}>
                 <Text
                   style={{
                     textAlign: "center",
@@ -658,8 +656,7 @@ export default function ChatPage() {
                     fontWeight: "bold",
                     color: theme.colors.onSurfaceVariant,
                   }}>
-                  Chat lets you send messages quickly without saving them to
-                  your recent list.
+                  Chat lets you send messages quickly
                 </Text>
                 <Divider style={{ marginVertical: 10 }} />
                 <Text>
@@ -704,23 +701,28 @@ export default function ChatPage() {
                   </View>
                 </View>
               </Card.Content>
+              <Card.Actions>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                  }}>
+                  <IconButton
+                    mode="outlined"
+                    icon={(props) => (
+                      <MaterialIcons name="screen-rotation" {...props} />
+                    )}
+                    onPress={() => {
+                      if (orientation === "PORTRAIT") {
+                        setOrientation("LANDSCAPE");
+                      } else {
+                        setOrientation("PORTRAIT");
+                      }
+                    }}
+                  />
+                </View>
+              </Card.Actions>
             </Card>
-          )}
-          {messages.length === 0 && input.trim() === "" && !displayMessage && (
-            <IconButton
-              mode="outlined"
-              style={{ position: "absolute", bottom: 5, right: 5 }}
-              icon={(props) => (
-                <MaterialIcons name="screen-rotation" {...props} />
-              )}
-              onPress={() => {
-                if (orientation === "PORTRAIT") {
-                  setOrientation("LANDSCAPE");
-                } else {
-                  setOrientation("PORTRAIT");
-                }
-              }}
-            />
           )}
           {messages.length > 0 && (
             <View style={{ flex: 1 }}>
