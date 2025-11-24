@@ -413,7 +413,9 @@ export default function Settings() {
                   dispatch(setColors(name));
                 }}
                 style={{
-                  padding: 5,
+                  paddingVertical: 0,
+                  paddingHorizontal: 5,
+
                   borderRadius: 10,
                   marginBottom: 5,
                   display: "flex",
@@ -458,7 +460,8 @@ export default function Settings() {
                 dispatch(setColors("default"));
               }}
               style={{
-                padding: 5,
+                paddingVertical: 0,
+                paddingHorizontal: 5,
                 borderRadius: 10,
                 display: "flex",
                 flexDirection: "row",
@@ -503,7 +506,7 @@ export default function Settings() {
               }}
               style={{
                 paddingHorizontal: 50,
-                paddingVertical: 25,
+                paddingVertical: 15,
                 borderColor: theme.colors.tertiary,
                 borderWidth: 5,
                 borderRadius: 100,
