@@ -15,6 +15,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  Platform,
   ScrollView,
   View,
 } from "react-native";
@@ -488,6 +489,8 @@ function ChatPage() {
     return input.trim() !== "" ? input.trim() : displayMessage?.text;
   }, [displayMessage, input]);
 
+  const instructionsOffset = Platform.OS === "web" ? 50 : 20;
+
   return (
     <ThemedView style={[coreStyles.container, { position: "relative" }]}>
       <CrossView
@@ -543,7 +546,7 @@ function ChatPage() {
                 style={{
                   color: theme.colors.tertiary,
                   position: "absolute",
-                  bottom: safeAreaInsets?.bottom! + 20,
+                  bottom: (safeAreaInsets?.bottom ?? 0) + instructionsOffset,
                   textAlign: "center",
                   fontSize: 22,
                   fontWeight: "bold",
@@ -984,6 +987,7 @@ function ChatPage() {
                   setNoticeMessage(null);
                   if (t.trim().length === 0) {
                     setFontSize(null);
+                    setShowRotateOptions(true);
                   }
                   if (t === "\n") {
                     setInput("");
