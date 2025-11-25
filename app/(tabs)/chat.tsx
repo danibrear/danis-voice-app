@@ -438,15 +438,13 @@ export default function ChatPage() {
                 style={{
                   color: theme.colors.tertiary,
                   position: "absolute",
-                  bottom: "10%",
-                  right: 20,
-                  left: 20,
+                  bottom: safeAreaInsets?.bottom! + 20,
                   textAlign: "center",
                   fontSize: 22,
                   fontWeight: "bold",
-                  backgroundColor: "rgba(0,0,0,0.5)",
-                  paddingVertical: 5,
-                  paddingHorizontal: 10,
+                  backgroundColor: "rgba(50,50,50,0.25)",
+                  padding: 5,
+                  borderRadius: 100,
                   zIndex: 3001,
                 }}>
                 Tap text to hide tools
