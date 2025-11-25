@@ -2,8 +2,10 @@ import CrossView from "@/components/CrossView";
 import ThemedView from "@/components/themed/ThemedView";
 import * as colors from "@/constants/colorPatterns";
 import { RootState } from "@/store";
+import { getDevToolsEnabled } from "@/store/preferences";
 import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
+import { darkTheme } from "@/theme";
 import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import { useNavigation } from "expo-router";
@@ -36,8 +38,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
+
 // @ts-expect-error this is a static asset
-import { darkTheme } from "@/theme";
 import Logo from "../../assets/images/splash-icon.png";
 
 type Message = {
@@ -63,8 +65,7 @@ type NoticeMessage = {
 };
 
 const FLIP_SCALE = 1.25;
-const SHOW_QUICK_SAY = false;
-const SHOW_SAVE_BUTTON = false;
+
 function ChatPage() {
   const theme = useTheme();
 
@@ -77,6 +78,9 @@ function ChatPage() {
   });
 
   const preferences = useSelector((state: RootState) => state.preferences);
+  const devToolsEnabled = useSelector(getDevToolsEnabled);
+  const SHOW_QUICK_SAY = devToolsEnabled;
+  const SHOW_SAVE_BUTTON = devToolsEnabled;
 
   const safeAreaInsets = useSafeAreaInsets();
   const dispatch = useDispatch();
@@ -1071,5 +1075,9 @@ function ChatPage() {
 }
 
 export default function ChatContainer() {
-  return <ThemeProvider theme={darkTheme}>{<ChatPage />}</ThemeProvider>;
+  return (
+    <ThemeProvider theme={darkTheme}>
+      <ChatPage />
+    </ThemeProvider>
+  );
 }

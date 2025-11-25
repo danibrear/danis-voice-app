@@ -1,10 +1,33 @@
+import { getDevToolsEnabled, setDevtoolsEnabled } from "@/store/preferences";
 import { useNavigation } from "expo-router";
+import { useState } from "react";
 import { View } from "react-native";
-import { Appbar, Divider, Icon, Text, useTheme } from "react-native-paper";
+import {
+  Appbar,
+  Divider,
+  Icon,
+  Switch,
+  Text,
+  useTheme,
+} from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function About() {
   const navigator = useNavigation();
   const theme = useTheme();
+
+  const [touches, setTouches] = useState(0);
+
+  const devToolsEnabled = useSelector(getDevToolsEnabled);
+
+  const dispatch = useDispatch();
+
+  const handleTouch = () => {
+    setTouches((prev) => prev + 1);
+    if (touches >= 10) {
+      dispatch(setDevtoolsEnabled(true));
+    }
+  };
   return (
     <View>
       <Appbar.Header>
@@ -72,6 +95,9 @@ export default function About() {
         }}>
         <Icon source="heart" color={theme.colors.tertiary} size={30} />
         <Text
+          onPress={() => {
+            handleTouch();
+          }}
           style={{
             fontSize: 25,
             fontWeight: "bold",
@@ -79,6 +105,31 @@ export default function About() {
           DB
         </Text>
       </View>
+      <Divider
+        style={{
+          marginVertical: 10,
+        }}
+      />
+      {devToolsEnabled && (
+        <View
+          style={{
+            justifyContent: "center",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            marginLeft: 20,
+            gap: 10,
+          }}>
+          <Text>Experiments enabled:</Text>
+          <Switch
+            value={devToolsEnabled}
+            onValueChange={(value: boolean) => {
+              setTouches(0);
+              dispatch(setDevtoolsEnabled(value));
+            }}
+          />
+        </View>
+      )}
     </View>
   );
 }

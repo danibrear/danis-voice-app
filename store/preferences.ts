@@ -9,6 +9,7 @@ export type PreferencesState = {
   preferredVoice?: string;
   colors?: string;
   chatReturnKeySendsMessage?: boolean;
+  devToolsEnabled?: boolean;
 };
 
 const initialState: PreferencesState = {
@@ -17,6 +18,8 @@ const initialState: PreferencesState = {
   speechPitch: 1.0,
   preferredVoice: undefined,
   chatReturnKeySendsMessage: false,
+
+  devToolsEnabled: false,
 };
 
 export const preferencesSlice = createSlice({
@@ -51,6 +54,10 @@ export const preferencesSlice = createSlice({
       state.colors = action.payload;
     },
 
+    setDevtoolsEnabled: (state, action: PayloadAction<boolean>) => {
+      state.devToolsEnabled = action.payload;
+    },
+
     clearValues: () => {
       return initialState;
     },
@@ -67,8 +74,11 @@ export const {
   setDarkmodeEnabled,
   setColors,
   setChatReturnKeySendsMessage,
+  setDevtoolsEnabled,
 } = preferencesSlice.actions;
 
 export default preferencesSlice.reducer;
 
 export const getPreferencesState = (state: RootState) => state.preferences;
+export const getDevToolsEnabled = (state: RootState) =>
+  !!state.preferences.devToolsEnabled;
