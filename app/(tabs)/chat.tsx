@@ -24,6 +24,7 @@ import {
   IconButton,
   Text,
   TextInput,
+  ThemeProvider,
   useTheme,
 } from "react-native-paper";
 import Animated, {
@@ -36,6 +37,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 // @ts-expect-error this is a static asset
+import { darkTheme } from "@/theme";
 import Logo from "../../assets/images/splash-icon.png";
 
 type Message = {
@@ -63,7 +65,7 @@ type NoticeMessage = {
 const FLIP_SCALE = 1.25;
 const SHOW_QUICK_SAY = false;
 const SHOW_SAVE_BUTTON = false;
-export default function ChatPage() {
+function ChatPage() {
   const theme = useTheme();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1066,4 +1068,8 @@ export default function ChatPage() {
       </Dialog>
     </ThemedView>
   );
+}
+
+export default function ChatContainer() {
+  return <ThemeProvider theme={darkTheme}>{<ChatPage />}</ThemeProvider>;
 }
