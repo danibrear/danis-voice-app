@@ -117,6 +117,13 @@ export default function RootLayout() {
                         headerShown: false,
                       }}
                     />
+                    <Stack.Screen
+                      name="quick"
+                      options={{
+                        headerShown: false,
+                        presentation: "transparentModal",
+                      }}
+                    />
                   </Stack>
                 </View>
                 <Dialog visible={updateAvailable}>

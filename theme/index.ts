@@ -56,6 +56,7 @@ export const darkTheme = {
     onInfo: "rgb(0, 51, 83)",
     infoContainer: "rgb(0, 74, 117)",
     onInfoContainer: "rgb(206, 229, 255)",
+    modalOverlay: "rgba(0, 0, 0, 0.75)",
   },
   roundness: 2,
 };
@@ -116,6 +117,7 @@ export const theme = {
     onInfo: "rgb(255, 255, 255)",
     infoContainer: "rgb(206, 229, 255)",
     onInfoContainer: "rgb(0, 29, 50)",
+    modalOverlay: "rgba(255, 255, 255, 0.75)",
   },
   roundness: 2,
 };

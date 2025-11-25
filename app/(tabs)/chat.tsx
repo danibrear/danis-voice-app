@@ -6,9 +6,16 @@ import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
 import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
+import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
+import {
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  ScrollView,
+  View,
+} from "react-native";
 import {
   Button,
   Card,
@@ -28,6 +35,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
+// @ts-expect-error this is a static asset
+import Logo from "../../assets/images/splash-icon.png";
 
 type Message = {
   text: string;
@@ -51,7 +60,9 @@ type NoticeMessage = {
   color: "info" | "error" | "success";
 };
 
-const FLIP_SCALE = 1.5;
+const FLIP_SCALE = 1.25;
+const SHOW_QUICK_SAY = false;
+const SHOW_SAVE_BUTTON = false;
 export default function ChatPage() {
   const theme = useTheme();
 
@@ -67,6 +78,8 @@ export default function ChatPage() {
 
   const safeAreaInsets = useSafeAreaInsets();
   const dispatch = useDispatch();
+
+  const navigator = useNavigation();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -213,10 +226,15 @@ export default function ChatPage() {
   };
 
   const handleRecentAdd = async () => {
+    if (input.trim() === "" && !displayMessage) {
+      return;
+    }
+    const textToSave =
+      input.trim() !== "" ? input.trim() : displayMessage!.text;
     dispatch(
       createStoredText({
         id: new Date().getTime().toString(),
-        text: input.trim(),
+        text: textToSave,
         starred: false,
         order: -1,
       }),
@@ -281,14 +299,10 @@ export default function ChatPage() {
             <MaterialIcons
               name="arrow-upward"
               {...props}
-              color={
-                angle === 180
-                  ? theme.colors.tertiary
-                  : theme.colors.onBackground
-              }
+              color={angle === 180 ? theme.colors.tertiary : "white"}
             />
           )}
-          size={input.trim().length > 0 ? 30 : 25}
+          size={30}
         />
         <IconButton
           onPress={() => setAngle(0)}
@@ -297,18 +311,16 @@ export default function ChatPage() {
             <MaterialIcons
               name="arrow-downward"
               {...props}
-              color={
-                angle === 0 ? theme.colors.tertiary : theme.colors.onBackground
-              }
+              color={angle === 0 ? theme.colors.tertiary : "white"}
             />
           )}
-          size={input.trim().length > 0 ? 30 : 25}
+          size={30}
         />
         <IconButton
           icon="magnify-plus"
           disabled={input.trim().length === 0}
-          iconColor={theme.colors.onBackground}
-          size={input.trim().length > 0 ? 30 : 25}
+          iconColor="white"
+          size={30}
           onPress={() => {
             if (fontSize === null) {
               setFontSize(100);
@@ -320,8 +332,8 @@ export default function ChatPage() {
         <IconButton
           icon="magnify-minus"
           disabled={input.trim().length === 0}
-          iconColor={theme.colors.onBackground}
-          size={input.trim().length > 0 ? 30 : 25}
+          iconColor="white"
+          size={30}
           onPress={() => {
             if (fontSize === null) {
               setFontSize(100);
@@ -332,15 +344,11 @@ export default function ChatPage() {
         />
         <IconButton
           icon="magnify-remove-outline"
-          iconColor={
-            fontSize === null
-              ? theme.colors.onBackground
-              : theme.colors.tertiary
-          }
+          iconColor={fontSize === null ? "white" : theme.colors.tertiary}
           style={{
             opacity: fontSize === null ? 0.333 : 1,
           }}
-          size={input.trim().length > 0 ? 30 : 25}
+          size={30}
           onPress={() => {
             setFontSize(null);
           }}
@@ -353,7 +361,7 @@ export default function ChatPage() {
             setDisplayMessage(null);
             setInput("");
           }}
-          size={input.trim().length > 0 ? 30 : 25}
+          size={30}
           disabled={input.trim() === "" && !displayMessage && !keyboardFocused}
           icon={(props) => (
             <FontAwesome
@@ -366,12 +374,103 @@ export default function ChatPage() {
               color={
                 input.trim() === "" && !displayMessage && !keyboardFocused
                   ? theme.colors.surfaceDisabled
-                  : theme.colors.onBackground
+                  : "white"
               }
             />
           )}
         />
       </View>
+    );
+  };
+  const renderTopTools = () => {
+    return (
+      <Animated.View
+        entering={FadeInUp.duration(150).springify().damping(15).mass(0.5)}
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: safeAreaInsets?.top!,
+          zIndex: 1001,
+        }}
+        onTouchStart={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}>
+        {displayMessage && (
+          <IconButton
+            mode="contained"
+            containerColor={theme.colors.onPrimary}
+            iconColor={theme.colors.primary}
+            onPress={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleSay(displayMessage.text);
+            }}
+            icon={(props) => <MaterialIcons name="replay" {...props} />}
+          />
+        )}
+
+        {(input.trim().length > 0 || displayMessage) && SHOW_SAVE_BUTTON && (
+          <Button
+            style={{ borderRadius: 100, padding: 0, marginLeft: 5 }}
+            labelStyle={{
+              fontSize: 14,
+              padding: 0,
+              margin: 0,
+              fontFamily: "Helvetica Neue",
+              fontWeight: "bold",
+            }}
+            contentStyle={{
+              paddingHorizontal: 10,
+              paddingVertical: 0,
+            }}
+            buttonColor={theme.colors.primaryContainer}
+            mode="outlined"
+            onPress={() => {
+              handleRecentAdd();
+            }}>
+            Save
+          </Button>
+        )}
+        <View
+          style={{
+            display: "flex",
+            flexGrow: 1,
+            flexDirection: "row",
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}>
+          {SHOW_QUICK_SAY && (
+            <Button
+              mode="outlined"
+              buttonColor={theme.colors.primaryContainer}
+              onPress={() => {
+                // @ts-expect-error navigate type
+                navigator.navigate("quick");
+              }}>
+              Quick Say
+            </Button>
+          )}
+          {messages.length > 0 && (
+            <IconButton
+              onPress={() => {
+                setIsShowMode(false);
+              }}
+              icon={(props) => (
+                <FontAwesome name="list" {...props} color="white" />
+              )}
+            />
+          )}
+        </View>
+      </Animated.View>
     );
   };
 
@@ -451,83 +550,11 @@ export default function ChatPage() {
               </Animated.Text>
             )}
 
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: safeAreaInsets?.top!,
-                zIndex: 1001,
-              }}
-              onTouchStart={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-              }}>
-              {input.trim().length > 0 &&
-                keyboardFocused &&
-                showRotateOptions && (
-                  <Animated.View
-                    entering={FadeInUp.duration(150)
-                      .springify()
-                      .damping(15)
-                      .mass(0.5)}>
-                    <Button
-                      style={{ borderRadius: 100, padding: 0, marginLeft: 5 }}
-                      labelStyle={{
-                        fontSize: 14,
-                        padding: 0,
-                        margin: 0,
-                        fontFamily: "Helvetica Neue",
-                        fontWeight: "bold",
-                      }}
-                      contentStyle={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 0,
-                      }}
-                      mode="outlined"
-                      onPress={() => {
-                        handleRecentAdd();
-                      }}>
-                      Save to recent
-                    </Button>
-                  </Animated.View>
-                )}
-              {displayMessage && (
-                <IconButton
-                  mode="contained"
-                  containerColor={theme.colors.onPrimary}
-                  iconColor={theme.colors.primary}
-                  onPress={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSay(displayMessage.text);
-                  }}
-                  icon={(props) => <MaterialIcons name="replay" {...props} />}
-                />
-              )}
-              <View
-                style={{
-                  display: "flex",
-                  flexGrow: 1,
-                  flexDirection: "row",
-                  justifyContent: "flex-end",
-                  alignItems: "center",
-                }}>
-                {messages.length > 0 && (
-                  <IconButton
-                    onPress={() => {
-                      setIsShowMode(false);
-                    }}
-                    icon={(props) => (
-                      <FontAwesome name="list" {...props} color="white" />
-                    )}
-                  />
-                )}
-              </View>
-            </View>
+            {(input.trim().length > 0 ||
+              displayMessage ||
+              messages.length > 0) &&
+              showRotateOptions &&
+              renderTopTools()}
 
             <View
               ref={containerRef}
@@ -541,26 +568,42 @@ export default function ChatPage() {
                 paddingTop: angle === 180 ? 50 : 0,
                 paddingHorizontal: 0,
               }}>
-              {input.trim().length === 0 && displayMessage === null && (
-                <View
-                  style={{
-                    flexGrow: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    flex: 1,
-                    alignSelf: "stretch",
-                  }}>
-                  <Text
+              {input.trim().length === 0 &&
+                displayMessage === null &&
+                isShowMode && (
+                  <Animated.View
+                    entering={FadeInUp.duration(666)
+                      .springify()
+                      .damping(25)
+                      .mass(2)}
                     style={{
-                      fontWeight: "bold",
-                      color: theme.colors.onBackground,
-                      fontSize: 20,
-                      textAlign: "center",
+                      display: "flex",
+                      flexShrink: 1,
                     }}>
-                    Type a message below.
-                  </Text>
-                </View>
-              )}
+                    <Image
+                      source={Logo}
+                      style={[
+                        {
+                          maxHeight: 200,
+                          height: "90%",
+
+                          resizeMode: "contain",
+                          zIndex: 1,
+                        },
+                      ]}
+                    />
+                    <Animated.Text
+                      entering={FadeInDown.duration(666).delay(100)}
+                      style={{
+                        fontWeight: "bold",
+                        color: theme.colors.onBackground,
+                        fontSize: 20,
+                        textAlign: "center",
+                      }}>
+                      Type a message below
+                    </Animated.Text>
+                  </Animated.View>
+                )}
               <Text
                 adjustsFontSizeToFit={true}
                 numberOfLines={displayMessage?.numberOfLines || numLines}
@@ -970,7 +1013,7 @@ export default function ChatPage() {
           <IconButton
             mode="contained"
             containerColor={theme.colors.primary}
-            iconColor={theme.colors.onPrimary}
+            iconColor="white"
             disabled={input.trim() === ""}
             icon={(props) => <MaterialIcons name="arrow-upward" {...props} />}
             style={{ marginLeft: 10 }}

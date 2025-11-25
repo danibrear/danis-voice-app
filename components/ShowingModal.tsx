@@ -273,10 +273,10 @@ export default function ShowingModal({
           mode="contained"
           style={{ flexGrow: 1 }}
           labelStyle={formStyles.bigButton}
-          onPress={() => {
+          onPress={async () => {
             setIsSpeaking(true);
             setColorIndex(-1);
-            AudioModule.setAudioModeAsync({
+            await AudioModule.setAudioModeAsync({
               playsInSilentMode: true,
             });
 
