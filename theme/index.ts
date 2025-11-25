@@ -13,7 +13,7 @@ export const darkTheme = {
     secondaryContainer: "rgb(131, 27, 80)",
     onSecondaryContainer: "rgb(255, 217, 228)",
     tertiary: "rgb(248, 77, 158)", //#f84d9e
-    onTertiary: "rgb(0, 0, 0)",
+    onTertiary: "rgb(255, 255, 255)",
     tertiaryContainer: "rgb(39, 80, 0)",
     onTertiaryContainer: "rgb(178, 245, 123)",
     error: "rgb(255, 179, 172)",

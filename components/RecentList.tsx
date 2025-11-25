@@ -7,7 +7,7 @@ import {
 import { listStyles } from "@/styles";
 import { StoredText } from "@/types/StoredText";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Keyboard,
   RefreshControl,
@@ -110,6 +110,11 @@ export default function RecentList({
     }
   };
 
+  const starredPhrases = useMemo(
+    () => recentTexts.filter((text) => text.starred),
+    [recentTexts],
+  );
+
   return (
     <View
       ref={parentRef}
@@ -122,7 +127,102 @@ export default function RecentList({
           setIsLongPressing(false);
         }
       }}>
-      {shownTexts.length === 0 && (
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 5,
+        }}>
+        <View style={{ flexGrow: 1 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              paddingHorizontal: 10,
+              justifyContent:
+                recentTexts.length > 0 && shownTexts.length > 0
+                  ? "space-between"
+                  : "flex-start",
+              gap: 5,
+              position: "relative",
+              zIndex: 9999,
+            }}>
+            {recentTexts && recentTexts.length > 0 && (
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  setStarredOnly((s) => !s);
+                }}
+                disabled={starredPhrases.length === 0 && !starredOnly}
+                icon={(props) => (
+                  <MaterialIcons
+                    name={starredOnly ? "star" : "star-outline"}
+                    {...props}
+                    color={starredOnly ? theme.colors.tertiary : props.color}
+                  />
+                )}>
+                Starred
+              </Button>
+            )}
+            {shownTexts && shownTexts.length > 0 && (
+              <>
+                {selectedIds.length > 0 && (
+                  <Button
+                    mode="contained"
+                    buttonColor={theme.colors.error}
+                    onPress={() => {
+                      selectedIds.forEach((id) => {
+                        dispatch(removeText(id));
+                      });
+                      setSelectedIds([]);
+                      setIsSelecting(false);
+                    }}>
+                    Delete ({selectedIds.length})
+                  </Button>
+                )}
+                {isSelecting && (
+                  <Button
+                    mode="contained"
+                    onPress={() => {
+                      setIsSelecting(false);
+                      setSelectedIds([]);
+                    }}>
+                    <MaterialIcons name="close" size={20} />
+                  </Button>
+                )}
+                {!isSelecting && (
+                  <Button
+                    mode="contained"
+                    icon={(props) => (
+                      <MaterialIcons {...props} name="check-box" />
+                    )}
+                    onPress={() => {
+                      setIsSelecting(true);
+                    }}>
+                    Select
+                  </Button>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {recentTexts && shownTexts && shownTexts.length === 0 && (
+        <View style={[listStyles.emptyContainer]}>
+          <Text
+            style={{
+              color: theme.colors.tertiary,
+              fontSize: 30,
+              fontWeight: "bold",
+              textAlign: "center",
+            }}>
+            No {starredOnly ? "starred" : "recent"} phrases
+          </Text>
+        </View>
+      )}
+      {recentTexts.length === 0 && (
         <View style={[listStyles.emptyContainer]}>
           <Animated.View
             entering={FadeInUp.duration(700)
@@ -176,75 +276,7 @@ export default function RecentList({
           </Animated.View>
         </View>
       )}
-      <View
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 5,
-        }}>
-        {shownTexts && shownTexts.length > 0 && (
-          <Button
-            mode="outlined"
-            onPress={() => {
-              setStarredOnly((s) => !s);
-            }}
-            icon={(props) => (
-              <MaterialIcons
-                name={starredOnly ? "star" : "star-outline"}
-                {...props}
-                color={starredOnly ? theme.colors.tertiary : props.color}
-              />
-            )}>
-            Starred
-          </Button>
-        )}
-        {shownTexts && shownTexts.length > 0 && (
-          <View
-            style={{
-              flexDirection: "row",
-              paddingHorizontal: 10,
-              justifyContent: "flex-end",
-              gap: 5,
-            }}>
-            {selectedIds.length > 0 && (
-              <Button
-                mode="contained"
-                buttonColor={theme.colors.error}
-                onPress={() => {
-                  selectedIds.forEach((id) => {
-                    dispatch(removeText(id));
-                  });
-                  setSelectedIds([]);
-                  setIsSelecting(false);
-                }}>
-                Delete ({selectedIds.length})
-              </Button>
-            )}
-            {isSelecting && (
-              <Button
-                mode="contained"
-                onPress={() => {
-                  setIsSelecting(false);
-                  setSelectedIds([]);
-                }}>
-                <MaterialIcons name="close" size={20} />
-              </Button>
-            )}
-            {!isSelecting && (
-              <Button
-                mode="contained"
-                icon={(props) => <MaterialIcons {...props} name="check-box" />}
-                onPress={() => {
-                  setIsSelecting(true);
-                }}>
-                Select
-              </Button>
-            )}
-          </View>
-        )}
-      </View>
+
       {!isChangingColorScheme && shownTexts.length > 0 && (
         <DraggableFlatList
           keyboardShouldPersistTaps="handled"

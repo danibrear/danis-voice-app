@@ -21,6 +21,8 @@ import {
 } from "react-native-paper";
 import Animated, {
   FadeInDown,
+  FadeInUp,
+  FadeOutDown,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
@@ -41,6 +43,12 @@ const WORD_COUNT_MIN_MAX_LINES = {
   35: { min: 6, max: 7 },
   60: { min: 7, max: 8 },
   80: { min: 8, max: 9 },
+};
+
+type NoticeMessage = {
+  id: string;
+  text: string;
+  color: "info" | "error" | "success";
 };
 
 const FLIP_SCALE = 1.5;
@@ -76,10 +84,15 @@ export default function ChatPage() {
 
   const [angle, setAngle] = useState(0);
   const messagesEndRef = useRef<ScrollView>(null);
+  const [keyboardFocused, setKeyboardFocused] = useState(false);
 
   const hasProcessedChange = useRef(false);
   const [colorIndex, setColorIndex] = useState(0);
   const [highlightColor, setHighlightColor] = useState(theme.colors.tertiary);
+
+  const [noticeMessage, setNoticeMessage] = useState<NoticeMessage | null>(
+    null,
+  );
 
   const opacity = useSharedValue(0.5);
 
@@ -199,6 +212,28 @@ export default function ChatPage() {
     }, 50);
   };
 
+  const handleRecentAdd = async () => {
+    dispatch(
+      createStoredText({
+        id: new Date().getTime().toString(),
+        text: input.trim(),
+        starred: false,
+        order: -1,
+      }),
+    );
+    setDisplayMessage(null);
+    setInput("");
+
+    setNoticeMessage({
+      id: new Date().toISOString(),
+      text: "Message saved to Recents",
+      color: "success",
+    });
+    setTimeout(() => {
+      setNoticeMessage(null);
+    }, 3000);
+  };
+
   const handleSay = async (messageText: string) => {
     AudioModule.setAudioModeAsync({
       playsInSilentMode: true,
@@ -231,6 +266,115 @@ export default function ChatPage() {
     });
   };
 
+  const renderTools = () => {
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          flexGrow: 1,
+          justifyContent: "space-around",
+        }}>
+        <IconButton
+          onPress={() => setAngle(180)}
+          mode={angle === 180 ? "contained" : undefined}
+          icon={(props) => (
+            <MaterialIcons
+              name="arrow-upward"
+              {...props}
+              color={
+                angle === 180
+                  ? theme.colors.tertiary
+                  : theme.colors.onBackground
+              }
+            />
+          )}
+          size={input.trim().length > 0 ? 30 : 25}
+        />
+        <IconButton
+          onPress={() => setAngle(0)}
+          mode={angle === 0 ? "contained" : undefined}
+          icon={(props) => (
+            <MaterialIcons
+              name="arrow-downward"
+              {...props}
+              color={
+                angle === 0 ? theme.colors.tertiary : theme.colors.onBackground
+              }
+            />
+          )}
+          size={input.trim().length > 0 ? 30 : 25}
+        />
+        <IconButton
+          icon="magnify-plus"
+          disabled={input.trim().length === 0}
+          iconColor={theme.colors.onBackground}
+          size={input.trim().length > 0 ? 30 : 25}
+          onPress={() => {
+            if (fontSize === null) {
+              setFontSize(100);
+              return;
+            }
+            handleSetFontSize(Math.min(200, fontSize + 10));
+          }}
+        />
+        <IconButton
+          icon="magnify-minus"
+          disabled={input.trim().length === 0}
+          iconColor={theme.colors.onBackground}
+          size={input.trim().length > 0 ? 30 : 25}
+          onPress={() => {
+            if (fontSize === null) {
+              setFontSize(100);
+              return;
+            }
+            handleSetFontSize(Math.max(20, fontSize - 10));
+          }}
+        />
+        <IconButton
+          icon="magnify-remove-outline"
+          iconColor={
+            fontSize === null
+              ? theme.colors.onBackground
+              : theme.colors.tertiary
+          }
+          style={{
+            opacity: fontSize === null ? 0.333 : 1,
+          }}
+          size={input.trim().length > 0 ? 30 : 25}
+          onPress={() => {
+            setFontSize(null);
+          }}
+        />
+        <IconButton
+          onPress={() => {
+            if (input.trim() === "" && displayMessage === null) {
+              Keyboard.dismiss();
+            }
+            setDisplayMessage(null);
+            setInput("");
+          }}
+          size={input.trim().length > 0 ? 30 : 25}
+          disabled={input.trim() === "" && !displayMessage && !keyboardFocused}
+          icon={(props) => (
+            <FontAwesome
+              name={
+                input.trim() === "" && displayMessage === null
+                  ? "chevron-down"
+                  : "window-close"
+              }
+              {...props}
+              color={
+                input.trim() === "" && !displayMessage && !keyboardFocused
+                  ? theme.colors.surfaceDisabled
+                  : theme.colors.onBackground
+              }
+            />
+          )}
+        />
+      </View>
+    );
+  };
+
   const menuMessage = useMemo(() => {
     return messages[menuMessageIdx ?? 0];
   }, [menuMessageIdx, messages]);
@@ -238,6 +382,7 @@ export default function ChatPage() {
   const message = useMemo(() => {
     return input.trim() !== "" ? input.trim() : displayMessage?.text;
   }, [displayMessage, input]);
+
   return (
     <ThemedView style={[coreStyles.container, { position: "relative" }]}>
       <CrossView
@@ -289,23 +434,25 @@ export default function ChatPage() {
                   .springify()
                   .damping(25)
                   .mass(2)}
+                exiting={FadeOutDown.duration(50)}
                 style={{
-                  color: "white",
+                  color: theme.colors.tertiary,
                   position: "absolute",
-                  top: safeAreaInsets?.top! - 10,
-                  right: 100,
-                  left: 100,
+                  bottom: "10%",
+                  right: 20,
+                  left: 20,
                   textAlign: "center",
-                  fontSize: 18,
+                  fontSize: 22,
                   fontWeight: "bold",
                   backgroundColor: "rgba(0,0,0,0.5)",
                   paddingVertical: 5,
                   paddingHorizontal: 10,
-                  zIndex: 1001,
+                  zIndex: 3001,
                 }}>
-                Tap text to show/hide options
+                Tap text to hide tools
               </Animated.Text>
             )}
+
             <View
               style={{
                 display: "flex",
@@ -321,6 +468,35 @@ export default function ChatPage() {
                 e.stopPropagation();
                 e.preventDefault();
               }}>
+              {input.trim().length > 0 &&
+                keyboardFocused &&
+                showRotateOptions && (
+                  <Animated.View
+                    entering={FadeInUp.duration(150)
+                      .springify()
+                      .damping(15)
+                      .mass(0.5)}>
+                    <Button
+                      style={{ borderRadius: 100, padding: 0, marginLeft: 5 }}
+                      labelStyle={{
+                        fontSize: 14,
+                        padding: 0,
+                        margin: 0,
+                        fontFamily: "Helvetica Neue",
+                        fontWeight: "bold",
+                      }}
+                      contentStyle={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 0,
+                      }}
+                      mode="outlined"
+                      onPress={() => {
+                        handleRecentAdd();
+                      }}>
+                      Save to recent
+                    </Button>
+                  </Animated.View>
+                )}
               {displayMessage && (
                 <IconButton
                   mode="contained"
@@ -354,6 +530,7 @@ export default function ChatPage() {
                 )}
               </View>
             </View>
+
             <View
               ref={containerRef}
               style={{
@@ -366,6 +543,26 @@ export default function ChatPage() {
                 paddingTop: angle === 180 ? 50 : 0,
                 paddingHorizontal: 0,
               }}>
+              {input.trim().length === 0 && displayMessage === null && (
+                <View
+                  style={{
+                    flexGrow: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    flex: 1,
+                    alignSelf: "stretch",
+                  }}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      color: theme.colors.onBackground,
+                      fontSize: 20,
+                      textAlign: "center",
+                    }}>
+                    Type a message below.
+                  </Text>
+                </View>
+              )}
               <Text
                 adjustsFontSizeToFit={true}
                 numberOfLines={displayMessage?.numberOfLines || numLines}
@@ -405,6 +602,7 @@ export default function ChatPage() {
                 {message?.slice(highlight.end)}
               </Text>
             </View>
+
             {showRotateOptions && (
               <Animated.View
                 entering={FadeInDown.duration(500)
@@ -416,88 +614,15 @@ export default function ChatPage() {
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  flexDirection: "row",
+                  width: "100%",
+                  flexDirection: "column",
                   justifyContent: "space-around",
-                  backgroundColor: "rgba(0,0,0,0.1)",
                 }}
                 onTouchStart={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                 }}>
-                <IconButton
-                  onPress={() => setAngle(180)}
-                  mode={angle === 180 ? "contained" : undefined}
-                  icon={(props) => (
-                    <MaterialIcons
-                      name="arrow-upward"
-                      {...props}
-                      color={angle === 180 ? theme.colors.tertiary : "white"}
-                    />
-                  )}
-                  size={30}
-                />
-                <IconButton
-                  onPress={() => setAngle(0)}
-                  mode={angle === 0 ? "contained" : undefined}
-                  icon={(props) => (
-                    <MaterialIcons
-                      name="arrow-downward"
-                      {...props}
-                      color={angle === 0 ? theme.colors.tertiary : "white"}
-                    />
-                  )}
-                  size={30}
-                />
-                <IconButton
-                  icon="magnify-plus"
-                  iconColor="white"
-                  size={30}
-                  onPress={() => {
-                    if (fontSize === null) {
-                      setFontSize(100);
-                      return;
-                    }
-                    handleSetFontSize(Math.min(200, fontSize + 10));
-                  }}
-                />
-                <IconButton
-                  icon="magnify-minus"
-                  iconColor="white"
-                  size={30}
-                  onPress={() => {
-                    if (fontSize === null) {
-                      setFontSize(100);
-                      return;
-                    }
-                    handleSetFontSize(Math.max(20, fontSize - 10));
-                  }}
-                />
-                <IconButton
-                  icon="magnify-remove-outline"
-                  iconColor={
-                    fontSize === null ? "white" : theme.colors.tertiary
-                  }
-                  style={{
-                    opacity: fontSize === null ? 0.333 : 1,
-                  }}
-                  size={30}
-                  onPress={() => {
-                    setFontSize(null);
-                  }}
-                />
-                <IconButton
-                  onPress={() => {
-                    if (input.trim() === "" && displayMessage === null) {
-                      Keyboard.dismiss();
-                    }
-                    setDisplayMessage(null);
-                    setInput("");
-                  }}
-                  size={30}
-                  icon={(props) => (
-                    <FontAwesome name="window-close" {...props} color="white" />
-                  )}
-                />
+                {renderTools()}
               </Animated.View>
             )}
           </View>
@@ -723,6 +848,13 @@ export default function ChatPage() {
             </View>
           )}
         </View>
+        <View
+          style={{
+            position: "relative",
+            backgroundColor: theme.colors.background,
+          }}>
+          {renderTools()}
+        </View>
       </CrossView>
 
       <KeyboardAvoidingView
@@ -739,6 +871,38 @@ export default function ChatPage() {
           width: "100%",
           flexWrap: "nowrap",
         }}>
+        {noticeMessage && (
+          <Animated.View
+            entering={FadeInDown.duration(500).springify().damping(20).mass(1)}
+            exiting={FadeInDown.duration(10)}
+            style={[
+              {
+                flexGrow: 1,
+                display: noticeMessage ? "flex" : "none",
+                justifyContent: "center",
+                width: "100%",
+                alignItems: "center",
+              },
+            ]}>
+            <Text
+              style={{
+                color: theme.colors.onTertiary,
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: 18,
+                fontFamily: "Helvetica Neue",
+                backgroundColor: theme.colors.tertiary,
+                paddingVertical: 10,
+                borderRadius: 5,
+                marginBottom: 5,
+                flexGrow: 1,
+                width: "100%",
+                paddingHorizontal: 10,
+              }}>
+              {noticeMessage.text}
+            </Text>
+          </Animated.View>
+        )}
         <View
           style={{
             display: "flex",
@@ -762,8 +926,15 @@ export default function ChatPage() {
                 placeholder="Message..."
                 value={input}
                 numberOfLines={2}
+                onFocus={() => {
+                  setKeyboardFocused(true);
+                }}
+                onBlur={() => {
+                  setKeyboardFocused(false);
+                }}
                 onChangeText={(t) => {
                   hasProcessedChange.current = false;
+                  setNoticeMessage(null);
                   if (t.trim().length === 0) {
                     setFontSize(null);
                   }
