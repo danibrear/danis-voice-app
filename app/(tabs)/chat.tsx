@@ -2,11 +2,12 @@ import CrossView from "@/components/CrossView";
 import ThemedView from "@/components/themed/ThemedView";
 import * as colors from "@/constants/colorPatterns";
 import { RootState } from "@/store";
+import { addRecentMessage } from "@/store/chat";
 import { getDevToolsEnabled } from "@/store/preferences";
 import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
 import { darkTheme } from "@/theme";
-import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
@@ -39,7 +40,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
-
 // @ts-expect-error this is a static asset
 import Logo from "../../assets/images/splash-icon.png";
 
@@ -80,7 +80,6 @@ function ChatPage() {
 
   const preferences = useSelector((state: RootState) => state.preferences);
   const devToolsEnabled = useSelector(getDevToolsEnabled);
-  const SHOW_QUICK_SAY = devToolsEnabled;
   const SHOW_SAVE_BUTTON = devToolsEnabled;
 
   const safeAreaInsets = useSafeAreaInsets();
@@ -94,9 +93,8 @@ function ChatPage() {
   const containerRef = useRef<View>(null);
 
   const [menuMessageIdx, setMenuMessageIdx] = useState<number | null>(null);
-  const [isShowMode, setIsShowMode] = useState(true);
 
-  const [showRotateOptions, setShowRotateOptions] = useState(true);
+  const [showAllTools, setShowAllTools] = useState(true);
   const [showTapInstructions, setShowTapInstructions] = useState(true);
   const [fontSize, setFontSize] = useState<number | null>(null);
 
@@ -129,7 +127,6 @@ function ChatPage() {
 
   useEffect(() => {
     if (
-      isShowMode &&
       showTapInstructions &&
       (messages.length > 0 || input.trim().length > 0)
     ) {
@@ -137,10 +134,10 @@ function ChatPage() {
         setShowTapInstructions(false);
       }, 4000);
     }
-    if (!isShowMode || (input.trim().length === 0 && messages.length === 0)) {
+    if (input.trim().length === 0 && messages.length === 0) {
       setShowTapInstructions(true);
     }
-  }, [input, isShowMode, messages.length, showTapInstructions]);
+  }, [input, messages.length, showTapInstructions]);
 
   useEffect(() => {
     if (!isSpeaking || messages.length === 0) {
@@ -160,7 +157,7 @@ function ChatPage() {
     if (displayMessage && input.trim() !== "") {
       setDisplayMessage(null);
       setFontSize(null);
-      setShowRotateOptions(true);
+      setShowAllTools(true);
     }
   }, [input, displayMessage]);
 
@@ -265,6 +262,8 @@ function ChatPage() {
     });
     setIsSpeaking(true);
     setColorIndex(-1);
+
+    dispatch(addRecentMessage(messageText));
     Speech.speak(messageText, {
       voice: preferences.preferredVoice,
       pitch: preferences.speechPitch,
@@ -422,26 +421,13 @@ function ChatPage() {
         )}
 
         {(input.trim().length > 0 || displayMessage) && SHOW_SAVE_BUTTON && (
-          <Button
-            style={{ borderRadius: 100, padding: 0, marginLeft: 5 }}
-            labelStyle={{
-              fontSize: 14,
-              padding: 0,
-              margin: 0,
-              fontFamily: "Helvetica Neue",
-              fontWeight: "bold",
-            }}
-            contentStyle={{
-              paddingHorizontal: 10,
-              paddingVertical: 0,
-            }}
-            buttonColor={theme.colors.primaryContainer}
+          <IconButton
+            icon={(props) => <MaterialIcons name="save" {...props} />}
             mode="outlined"
             onPress={() => {
               handleRecentAdd();
-            }}>
-            Save
-          </Button>
+            }}
+          />
         )}
         <View
           style={{
@@ -455,21 +441,11 @@ function ChatPage() {
             e.preventDefault();
             e.stopPropagation();
           }}>
-          {SHOW_QUICK_SAY && (
-            <Button
-              mode="outlined"
-              buttonColor={theme.colors.primaryContainer}
+          {showAllTools && (
+            <IconButton
               onPress={() => {
                 // @ts-expect-error navigate type
                 navigator.navigate("quick");
-              }}>
-              Quick Say
-            </Button>
-          )}
-          {messages.length > 0 && (
-            <IconButton
-              onPress={() => {
-                setIsShowMode(false);
               }}
               icon={(props) => (
                 <FontAwesome name="list" {...props} color="white" />
@@ -515,7 +491,7 @@ function ChatPage() {
             marginBottom: 0,
           },
         ]}>
-        {isShowMode && (messages.length > 0 || input.trim().length > 0) && (
+        {(messages.length > 0 || input.trim().length > 0) && (
           <View
             style={{
               position: "absolute",
@@ -530,9 +506,9 @@ function ChatPage() {
             }}
             onTouchStart={() => {
               if (input.trim() === "" && displayMessage === null) {
-                setShowRotateOptions(true);
+                setShowAllTools(true);
               } else {
-                setShowRotateOptions((s) => !s);
+                setShowAllTools((s) => !s);
               }
             }}>
             {showTapInstructions && (
@@ -562,7 +538,7 @@ function ChatPage() {
             {(input.trim().length > 0 ||
               displayMessage ||
               messages.length > 0) &&
-              showRotateOptions &&
+              showAllTools &&
               renderTopTools()}
 
             <View
@@ -577,42 +553,40 @@ function ChatPage() {
                 paddingTop: angle === 180 ? 50 : 0,
                 paddingHorizontal: 0,
               }}>
-              {input.trim().length === 0 &&
-                displayMessage === null &&
-                isShowMode && (
-                  <Animated.View
-                    entering={FadeInUp.duration(666)
-                      .springify()
-                      .damping(25)
-                      .mass(2)}
-                    style={{
-                      display: "flex",
-                      flexShrink: 1,
-                    }}>
-                    <Image
-                      source={Logo}
-                      style={[
-                        {
-                          maxHeight: 200,
-                          height: "90%",
+              {input.trim().length === 0 && displayMessage === null && (
+                <Animated.View
+                  entering={FadeInUp.duration(666)
+                    .springify()
+                    .damping(25)
+                    .mass(2)}
+                  style={{
+                    display: "flex",
+                    flexShrink: 1,
+                  }}>
+                  <Image
+                    source={Logo}
+                    style={[
+                      {
+                        maxHeight: 200,
+                        height: "90%",
 
-                          resizeMode: "contain",
-                          zIndex: 1,
-                        },
-                      ]}
-                    />
-                    <Animated.Text
-                      entering={FadeInDown.duration(666).delay(100)}
-                      style={{
-                        fontWeight: "bold",
-                        color: theme.colors.onBackground,
-                        fontSize: 20,
-                        textAlign: "center",
-                      }}>
-                      Type a message below
-                    </Animated.Text>
-                  </Animated.View>
-                )}
+                        resizeMode: "contain",
+                        zIndex: 1,
+                      },
+                    ]}
+                  />
+                  <Animated.Text
+                    entering={FadeInDown.duration(666).delay(100)}
+                    style={{
+                      fontWeight: "bold",
+                      color: theme.colors.onBackground,
+                      fontSize: 20,
+                      textAlign: "center",
+                    }}>
+                    Type a message below
+                  </Animated.Text>
+                </Animated.View>
+              )}
               <Text
                 adjustsFontSizeToFit={true}
                 numberOfLines={displayMessage?.numberOfLines || numLines}
@@ -653,7 +627,7 @@ function ChatPage() {
               </Text>
             </View>
 
-            {showRotateOptions && (
+            {showAllTools && (
               <Animated.View
                 entering={FadeInDown.duration(500)
                   .springify()
@@ -802,101 +776,6 @@ function ChatPage() {
               </Card.Content>
             </Card>
           )}
-          {messages.length > 0 && (
-            <View style={{ flex: 1 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  paddingHorizontal: 10,
-                }}>
-                <Button
-                  onPress={() => {
-                    setMessages([]);
-                    setIsShowMode(true);
-                    setShowRotateOptions(true);
-                  }}>
-                  Clear Chat
-                </Button>
-                <Button
-                  icon={(props) => (
-                    <FontAwesome6 name="display" {...props} size={20} />
-                  )}
-                  mode="outlined"
-                  onPress={() => {
-                    setShowRotateOptions(true);
-                    setIsShowMode(true);
-                  }}>
-                  Show Mode
-                </Button>
-              </View>
-
-              <ScrollView
-                keyboardShouldPersistTaps="handled"
-                ref={messagesEndRef}
-                style={{
-                  flexGrow: 1,
-                }}>
-                <View
-                  style={{
-                    flex: 1,
-                    alignSelf: "stretch",
-                    alignItems: "flex-end",
-                  }}>
-                  {messages.map((message, index) => (
-                    <View
-                      key={`chat-message${index}`}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        marginHorizontal: 10,
-                        marginVertical: 5,
-                      }}>
-                      <IconButton
-                        mode="outlined"
-                        style={{ zIndex: 9999, position: "relative" }}
-                        icon={(props) => (
-                          <MaterialIcons name="replay" {...props} size={25} />
-                        )}
-                        onPress={() => {
-                          handleSay(message.text);
-                        }}
-                      />
-                      <View
-                        style={{
-                          zIndex: 100,
-                          backgroundColor: theme.colors.background,
-                          borderWidth: 1,
-                          borderColor: theme.colors.outline,
-                          paddingHorizontal: 15,
-                          paddingVertical: 10,
-                          marginVertical: 5,
-                          borderRadius: 50,
-                          padding: 0,
-                          flexShrink: 1,
-                          boxShadow: `0 2px 2px ${theme.colors.surfaceDisabled}`,
-                        }}>
-                        <Text>{message.text}</Text>
-                      </View>
-                      <IconButton
-                        icon={(props) => (
-                          <MaterialIcons
-                            name="more-vert"
-                            {...props}
-                            size={25}
-                          />
-                        )}
-                        onPress={(event) => {
-                          setMenuMessageIdx(index);
-                        }}
-                      />
-                    </View>
-                  ))}
-                </View>
-                <View style={{ height: 150 }} />
-              </ScrollView>
-            </View>
-          )}
         </View>
         <View
           style={{
@@ -987,7 +866,7 @@ function ChatPage() {
                   setNoticeMessage(null);
                   if (t.trim().length === 0) {
                     setFontSize(null);
-                    setShowRotateOptions(true);
+                    setShowAllTools(true);
                   }
                   if (t === "\n") {
                     setInput("");

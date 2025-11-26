@@ -3,6 +3,7 @@ import { persistReducer, persistStore } from "redux-persist";
 import storedTextsReducer from "./storedTexts";
 import preferencesReducer from "./preferences";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import chatReducer from "./chat";
 
 const persistPreferencesConfig = {
   key: "preferencesProfile",
@@ -26,6 +27,7 @@ export const store = configureStore({
   reducer: {
     preferences: persistedPreferencesReducer,
     storedTexts: persistedStoredTextsReducer,
+    chat: chatReducer,
   },
   devTools: process.env.NODE_ENV !== "production",
   middleware: (getDefaultMiddleware) => {
