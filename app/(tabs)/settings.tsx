@@ -12,7 +12,7 @@ import {
   setRate,
 } from "@/store/preferences";
 import { coreStyles } from "@/styles";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
@@ -109,6 +109,11 @@ export default function Settings() {
     }, 3000);
     return () => clearTimeout(interval);
   }, [info, success, error, resetStatusMessages]);
+
+  const handleDismissVoiceModal = () => {
+    setIsChoosingVoice(false);
+    setShowingOnlyFavorites(false);
+  };
 
   const preferredVoice = useMemo(
     () =>
@@ -591,7 +596,9 @@ export default function Settings() {
 
       <Dialog
         visible={isChoosingVoice}
-        onDismiss={() => setIsChoosingVoice(false)}>
+        onDismiss={() => {
+          handleDismissVoiceModal();
+        }}>
         <Dialog.Title>
           <View
             style={{
@@ -611,7 +618,17 @@ export default function Settings() {
             <Button
               labelStyle={{ fontSize: 12, fontWeight: "bold" }}
               mode="outlined"
-              icon={showingOnlyFavorites ? "heart" : "heart-outline"}
+              icon={(props) => {
+                return (
+                  <Ionicons
+                    {...props}
+                    name={showingOnlyFavorites ? "heart" : "heart-outline"}
+                    color={
+                      showingOnlyFavorites ? theme.colors.tertiary : props.color
+                    }
+                  />
+                );
+              }}
               onPress={() => {
                 setShowingOnlyFavorites((s) => !s);
               }}>
@@ -658,6 +675,7 @@ export default function Settings() {
             keyboardShouldPersistTaps="handled"
             style={{
               maxHeight: 400,
+              minHeight: 300,
             }}>
             {showVoices.length === 0 && showingOnlyFavorites && (
               <Text>No voices are favorited.</Text>
@@ -688,7 +706,7 @@ export default function Settings() {
                   }}
                   onPress={() => {
                     dispatch(setPreferredVoice(voice.identifier));
-                    setIsChoosingVoice(false);
+                    handleDismissVoiceModal();
                     setFilter("");
                   }}>
                   <View
@@ -812,7 +830,12 @@ export default function Settings() {
             }}>
             Refresh Voices
           </Button>
-          <Button onPress={() => setIsChoosingVoice(false)}>Close</Button>
+          <Button
+            onPress={() => {
+              handleDismissVoiceModal();
+            }}>
+            Close
+          </Button>
         </Dialog.Actions>
       </Dialog>
       <Snackbar
