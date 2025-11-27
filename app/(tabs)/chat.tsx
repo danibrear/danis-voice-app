@@ -306,30 +306,6 @@ function ChatPage() {
           justifyContent: "space-around",
         }}>
         <IconButton
-          onPress={() => setAngle(180)}
-          mode={angle === 180 ? "contained" : undefined}
-          icon={(props) => (
-            <MaterialIcons
-              name="arrow-upward"
-              {...props}
-              color={angle === 180 ? theme.colors.tertiary : "white"}
-            />
-          )}
-          size={30}
-        />
-        <IconButton
-          onPress={() => setAngle(0)}
-          mode={angle === 0 ? "contained" : undefined}
-          icon={(props) => (
-            <MaterialIcons
-              name="arrow-downward"
-              {...props}
-              color={angle === 0 ? theme.colors.tertiary : "white"}
-            />
-          )}
-          size={30}
-        />
-        <IconButton
           icon="magnify-plus"
           disabled={input.trim().length === 0}
           iconColor="white"
@@ -391,6 +367,30 @@ function ChatPage() {
               }
             />
           )}
+        />
+        <IconButton
+          onPress={() => setAngle(180)}
+          mode={angle === 180 ? "contained" : undefined}
+          icon={(props) => (
+            <MaterialIcons
+              name="arrow-upward"
+              {...props}
+              color={angle === 180 ? theme.colors.tertiary : "white"}
+            />
+          )}
+          size={30}
+        />
+        <IconButton
+          onPress={() => setAngle(0)}
+          mode={angle === 0 ? "contained" : undefined}
+          icon={(props) => (
+            <MaterialIcons
+              name="arrow-downward"
+              {...props}
+              color={angle === 0 ? theme.colors.tertiary : "white"}
+            />
+          )}
+          size={30}
         />
       </View>
     );
@@ -897,14 +897,6 @@ function ChatPage() {
                 }
                 outlineStyle={{ borderRadius: 8 }}
                 style={{ flexGrow: 1, paddingRight: 5 }}
-              />
-              <IconButton
-                disabled={input.trim().length === 0}
-                style={{ position: "absolute", right: -10, top: -10 }}
-                icon={(props) => (
-                  <FontAwesome name="close" {...props} size={20} />
-                )}
-                onPress={() => setInput("")}
               />
             </View>
           </View>
