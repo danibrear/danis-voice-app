@@ -256,14 +256,21 @@ function ChatPage() {
     }, 3000);
   };
 
-  const handleSay = async (messageText: string) => {
+  const handleSay = async (
+    messageText: string,
+    options?: {
+      isReplay?: boolean;
+    },
+  ) => {
     AudioModule.setAudioModeAsync({
       playsInSilentMode: true,
     });
     setIsSpeaking(true);
     setColorIndex(-1);
 
-    dispatch(addRecentMessage(messageText));
+    if (!options?.isReplay) {
+      dispatch(addRecentMessage(messageText));
+    }
     Speech.speak(messageText, {
       voice: preferences.preferredVoice,
       pitch: preferences.speechPitch,
@@ -414,7 +421,9 @@ function ChatPage() {
             onPress={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              handleSay(displayMessage.text);
+              handleSay(displayMessage.text, {
+                isReplay: true,
+              });
             }}
             icon={(props) => <MaterialIcons name="replay" {...props} />}
           />
