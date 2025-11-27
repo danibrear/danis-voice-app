@@ -2,6 +2,9 @@ import ThemedView from "@/components/themed/ThemedView";
 import { allColors } from "@/constants/colorPatterns";
 import { RootState } from "@/store";
 import {
+  addFavoriteVoiceId,
+  getFavoriteVoiceIds,
+  removeFavoriteVoiceId,
   setChatReturnKeySendsMessage,
   setColors,
   setPitch,
@@ -39,6 +42,7 @@ export default function Settings() {
   const [voices, setVoices] = useState<Speech.Voice[]>([]);
   const [isChoosingVoice, setIsChoosingVoice] = useState(false);
   const [isTestingVoice, setIsTestingVoice] = useState<string | null>(null);
+  const favoriteVoiceIds = useSelector(getFavoriteVoiceIds);
 
   const [filter, setFilter] = useState("");
 
@@ -49,8 +53,17 @@ export default function Settings() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [isCheckingForUpdates, setIsCheckingForUpdates] = useState(false);
+  const [isFavoritingVoiceId, setIsFavoritingVoiceId] = useState<string | null>(
+    null,
+  );
+
+  const [showingOnlyFavorites, setShowingOnlyFavorites] = useState(false);
 
   const navigate = useNavigation();
+
+  useEffect(() => {
+    setIsFavoritingVoiceId(null);
+  }, [favoriteVoiceIds]);
 
   useEffect(() => {
     try {
@@ -161,6 +174,12 @@ export default function Settings() {
       );
     });
   }, [filter, selectedVoices]);
+
+  const showVoices = showingOnlyFavorites
+    ? filteredVoices.filter((voice) =>
+        favoriteVoiceIds.includes(voice.identifier),
+      )
+    : filteredVoices;
   return (
     <ThemedView style={coreStyles.container}>
       <SafeAreaView style={coreStyles.container}>
@@ -573,13 +592,40 @@ export default function Settings() {
       <Dialog
         visible={isChoosingVoice}
         onDismiss={() => setIsChoosingVoice(false)}>
-        <Dialog.Title>Choose a Voice</Dialog.Title>
+        <Dialog.Title>
+          <View
+            style={{
+              flex: 1,
+              width: "100%",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}>
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: 20,
+              }}>
+              Choose a Voice
+            </Text>
+            <Button
+              labelStyle={{ fontSize: 12, fontWeight: "bold" }}
+              mode="outlined"
+              icon={showingOnlyFavorites ? "heart" : "heart-outline"}
+              onPress={() => {
+                setShowingOnlyFavorites((s) => !s);
+              }}>
+              Favorites
+            </Button>
+          </View>
+        </Dialog.Title>
         <Dialog.Content>
           <TextInput
             mode="outlined"
             autoCorrect={false}
             autoCapitalize="none"
             keyboardType="default"
+            clearButtonMode="always"
             placeholder="Filter voices..."
             value={filter}
             onChangeText={(text) => setFilter(text)}
@@ -613,7 +659,13 @@ export default function Settings() {
             style={{
               maxHeight: 400,
             }}>
-            {filteredVoices.map((voice, index) => (
+            {showVoices.length === 0 && showingOnlyFavorites && (
+              <Text>No voices are favorited.</Text>
+            )}
+            {showVoices.length === 0 && !showingOnlyFavorites && (
+              <Text>No voices match the filter.</Text>
+            )}
+            {showVoices.map((voice, index) => (
               <View
                 key={`voice-option-dialog-${index}`}
                 style={{
@@ -684,6 +736,29 @@ export default function Settings() {
                     </View>
                   </View>
                 </TouchableOpacity>
+                <IconButton
+                  loading={isFavoritingVoiceId === voice.identifier}
+                  icon={
+                    favoriteVoiceIds.includes(voice.identifier)
+                      ? "heart"
+                      : "heart-outline"
+                  }
+                  style={{
+                    display: "flex",
+                    flexShrink: 1,
+                  }}
+                  size={20}
+                  onPress={() => {
+                    setIsFavoritingVoiceId(voice.identifier);
+                    Keyboard.dismiss();
+
+                    if (favoriteVoiceIds.includes(voice.identifier)) {
+                      dispatch(removeFavoriteVoiceId(voice.identifier));
+                    } else {
+                      dispatch(addFavoriteVoiceId(voice.identifier));
+                    }
+                  }}
+                />
                 <IconButton
                   icon={
                     isTestingVoice === voice.identifier ? "stop" : "volume-high"

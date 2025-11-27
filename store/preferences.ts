@@ -10,6 +10,7 @@ export type PreferencesState = {
   colors?: string;
   chatReturnKeySendsMessage?: boolean;
   devToolsEnabled?: boolean;
+  favoriteVoiceIds?: string[];
 };
 
 const initialState: PreferencesState = {
@@ -18,8 +19,8 @@ const initialState: PreferencesState = {
   speechPitch: 1.0,
   preferredVoice: undefined,
   chatReturnKeySendsMessage: false,
-
   devToolsEnabled: false,
+  favoriteVoiceIds: [],
 };
 
 export const preferencesSlice = createSlice({
@@ -58,6 +59,23 @@ export const preferencesSlice = createSlice({
       state.devToolsEnabled = action.payload;
     },
 
+    addFavoriteVoiceId: (state, action: PayloadAction<string>) => {
+      if (!state.favoriteVoiceIds) {
+        state.favoriteVoiceIds = [];
+      }
+      if (!state.favoriteVoiceIds.includes(action.payload)) {
+        state.favoriteVoiceIds.push(action.payload);
+      }
+    },
+    removeFavoriteVoiceId: (state, action: PayloadAction<string>) => {
+      if (!state.favoriteVoiceIds) {
+        return;
+      }
+      state.favoriteVoiceIds = state.favoriteVoiceIds.filter(
+        (id) => id !== action.payload,
+      );
+    },
+
     clearValues: () => {
       return initialState;
     },
@@ -75,6 +93,8 @@ export const {
   setColors,
   setChatReturnKeySendsMessage,
   setDevtoolsEnabled,
+  addFavoriteVoiceId,
+  removeFavoriteVoiceId,
 } = preferencesSlice.actions;
 
 export default preferencesSlice.reducer;
@@ -82,3 +102,5 @@ export default preferencesSlice.reducer;
 export const getPreferencesState = (state: RootState) => state.preferences;
 export const getDevToolsEnabled = (state: RootState) =>
   !!state.preferences.devToolsEnabled;
+export const getFavoriteVoiceIds = (state: RootState) =>
+  state.preferences.favoriteVoiceIds || [];
