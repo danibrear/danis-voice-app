@@ -7,7 +7,11 @@ import { getDevToolsEnabled } from "@/store/preferences";
 import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
 import { darkTheme } from "@/theme";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import {
+  FontAwesome,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { AudioModule } from "expo-audio";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
@@ -372,8 +376,8 @@ function ChatPage() {
           onPress={() => setAngle(180)}
           mode={angle === 180 ? "contained" : undefined}
           icon={(props) => (
-            <MaterialIcons
-              name="arrow-upward"
+            <MaterialCommunityIcons
+              name="format-font-size-increase"
               {...props}
               color={angle === 180 ? theme.colors.tertiary : "white"}
             />
@@ -384,8 +388,8 @@ function ChatPage() {
           onPress={() => setAngle(0)}
           mode={angle === 0 ? "contained" : undefined}
           icon={(props) => (
-            <MaterialIcons
-              name="arrow-downward"
+            <MaterialCommunityIcons
+              name="format-font-size-decrease"
               {...props}
               color={angle === 0 ? theme.colors.tertiary : "white"}
             />

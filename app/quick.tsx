@@ -23,6 +23,9 @@ export default function QuickScreen() {
   const [tab, setTab] = useState<"phrases" | "chat">("phrases");
   const [starredOnly, setStarredOnly] = useState(false);
 
+  const [orderedPhrases, setOrderedPhrases] = useState<StoredText[]>([]);
+  const [starredTexts, setStarredTexts] = useState<StoredText[]>([]);
+
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const dispatch = useDispatch();
@@ -40,6 +43,13 @@ export default function QuickScreen() {
     }, 50);
     return () => clearInterval(interval);
   }, [isSpeakingId]);
+
+  useEffect(() => {
+    setOrderedPhrases(
+      recentTexts.sort((a, b) => (b.order || 0) - (a.order || 0)),
+    );
+    setStarredTexts(recentTexts.filter((text) => text.starred));
+  }, [recentTexts]);
 
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -191,11 +201,6 @@ export default function QuickScreen() {
       </View>
     );
   };
-
-  const starredTexts = recentTexts.filter((text) => text.starred);
-  const orderedPhrases = recentTexts.sort(
-    (a, b) => (b.order || 0) - (a.order || 0),
-  );
   return (
     <View style={{ flex: 1 }}>
       <SafeAreaView
