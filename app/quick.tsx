@@ -20,7 +20,8 @@ export default function QuickScreen() {
   const { recentTexts } = useSelector((state: RootState) => state.storedTexts);
   const preferences = useSelector((state: RootState) => state.preferences);
   const recentMessages = useSelector(getRecentMessages);
-  const [tab, setTab] = useState<"starred" | "chat">("starred");
+  const [tab, setTab] = useState<"phrases" | "chat">("phrases");
+  const [starredOnly, setStarredOnly] = useState(false);
 
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -75,11 +76,11 @@ export default function QuickScreen() {
     });
   };
 
-  const renderStarredTab = () => {
-    if (tab !== "starred") {
+  const renderPhrasesTab = () => {
+    if (tab !== "phrases") {
       return null;
     }
-    if (orderedStarredTexts.length === 0) {
+    if (orderedPhrases.length === 0) {
       return (
         <View
           style={{
@@ -91,7 +92,8 @@ export default function QuickScreen() {
         </View>
       );
     }
-    return orderedStarredTexts.map((text) => (
+    const phrases = starredOnly ? starredTexts : orderedPhrases;
+    return phrases.map((text) => (
       <TouchableOpacity
         key={text.id}
         onPress={() => {
@@ -191,7 +193,7 @@ export default function QuickScreen() {
   };
 
   const starredTexts = recentTexts.filter((text) => text.starred);
-  const orderedStarredTexts = starredTexts.sort(
+  const orderedPhrases = recentTexts.sort(
     (a, b) => (b.order || 0) - (a.order || 0),
   );
   return (
@@ -229,9 +231,9 @@ export default function QuickScreen() {
           <View style={{ flexDirection: "row", gap: 10, marginBottom: 10 }}>
             <Button
               style={{ width: "50%" }}
-              onPress={() => setTab("starred")}
-              mode={tab === "starred" ? "contained" : "outlined"}>
-              Starred
+              onPress={() => setTab("phrases")}
+              mode={tab === "phrases" ? "contained" : "outlined"}>
+              Phrases
             </Button>
             <Button
               style={{ width: "50%" }}
@@ -259,7 +261,24 @@ export default function QuickScreen() {
                 Clear History
               </Button>
             )}
-            {renderStarredTab()}
+            {tab === "phrases" && orderedPhrases.length > 0 && (
+              <Button
+                mode="outlined"
+                icon={(props) => (
+                  <MaterialIcons
+                    name={starredOnly ? "star" : "star-outline"}
+                    {...props}
+                    color={starredOnly ? theme.colors.tertiary : props.color}
+                  />
+                )}
+                style={{ marginBottom: 10, alignSelf: "flex-end" }}
+                onPress={() => {
+                  setStarredOnly((s) => !s);
+                }}>
+                Starred
+              </Button>
+            )}
+            {renderPhrasesTab()}
             {renderChatHistoryTab()}
             <View style={{ height: 60 }} />
           </ScrollView>
