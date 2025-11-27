@@ -3,10 +3,12 @@ import { Dimensions, Modal, Platform, Text, View } from "react-native";
 
 import { formStyles } from "@/styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as ScreenOrientation from "expo-screen-orientation";
 import * as Speech from "expo-speech";
 import { Button, IconButton, useTheme } from "react-native-paper";
-import { SafeAreaInsetsContext } from "react-native-safe-area-context";
+import {
+  SafeAreaInsetsContext,
+  SafeAreaView,
+} from "react-native-safe-area-context";
 
 import { RootState } from "@/store";
 import { calculateWidthOfWord } from "@/utils/fontSize";
@@ -47,8 +49,6 @@ export default function ShowingModal({
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const [numLines, setNumLines] = useState<number>(6);
-
-  const [isPortrait, setIsPortrait] = useState<boolean>(true);
 
   const preferences = useSelector((state: RootState) => state.preferences);
   const theme = useTheme();
@@ -142,37 +142,6 @@ export default function ShowingModal({
     }
     setDefaultFontSize(minFs);
   }, [storedText, isWeb]);
-
-  useEffect(() => {
-    if (!isWeb) {
-      return;
-    }
-    window.addEventListener("orientationchange", (e) => {
-      if (window.innerHeight <= window.innerWidth) {
-        setIsPortrait(false);
-      } else {
-        setIsPortrait(true);
-      }
-    });
-    return () => {
-      window.removeEventListener("orientationchange", () => {});
-    };
-  }, [isWeb]);
-
-  useEffect(() => {
-    ScreenOrientation.addOrientationChangeListener((e) => {
-      setIsPortrait(
-        e.orientationInfo.orientation ===
-          ScreenOrientation.Orientation.PORTRAIT_UP ||
-          e.orientationInfo.orientation ===
-            ScreenOrientation.Orientation.PORTRAIT_DOWN,
-      );
-    });
-    return () => {
-      ScreenOrientation.removeOrientationChangeListeners();
-    };
-  }, []);
-
   useEffect(() => {
     let flashInterval = undefined;
     if (isFlashing) {
@@ -352,7 +321,7 @@ export default function ShowingModal({
         backgroundColor: "transparent",
         alignSelf: "center",
       }}>
-      <View
+      <SafeAreaView
         style={{
           flex: 1,
           alignSelf: "center",
@@ -364,7 +333,7 @@ export default function ShowingModal({
               : "transparent"
             : "rgba(0,0,0,.9)",
 
-          paddingTop: isPortrait ? safeAreaContext?.top : 5,
+          paddingTop: 5,
           paddingBottom: safeAreaContext?.bottom,
           position: "relative",
         }}>
@@ -409,7 +378,7 @@ export default function ShowingModal({
               gap: 2,
               position: "absolute",
               top: 0,
-              left: isPortrait ? 5 : safeAreaContext?.top,
+              left: 5,
               zIndex: 10,
             }}>
             <IconButton
@@ -431,7 +400,7 @@ export default function ShowingModal({
               gap: 2,
               position: "absolute",
               top: 0,
-              right: isPortrait ? 5 : safeAreaContext?.top,
+              right: 5,
               zIndex: 10,
             }}>
             <IconButton
@@ -500,51 +469,44 @@ export default function ShowingModal({
               </Text>
             )}
           </View>
-          {isPortrait && (
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 10,
+              display: "flex",
+              paddingBottom: isWeb ? 40 : 20,
+            }}>
             <View
               style={{
-                alignItems: "center",
-                justifyContent: "center",
                 paddingHorizontal: 10,
-                display: "flex",
-                paddingBottom: isWeb ? 40 : 20,
+                width: "100%",
               }}>
-              <View
-                style={{
-                  paddingHorizontal: 10,
-                  width: "100%",
-                }}>
-                {renderControls()}
-              </View>
-              <View
-                style={{
-                  paddingHorizontal: 10,
-                  paddingTop: 30,
-                  width: "100%",
-                }}>
-                <Button
-                  mode="contained"
-                  labelStyle={formStyles.bigButton}
-                  onPress={() => {
-                    Speech.stop();
-                    setIsSpeaking(false);
-                    setIsFlashing(false);
-                    setIsPaused(false);
-                    setFlashOn(false);
-                    if (!isWeb) {
-                      ScreenOrientation.lockAsync(
-                        ScreenOrientation.OrientationLock.PORTRAIT_UP,
-                      );
-                    }
-                    onDone();
-                  }}>
-                  Done
-                </Button>
-              </View>
+              {renderControls()}
             </View>
-          )}
+            <View
+              style={{
+                paddingHorizontal: 10,
+                paddingTop: 10,
+                width: "100%",
+              }}>
+              <Button
+                mode="contained"
+                labelStyle={formStyles.bigButton}
+                onPress={() => {
+                  Speech.stop();
+                  setIsSpeaking(false);
+                  setIsFlashing(false);
+                  setIsPaused(false);
+                  setFlashOn(false);
+                  onDone();
+                }}>
+                Done
+              </Button>
+            </View>
+          </View>
         </View>
-      </View>
+      </SafeAreaView>
       <EditStoredTextDialog
         storedText={storedText}
         isEditing={isEditing}
