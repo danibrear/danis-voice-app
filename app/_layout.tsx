@@ -8,7 +8,9 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import * as QuickActions from "expo-quick-actions";
+import { RouterAction, useQuickActionRouting } from "expo-quick-actions/router";
 import { Stack } from "expo-router";
+import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -24,8 +26,6 @@ import {
 } from "react-native-paper";
 import "react-native-reanimated";
 import { Provider as ReduxProvider } from "react-redux";
-
-import { RouterAction, useQuickActionRouting } from "expo-quick-actions/router";
 export const unstable_settings = {
   anchor: "(tabs)",
 };
@@ -66,6 +66,8 @@ export default function RootLayout() {
     if (Platform.OS === "web") {
       return;
     }
+
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     const interval = setInterval(() => {
       Updates.checkForUpdateAsync()
         .then(async (update) => {

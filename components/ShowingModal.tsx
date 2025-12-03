@@ -1,9 +1,8 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Dimensions, Modal, Platform, Text, View } from "react-native";
 
 import { formStyles } from "@/styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as Speech from "expo-speech";
 import { Button, IconButton, useTheme } from "react-native-paper";
 import {
   SafeAreaInsetsContext,
@@ -12,10 +11,10 @@ import {
 
 import { RootState } from "@/store";
 import { calculateWidthOfWord } from "@/utils/fontSize";
-import { AudioModule } from "expo-audio";
 import { useDispatch, useSelector } from "react-redux";
 
 import * as colors from "@/constants/colorPatterns";
+import { useSpeech } from "@/hooks/useSpeech";
 import { setStoredTextFontSize } from "@/store/storedTexts";
 import { StoredText } from "@/types/StoredText";
 import EditStoredTextDialog from "./EditStoredTextDialog";
@@ -29,18 +28,10 @@ export default function ShowingModal({
   storedText: StoredText | null;
   onDone: () => void;
 }) {
-  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-
   const [fontSize, setFontSize] = useState<number>(storedText?.fontSize || 100);
   const [defaultFontSize, setDefaultFontSize] = useState<number>(
     storedText?.fontSize || 100,
   );
-
-  const [highlight, setHighlight] = useState<{ start: number; end: number }>({
-    start: 0,
-    end: 0,
-  });
 
   const isWeb = Platform.OS === "web";
 
@@ -65,22 +56,32 @@ export default function ShowingModal({
 
   const dispatch = useDispatch();
 
+  const {
+    handleSay,
+    handleResume,
+    handleStop,
+    boundary,
+    isSpeakingId,
+    handlePause,
+    isPaused,
+  } = useSpeech();
+
   useEffect(() => {
     setText(storedText ? storedText.text || "" : "");
   }, [storedText]);
 
   useEffect(() => {
     if (
-      !isSpeaking ||
+      !isSpeakingId ||
       !preferences.colors ||
-      highlight.start === highlight.end
+      boundary.start === boundary.end
     ) {
       return;
     }
     setColorIndex(
       (idx) => (idx + 1) % (preferences.colors ? preferences.colors.length : 1),
     );
-  }, [isSpeaking, highlight, preferences.colors]);
+  }, [isSpeakingId, boundary, preferences.colors]);
 
   useEffect(() => {
     const pattern = preferences.colors;
@@ -166,57 +167,31 @@ export default function ShowingModal({
     dispatch(setStoredTextFontSize({ id: storedText?.id, fontSize: size }));
   };
 
-  const handleDone = useCallback(() => {
-    setHighlight({
-      start: 0,
-      end: 0,
-    });
-    setIsSpeaking(false);
-    setIsPaused(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isSpeaking) {
-      return;
-    }
-
-    const checkSpeaking = setInterval(async () => {
-      const speaking = await Speech.isSpeakingAsync();
-      if (!speaking) {
-        handleDone();
-        Speech.stop();
-      }
-    }, 50);
-    return () => clearInterval(checkSpeaking);
-  }, [isSpeaking, handleDone]);
-
   const renderPlayPause = () => {
     const buttons = [];
     if (!storedText || !storedText?.text) {
       return;
     }
-    if (isSpeaking) {
+    if (isSpeakingId) {
       buttons.push(
         <Button
           mode="contained"
           labelStyle={formStyles.bigButton}
           style={{ flexGrow: 1 }}
           onPress={() => {
-            setIsSpeaking(false);
-            Speech.stop();
+            handleStop();
           }}>
           Stop
         </Button>,
       );
     }
-    if (isSpeaking && !isPaused) {
+    if (isSpeakingId && !isPaused) {
       buttons.push(
         <Button
           mode="contained"
           labelStyle={formStyles.bigButton}
           onPress={() => {
-            Speech.pause();
-            setIsPaused(true);
+            handlePause();
           }}>
           Pause
         </Button>,
@@ -228,43 +203,31 @@ export default function ShowingModal({
           mode="contained"
           labelStyle={formStyles.bigButton}
           onPress={async () => {
-            setIsPaused(false);
-            setIsSpeaking(true);
-            Speech.resume();
+            await handleResume();
           }}>
           Resume
         </Button>,
       );
     }
-    if (!isSpeaking && !isPaused) {
+    if (!isSpeakingId && !isPaused) {
       buttons.push(
         <Button
           mode="contained"
           style={{ flexGrow: 1 }}
           labelStyle={formStyles.bigButton}
           onPress={async () => {
-            setIsSpeaking(true);
             setColorIndex(-1);
-            await AudioModule.setAudioModeAsync({
-              playsInSilentMode: true,
-            });
 
-            Speech.speak(text || "", {
-              voice: preferences.preferredVoice,
-              rate: preferences.speechRate,
-              pitch: preferences.speechPitch,
-              onDone: () => {
-                handleDone();
-              },
-              onError: () => {
-                handleDone();
-              },
+            handleSay(text || "", {
               onBoundary: (e: { charIndex: number; charLength: number }) => {
-                const { charIndex, charLength } = e;
-                setHighlight({
-                  start: charIndex,
-                  end: charIndex + charLength,
-                });
+                const { charLength } = e;
+                if (charLength > 0) {
+                  setColorIndex(
+                    (idx) =>
+                      (idx + 1) %
+                      (preferences.colors ? preferences.colors.length : 1),
+                  );
+                }
               },
             });
           }}>
@@ -333,8 +296,7 @@ export default function ShowingModal({
               : "transparent"
             : "rgba(0,0,0,.9)",
 
-          paddingTop: 5,
-          paddingBottom: safeAreaContext?.bottom,
+          paddingVertical: safeAreaContext?.top,
           position: "relative",
         }}>
         <View
@@ -452,7 +414,7 @@ export default function ShowingModal({
                   textAlign: "center",
                   color: isFlashing ? (flashOn ? "white" : "black") : "white",
                 }}>
-                {text.slice(0, highlight.start)}
+                {text.slice(0, boundary.start)}
                 <Text
                   style={{
                     color:
@@ -463,9 +425,9 @@ export default function ShowingModal({
                         : "transparent",
                     borderRadius: 10,
                   }}>
-                  {text.slice(highlight.start, highlight.end)}
+                  {text.slice(boundary.start, boundary.end)}
                 </Text>
-                {text.slice(highlight.end)}
+                {text.slice(boundary.end)}
               </Text>
             )}
           </View>
@@ -494,11 +456,7 @@ export default function ShowingModal({
                 mode="contained"
                 labelStyle={formStyles.bigButton}
                 onPress={() => {
-                  Speech.stop();
-                  setIsSpeaking(false);
-                  setIsFlashing(false);
-                  setIsPaused(false);
-                  setFlashOn(false);
+                  handleStop();
                   onDone();
                 }}>
                 Done

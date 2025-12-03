@@ -2,14 +2,13 @@ import { coreStyles, formStyles, spacingStyles } from "@/styles";
 import { useContext, useEffect, useState } from "react";
 import { KeyboardAvoidingView, View } from "react-native";
 
+import Logo from "@/components/Logo";
 import RecentList from "@/components/RecentList";
 import { createStoredText } from "@/store/storedTexts";
 import { StoredText } from "@/types/StoredText";
 import { Button, Icon, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
-// @ts-expect-error this is a static asset
-import Logo from "../../assets/images/splash-icon.png";
 
 import PageTitle from "@/components/PageTitle";
 import ShowingModal from "@/components/ShowingModal";

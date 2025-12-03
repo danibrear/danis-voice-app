@@ -1,10 +1,9 @@
+import { useSpeech } from "@/hooks/useSpeech";
 import { RootState } from "@/store";
 import { clearRecentMessages, getRecentMessages } from "@/store/chat";
 import { StoredText } from "@/types/StoredText";
 import { MaterialIcons } from "@expo/vector-icons";
-import { AudioModule } from "expo-audio";
 import { useNavigation } from "expo-router";
-import * as Speech from "expo-speech";
 import { useEffect, useRef, useState } from "react";
 import { Dimensions, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
@@ -18,7 +17,6 @@ export default function QuickScreen() {
   const navigator = useNavigation();
   const theme = useTheme();
   const { recentTexts } = useSelector((state: RootState) => state.storedTexts);
-  const preferences = useSelector((state: RootState) => state.preferences);
   const recentMessages = useSelector(getRecentMessages);
   const [tab, setTab] = useState<"phrases" | "chat">("phrases");
   const [starredOnly, setStarredOnly] = useState(false);
@@ -26,23 +24,10 @@ export default function QuickScreen() {
   const [orderedPhrases, setOrderedPhrases] = useState<StoredText[]>([]);
   const [starredTexts, setStarredTexts] = useState<StoredText[]>([]);
 
-  const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (!isSpeakingId) {
-      setIsSpeakingId(null);
-      return;
-    }
-    const interval = setInterval(async () => {
-      if (!(await Speech.isSpeakingAsync())) {
-        setIsSpeakingId(null);
-        clearInterval(interval);
-      }
-    }, 50);
-    return () => clearInterval(interval);
-  }, [isSpeakingId]);
+  const { handleSay, isSpeakingId } = useSpeech();
 
   useEffect(() => {
     setOrderedPhrases(
@@ -54,37 +39,6 @@ export default function QuickScreen() {
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   }, [tab]);
-
-  const handleSay = async (text: StoredText) => {
-    await AudioModule.setAudioModeAsync({
-      playsInSilentMode: true,
-    });
-    if (isSpeakingId !== null) {
-      Speech.stop();
-    }
-    if (isSpeakingId === text.id) {
-      setIsSpeakingId(null);
-      return;
-    }
-
-    setIsSpeakingId(text.id);
-
-    Speech.speak(text.text || "", {
-      voice: preferences.preferredVoice,
-      rate: preferences.speechRate,
-      pitch: preferences.speechPitch,
-      onDone: () => {
-        if (isSpeakingId === text.id) {
-          setIsSpeakingId(null);
-        }
-      },
-      onError: () => {
-        if (isSpeakingId === text.id) {
-          setIsSpeakingId(null);
-        }
-      },
-    });
-  };
 
   const renderPhrasesTab = () => {
     if (tab !== "phrases") {

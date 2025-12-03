@@ -1,6 +1,8 @@
 import CrossView from "@/components/CrossView";
+import Logo from "@/components/Logo";
 import ThemedView from "@/components/themed/ThemedView";
 import * as colors from "@/constants/colorPatterns";
+import { useSpeech } from "@/hooks/useSpeech";
 import { RootState } from "@/store";
 import { addRecentMessage } from "@/store/chat";
 import { getDevToolsEnabled } from "@/store/preferences";
@@ -12,7 +14,6 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { AudioModule } from "expo-audio";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -44,8 +45,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
-// @ts-expect-error this is a static asset
-import Logo from "../../assets/images/splash-icon.png";
 
 type Message = {
   text: string;
@@ -77,10 +76,6 @@ function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [displayMessage, setDisplayMessage] = useState<Message | null>(null);
-  const [highlight, setHighlight] = useState<{ start: number; end: number }>({
-    start: 0,
-    end: 0,
-  });
 
   const preferences = useSelector((state: RootState) => state.preferences);
   const devToolsEnabled = useSelector(getDevToolsEnabled);
@@ -115,6 +110,8 @@ function ChatPage() {
   const [noticeMessage, setNoticeMessage] = useState<NoticeMessage | null>(
     null,
   );
+
+  const { handleSay: _callhandleSay, boundary } = useSpeech();
 
   const opacity = useSharedValue(0.5);
 
@@ -200,10 +197,6 @@ function ChatPage() {
   }, [colorIndex, preferences.colors, theme.colors.tertiary]);
 
   const handleDone = useCallback(() => {
-    setHighlight({
-      start: 0,
-      end: 0,
-    });
     setIsSpeaking(false);
     setIsPaused(false);
   }, []);
@@ -266,19 +259,12 @@ function ChatPage() {
       isReplay?: boolean;
     },
   ) => {
-    AudioModule.setAudioModeAsync({
-      playsInSilentMode: true,
-    });
-    setIsSpeaking(true);
     setColorIndex(-1);
 
     if (!options?.isReplay) {
       dispatch(addRecentMessage(messageText));
     }
-    Speech.speak(messageText, {
-      voice: preferences.preferredVoice,
-      pitch: preferences.speechPitch,
-      rate: preferences.speechRate,
+    _callhandleSay(messageText, {
       onDone: () => {
         handleDone();
       },
@@ -286,17 +272,13 @@ function ChatPage() {
         handleDone();
       },
       onBoundary: (e: { charIndex: number; charLength: number }) => {
-        const { charIndex, charLength } = e;
+        const { charLength } = e;
         if (charLength > 0) {
           setColorIndex(
             (idx) =>
               (idx + 1) % (preferences.colors ? preferences.colors.length : 1),
           );
         }
-        setHighlight({
-          start: charIndex,
-          end: charIndex + charLength,
-        });
       },
     });
   };
@@ -621,7 +603,7 @@ function ChatPage() {
                   alignItems: "center",
                   fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
                 }}>
-                {message?.slice(0, highlight.start)}
+                {message?.slice(0, boundary.start)}
                 <Text
                   style={{
                     color: highlightColor,
@@ -634,9 +616,9 @@ function ChatPage() {
                     alignItems: "center",
                     fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
                   }}>
-                  {message?.slice(highlight.start, highlight.end)}
+                  {message?.slice(boundary.start, boundary.end)}
                 </Text>
-                {message?.slice(highlight.end)}
+                {message?.slice(boundary.end)}
               </Text>
             </View>
 
