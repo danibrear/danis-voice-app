@@ -164,8 +164,8 @@ export default function QuickScreen() {
             alignItems: "center",
             justifyContent: "center",
             alignSelf: "stretch",
-            maxWidth: 400,
-            width: "100%",
+            maxWidth: Math.min(HEIGHT, WIDTH),
+            width: "90%",
             marginHorizontal: "auto",
             height: "90%",
             maxHeight: Math.min(HEIGHT, WIDTH),
@@ -174,7 +174,13 @@ export default function QuickScreen() {
             e.preventDefault();
             e.stopPropagation();
           }}>
-          <View style={{ flexDirection: "row", gap: 10, marginBottom: 10 }}>
+          <View
+            style={{
+              width: "100%",
+              flexDirection: "row",
+              gap: 10,
+              marginBottom: 10,
+            }}>
             <Button
               style={{ width: "50%" }}
               onPress={() => setTab("phrases")}
