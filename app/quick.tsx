@@ -32,10 +32,14 @@ export default function QuickScreen() {
   const { handleSay, isSpeakingId } = useSpeech();
 
   useEffect(() => {
-    setOrderedPhrases(
-      recentTexts.sort((a, b) => (b.order || 0) - (a.order || 0)),
-    );
-    setStarredTexts(recentTexts.filter((text) => text.starred));
+    try {
+      setOrderedPhrases(
+        recentTexts.sort((a, b) => (b.order || 0) - (a.order || 0)),
+      );
+      setStarredTexts(recentTexts.filter((text) => text.starred));
+    } catch (e) {
+      console.log("[ERROR] Failed to sort recent texts:", e);
+    }
   }, [recentTexts]);
 
   useEffect(() => {
