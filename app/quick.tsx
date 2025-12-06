@@ -11,7 +11,9 @@ import { Button, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
-const HEIGHT = Dimensions.get("window").height;
+const Dims = Dimensions.get("window");
+const HEIGHT = Dims.height;
+const WIDTH = Dims.width;
 
 export default function QuickScreen() {
   const navigator = useNavigation();
@@ -40,6 +42,54 @@ export default function QuickScreen() {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   }, [tab]);
 
+  const renderButton = (text: StoredText) => {
+    return (
+      <TouchableOpacity
+        key={text.id}
+        onPress={() => {
+          handleSay(text);
+        }}
+        style={{
+          marginVertical: 5,
+          padding: 10,
+          borderWidth: 1,
+          borderColor:
+            isSpeakingId === text.id
+              ? theme.colors.tertiary
+              : theme.colors.primary,
+          borderRadius: 5,
+          display: "flex",
+          alignSelf: "stretch",
+          flexDirection: "row",
+          flexShrink: 1,
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: theme.colors.surfaceDisabled,
+        }}>
+        <Text
+          style={{
+            fontWeight: "bold",
+            flexShrink: 1,
+          }}>
+          {text.text}
+        </Text>
+        <View
+          style={{
+            display: "flex",
+            flexShrink: 1,
+            opacity: isSpeakingId === text.id ? 1 : 0,
+          }}>
+          <MaterialIcons
+            name="stop-circle"
+            size={16}
+            color={theme.colors.tertiary}
+          />
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const renderPhrasesTab = () => {
     if (tab !== "phrases") {
       return null;
@@ -57,44 +107,7 @@ export default function QuickScreen() {
       );
     }
     const phrases = starredOnly ? starredTexts : orderedPhrases;
-    return phrases.map((text) => (
-      <TouchableOpacity
-        key={text.id}
-        onPress={() => {
-          handleSay(text);
-        }}
-        style={{
-          marginVertical: 5,
-          padding: 10,
-          paddingHorizontal: 15,
-          borderWidth: 1,
-          borderColor:
-            isSpeakingId === text.id
-              ? theme.colors.tertiary
-              : theme.colors.primary,
-          borderRadius: 50,
-          display: "flex",
-          alignSelf: "stretch",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          backgroundColor: theme.colors.surfaceDisabled,
-        }}>
-        <Text
-          style={{
-            fontWeight: "bold",
-          }}>
-          {text.text}
-        </Text>
-        {isSpeakingId === text.id && (
-          <MaterialIcons
-            name="stop-circle"
-            size={16}
-            color={theme.colors.tertiary}
-          />
-        )}
-      </TouchableOpacity>
-    ));
+    return phrases.map((text) => renderButton(text));
   };
   const renderChatHistoryTab = () => {
     if (tab !== "chat") {
@@ -114,44 +127,13 @@ export default function QuickScreen() {
     }
     return (
       <View>
-        {recentMessages.map((message, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => {
-              handleSay({ id: `chat-${index}`, text: message, starred: false });
-            }}
-            style={{
-              marginVertical: 5,
-              padding: 10,
-              paddingHorizontal: 15,
-              borderWidth: 1,
-              borderColor:
-                isSpeakingId === `chat-${index}`
-                  ? theme.colors.tertiary
-                  : theme.colors.primary,
-              borderRadius: 50,
-              display: "flex",
-              alignSelf: "stretch",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              backgroundColor: theme.colors.surfaceDisabled,
-            }}>
-            <Text
-              style={{
-                fontWeight: "bold",
-              }}>
-              {message}
-            </Text>
-            {isSpeakingId === `chat-${index}` && (
-              <MaterialIcons
-                name="stop-circle"
-                size={16}
-                color={theme.colors.tertiary}
-              />
-            )}
-          </TouchableOpacity>
-        ))}
+        {recentMessages.map((message, index) =>
+          renderButton({
+            id: `chat-message-${index}`,
+            text: message,
+            starred: false,
+          }),
+        )}
       </View>
     );
   };
@@ -181,7 +163,8 @@ export default function QuickScreen() {
             maxWidth: 400,
             width: "100%",
             marginHorizontal: "auto",
-            maxHeight: HEIGHT * 0.5,
+            height: "90%",
+            maxHeight: Math.min(HEIGHT, WIDTH),
           }}
           onTouchStart={(e) => {
             e.preventDefault();

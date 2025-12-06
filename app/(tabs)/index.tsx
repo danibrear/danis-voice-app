@@ -154,15 +154,19 @@ export default function HomeScreen() {
             style={{
               marginTop: 5,
               display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              flexGrow: 1,
             }}
-            contentStyle={{
-              flexDirection: "row",
-              width: "100%",
-              alignItems: "center",
-            }}
-            labelStyle={[formStyles.bigButton]}
+            labelStyle={[
+              formStyles.bigButton,
+              {
+                textAlign: "center",
+                display: "flex",
+                flex: 1,
+                alignContent: "center",
+                alignItems: "center",
+                justifyContent: "center",
+              },
+            ]}
             onPress={() => {
               if (textInput.trim().length === 0) {
                 setError("Please enter some text to show.");
@@ -180,23 +184,17 @@ export default function HomeScreen() {
                   starred: false,
                   order: storedTexts.recentTexts.length,
                 };
-                dispatch(createStoredText(newStoredText));
-                setStoredText(newStoredText);
+                try {
+                  dispatch(createStoredText(newStoredText));
+                  setStoredText(newStoredText);
+                } catch (e) {
+                  console.log("[ERROR] error creating stored text:", e);
+                  setError("Failed to create phrase. Please try again.");
+                }
               }
               setTextInput("");
             }}>
-            <Text
-              style={{
-                color: theme.colors.onPrimary,
-                fontSize: 18,
-                fontWeight: "bold",
-                textAlign: "center",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}>
-              SHOW
-            </Text>
+            SHOW
           </Button>
         </View>
       </KeyboardAvoidingView>

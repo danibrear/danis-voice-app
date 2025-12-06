@@ -35,7 +35,13 @@ export default function EditStoredTextDialog({
         setIsEditing(false);
       }}>
       <Dialog.Content>
-        <TextInput mode="outlined" value={newText} onChangeText={setNewText} />
+        <TextInput
+          mode="outlined"
+          multiline
+          numberOfLines={3}
+          value={newText}
+          onChangeText={setNewText}
+        />
       </Dialog.Content>
       <Dialog.Actions>
         <Button

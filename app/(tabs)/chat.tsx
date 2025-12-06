@@ -259,28 +259,33 @@ function ChatPage() {
       isReplay?: boolean;
     },
   ) => {
-    setColorIndex(-1);
+    try {
+      setColorIndex(-1);
 
-    if (!options?.isReplay) {
-      dispatch(addRecentMessage(messageText));
+      if (!options?.isReplay) {
+        dispatch(addRecentMessage(messageText));
+      }
+      _callhandleSay(messageText, {
+        onDone: () => {
+          handleDone();
+        },
+        onError: () => {
+          handleDone();
+        },
+        onBoundary: (e: { charIndex: number; charLength: number }) => {
+          const { charLength } = e;
+          if (charLength > 0) {
+            setColorIndex(
+              (idx) =>
+                (idx + 1) %
+                (preferences.colors ? preferences.colors.length : 1),
+            );
+          }
+        },
+      });
+    } catch (e) {
+      console.log("[ERROR] error saying", e);
     }
-    _callhandleSay(messageText, {
-      onDone: () => {
-        handleDone();
-      },
-      onError: () => {
-        handleDone();
-      },
-      onBoundary: (e: { charIndex: number; charLength: number }) => {
-        const { charLength } = e;
-        if (charLength > 0) {
-          setColorIndex(
-            (idx) =>
-              (idx + 1) % (preferences.colors ? preferences.colors.length : 1),
-          );
-        }
-      },
-    });
   };
 
   const renderTools = () => {
@@ -494,7 +499,7 @@ function ChatPage() {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: "black",
+              backgroundColor: theme.colors.background,
               zIndex: 1000,
               paddingTop: safeAreaInsets?.top,
               alignItems: "center",
@@ -608,7 +613,6 @@ function ChatPage() {
                   style={{
                     color: highlightColor,
                     textAlign: "center",
-                    marginHorizontal: 10,
                     fontWeight: "bold",
                     flexDirection: "column",
                     justifyContent: "center",
@@ -716,7 +720,7 @@ function ChatPage() {
                 borderRadius: 10,
                 alignSelf: "center",
               }}>
-              <Card.Content style={{ padding: 0 }}>
+              <Card.Content>
                 <Text
                   style={{
                     textAlign: "center",

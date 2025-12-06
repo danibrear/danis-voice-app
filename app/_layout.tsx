@@ -10,7 +10,6 @@ import {
 import * as QuickActions from "expo-quick-actions";
 import { RouterAction, useQuickActionRouting } from "expo-quick-actions/router";
 import { Stack } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -62,12 +61,22 @@ export default function RootLayout() {
     ]);
   }, []);
 
+  // useEffect(() => {
+  //   const lockOrientation = async () => {
+  //     if (Platform.OS === "web") {
+  //       return;
+  //     }
+  //     await ScreenOrientation.lockAsync(
+  //       ScreenOrientation.OrientationLock.PORTRAIT_UP,
+  //     );
+  //   };
+  //   lockOrientation();
+  // }, []);
+
   useEffect(() => {
     if (Platform.OS === "web") {
       return;
     }
-
-    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     const interval = setInterval(() => {
       Updates.checkForUpdateAsync()
         .then(async (update) => {

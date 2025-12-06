@@ -9,7 +9,7 @@ export default function TabLayout() {
   const pathName = usePathname();
 
   useEffect(() => {
-    if (pathName.startsWith("/chat")) {
+    if (pathName.startsWith("/chat") || pathName.startsWith("/quick")) {
       NavigationBar.setStatusBarStyle("light");
     } else {
       NavigationBar.setStatusBarStyle("auto");
