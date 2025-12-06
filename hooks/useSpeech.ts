@@ -33,6 +33,10 @@ export const useSpeech = () => {
     const interval = setInterval(async () => {
       if (!(await Speech.isSpeakingAsync())) {
         setIsSpeakingId(null);
+        setBoundary({
+          start: 0,
+          end: 0,
+        });
         clearInterval(interval);
       }
     }, 50);
@@ -112,6 +116,10 @@ export const useSpeech = () => {
   const handleStop = async () => {
     await Speech.stop();
     setIsSpeakingId(null);
+    setBoundary({
+      start: 0,
+      end: 0,
+    });
   };
 
   const handleResume = async () => {
