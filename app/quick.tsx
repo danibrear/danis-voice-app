@@ -31,14 +31,24 @@ export default function QuickScreen() {
 
   const { handleSay, isSpeakingId } = useSpeech();
 
+  const [recentDirection, setRecentDirection] = useState<"asc" | "desc">(
+    "desc",
+  );
+
   useEffect(() => {
     try {
-      setOrderedPhrases(
-        recentTexts.sort((a, b) => (b.order || 0) - (a.order || 0)),
-      );
-      setStarredTexts(recentTexts.filter((text) => text.starred));
+      if (!recentTexts || recentTexts.length === 0) {
+        setOrderedPhrases([]);
+        setStarredTexts([]);
+        return;
+      }
+      let recent = [...recentTexts];
+      setOrderedPhrases(recent.sort((a, b) => (a.order || 0) - (b.order || 0)));
+      setStarredTexts(recent.filter((text) => text.starred));
     } catch (e) {
       console.log("[ERROR] Failed to sort recent texts:", e);
+      setOrderedPhrases(recentTexts || []);
+      setStarredTexts(recentTexts.filter((text) => text.starred));
     }
   }, [recentTexts]);
 
@@ -98,7 +108,9 @@ export default function QuickScreen() {
     if (tab !== "phrases") {
       return null;
     }
-    if (orderedPhrases.length === 0) {
+    const phrases = starredOnly ? starredTexts : orderedPhrases;
+    if (phrases.length === 0) {
+      const starred = starredOnly ? "starred " : "";
       return (
         <View
           style={{
@@ -106,11 +118,10 @@ export default function QuickScreen() {
             alignItems: "center",
             marginTop: 20,
           }}>
-          <Text>No starred texts available.</Text>
+          <Text>No {starred}phrases available.</Text>
         </View>
       );
     }
-    const phrases = starredOnly ? starredTexts : orderedPhrases;
     return phrases.map((text) => renderButton(text));
   };
   const renderChatHistoryTab = () => {
@@ -129,9 +140,13 @@ export default function QuickScreen() {
         </View>
       );
     }
+    const messagesOrder =
+      recentDirection === "asc"
+        ? recentMessages
+        : [...recentMessages].reverse();
     return (
       <View>
-        {recentMessages.map((message, index) =>
+        {messagesOrder.map((message, index) =>
           renderButton({
             id: `chat-message-${index}`,
             text: message,
@@ -204,14 +219,41 @@ export default function QuickScreen() {
               alignSelf: "stretch",
             }}>
             {tab === "chat" && recentMessages.length > 0 && (
-              <Button
-                mode="outlined"
-                style={{ marginBottom: 10, alignSelf: "flex-end" }}
-                onPress={() => {
-                  dispatch(clearRecentMessages());
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginBottom: 10,
                 }}>
-                Clear History
-              </Button>
+                <Button
+                  mode="outlined"
+                  contentStyle={{
+                    flexDirection: "row-reverse",
+                  }}
+                  icon={(props) => (
+                    <MaterialIcons
+                      name={
+                        recentDirection === "asc"
+                          ? "arrow-upward"
+                          : "arrow-downward"
+                      }
+                      {...props}
+                    />
+                  )}
+                  onPress={() => {
+                    setRecentDirection((s) => (s === "asc" ? "desc" : "asc"));
+                  }}>
+                  Sort
+                </Button>
+                <Button
+                  mode="outlined"
+                  style={{ alignSelf: "flex-end" }}
+                  onPress={() => {
+                    dispatch(clearRecentMessages());
+                  }}>
+                  Clear History
+                </Button>
+              </View>
             )}
             {tab === "phrases" && orderedPhrases.length > 0 && (
               <Button
