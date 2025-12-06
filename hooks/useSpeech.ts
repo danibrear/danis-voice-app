@@ -64,7 +64,6 @@ export const useSpeech = () => {
     setBoundary({ start: 0, end: 0 });
 
     Speech.speak(toSay, {
-      language: "en-US",
       voice: preferences.preferredVoice,
       rate: preferences.speechRate,
       pitch: preferences.speechPitch,

@@ -493,6 +493,7 @@ function ChatPage() {
             marginBottom: 0,
           },
         ]}>
+        {renderTopTools()}
         {(messages.length > 0 || input.trim().length > 0) && (
           <View
             style={{
@@ -536,12 +537,6 @@ function ChatPage() {
                 Tap text to hide tools
               </Animated.Text>
             )}
-
-            {(input.trim().length > 0 ||
-              displayMessage ||
-              messages.length > 0) &&
-              showAllTools &&
-              renderTopTools()}
 
             <View
               ref={containerRef}
