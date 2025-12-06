@@ -39,12 +39,9 @@ export const useSpeech = () => {
     return () => clearInterval(interval);
   }, [isSpeakingId]);
 
-  const handleSay = async (
-    text: StoredText | string,
-    props?: UseSpeechProps,
-  ) => {
-    const toSay = typeof text === "string" ? text : text.text || "";
-    const id = typeof text === "string" ? null : text.id;
+  const handleSay = async (text: StoredText, props?: UseSpeechProps) => {
+    const toSay = text.text || "";
+    const id = text.id;
     await AudioModule.setAudioModeAsync({
       playsInSilentMode: true,
       allowsRecording: false,

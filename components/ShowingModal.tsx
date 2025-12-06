@@ -221,8 +221,11 @@ export default function ShowingModal({
           labelStyle={formStyles.bigButton}
           onPress={async () => {
             setColorIndex(-1);
+            if (!storedText) {
+              return;
+            }
 
-            handleSay(text || "", {
+            handleSay(storedText, {
               onBoundary: (e: { charIndex: number; charLength: number }) => {
                 const { charLength } = e;
                 if (charLength > 0) {

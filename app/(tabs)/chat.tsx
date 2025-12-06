@@ -267,24 +267,31 @@ function ChatPage() {
       if (!options?.isReplay) {
         dispatch(addRecentMessage(messageText));
       }
-      _callhandleSay(messageText, {
-        onDone: () => {
-          handleDone();
+      _callhandleSay(
+        {
+          id: "quick-say-id",
+          text: messageText,
+          starred: false,
         },
-        onError: () => {
-          handleDone();
+        {
+          onDone: () => {
+            handleDone();
+          },
+          onError: () => {
+            handleDone();
+          },
+          onBoundary: (e: { charIndex: number; charLength: number }) => {
+            const { charLength } = e;
+            if (charLength > 0) {
+              setColorIndex(
+                (idx) =>
+                  (idx + 1) %
+                  (preferences.colors ? preferences.colors.length : 1),
+              );
+            }
+          },
         },
-        onBoundary: (e: { charIndex: number; charLength: number }) => {
-          const { charLength } = e;
-          if (charLength > 0) {
-            setColorIndex(
-              (idx) =>
-                (idx + 1) %
-                (preferences.colors ? preferences.colors.length : 1),
-            );
-          }
-        },
-      });
+      );
     } catch (e) {
       console.log("[ERROR] error saying", e);
     }
