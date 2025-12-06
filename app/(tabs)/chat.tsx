@@ -111,6 +111,8 @@ function ChatPage() {
     null,
   );
 
+  const isWeb = Platform.OS === "web";
+
   const { handleSay: _callhandleSay, boundary } = useSpeech();
 
   const opacity = useSharedValue(0.5);
@@ -562,16 +564,19 @@ function ChatPage() {
                   style={{
                     display: "flex",
                     flexShrink: 1,
+                    width: "100%",
+                    height: "100%",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}>
                   <Image
                     source={Logo}
                     style={[
                       {
-                        maxHeight: 200,
+                        maxHeight: isWeb ? 200 : 200,
                         height: "90%",
 
                         resizeMode: "contain",
-                        zIndex: 1,
                       },
                     ]}
                   />
@@ -719,6 +724,8 @@ function ChatPage() {
                 marginHorizontal: 10,
                 borderRadius: 10,
                 alignSelf: "center",
+                width: "95%",
+                maxWidth: 600,
               }}>
               <Card.Content>
                 <Text
