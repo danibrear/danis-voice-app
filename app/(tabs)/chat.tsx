@@ -16,6 +16,7 @@ import {
 } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
+import { onTranslateTask } from "expo-translate-text";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Image,
@@ -255,6 +256,19 @@ function ChatPage() {
     }, 3000);
   };
 
+  const translateText = async () => {
+    try {
+      const result = await onTranslateTask({
+        input: "Hello, world!",
+        sourceLangCode: "en",
+        targetLangCode: "es",
+      });
+      console.log(result.translatedTexts); // "¡Hola, mundo!"
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleSay = async (
     messageText: string,
     options?: {
@@ -450,6 +464,10 @@ function ChatPage() {
             e.preventDefault();
             e.stopPropagation();
           }}>
+          <IconButton
+            onPress={() => translateText()}
+            icon={(props) => <MaterialIcons name="translate" {...props} />}
+          />
           {showAllTools && (
             <IconButton
               onPress={() => {
