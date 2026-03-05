@@ -19,6 +19,7 @@ import * as Speech from "expo-speech";
 import { onTranslateTask } from "expo-translate-text";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -32,6 +33,7 @@ import {
   Dialog,
   Divider,
   IconButton,
+  RadioButton,
   Text,
   TextInput,
   ThemeProvider,
@@ -70,6 +72,21 @@ type NoticeMessage = {
 };
 
 const FLIP_SCALE = 1.25;
+
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "es", label: "Spanish" },
+  { code: "fr", label: "French" },
+  { code: "de", label: "German" },
+  { code: "it", label: "Italian" },
+  { code: "pt", label: "Portuguese" },
+  { code: "zh", label: "Chinese" },
+  { code: "ja", label: "Japanese" },
+  { code: "ko", label: "Korean" },
+  { code: "ar", label: "Arabic" },
+  { code: "ru", label: "Russian" },
+  { code: "hi", label: "Hindi" },
+];
 
 function ChatPage() {
   const theme = useTheme();
@@ -112,11 +129,45 @@ function ChatPage() {
     null,
   );
 
+  const [translatedMessage, setTranslatedMessage] = useState<string | null>(
+    null,
+  );
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslationLoading, setIsTranslationLoading] = useState(false);
+  const [showTranslateDialog, setShowTranslateDialog] = useState(false);
+  const [sourceLang, setSourceLang] = useState("en");
+  const [targetLang, setTargetLang] = useState("es");
+
   const isWeb = Platform.OS === "web";
 
   const { handleSay: _callhandleSay, boundary } = useSpeech();
 
   const opacity = useSharedValue(0.5);
+  const translateText = useCallback(
+    async (text: string) => {
+      try {
+        const result = await onTranslateTask({
+          input: text,
+          sourceLangCode: sourceLang,
+          targetLangCode: targetLang,
+        });
+        console.log("Translation result:", result);
+        if (
+          Array.isArray(result.translatedTexts) &&
+          result.translatedTexts.length > 0
+        ) {
+          setTranslatedMessage(result.translatedTexts[0] as string);
+        } else {
+          setTranslatedMessage(result.translatedTexts as string);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsTranslationLoading(false);
+      }
+    },
+    [sourceLang, targetLang],
+  );
 
   useEffect(() => {
     if (!displayMessage) {
@@ -166,6 +217,19 @@ function ChatPage() {
   }, [input, displayMessage]);
 
   useEffect(() => {
+    if (!isTranslating || input.trim().length === 0) {
+      setTranslatedMessage(null);
+      setIsTranslationLoading(false);
+      return;
+    }
+    setIsTranslationLoading(true);
+    const timeout = setTimeout(() => {
+      translateText(input.trim());
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [input, isTranslating, translateText]);
+
+  useEffect(() => {
     const words = input.trim().split(" ");
     for (const [wordCountStr, lineLimits] of Object.entries(
       WORD_COUNT_MIN_MAX_LINES,
@@ -209,6 +273,11 @@ function ChatPage() {
   };
 
   const handleSendMessage = async () => {
+    if (isTranslating) {
+      console.log("Saying translated message:", translatedMessage);
+      await handleSay(translatedMessage ?? input.trim());
+      return;
+    }
     if (input.trim() === "") {
       return;
     }
@@ -254,19 +323,6 @@ function ChatPage() {
     setTimeout(() => {
       setNoticeMessage(null);
     }, 3000);
-  };
-
-  const translateText = async () => {
-    try {
-      const result = await onTranslateTask({
-        input: "Hello, world!",
-        sourceLangCode: "en",
-        targetLangCode: "es",
-      });
-      console.log(result.translatedTexts); // "¡Hola, mundo!"
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   const handleSay = async (
@@ -465,8 +521,21 @@ function ChatPage() {
             e.stopPropagation();
           }}>
           <IconButton
-            onPress={() => translateText()}
-            icon={(props) => <MaterialIcons name="translate" {...props} />}
+            onPress={() => {
+              Keyboard.dismiss();
+              setShowTranslateDialog(true);
+            }}
+            mode={isTranslating ? "contained" : undefined}
+            containerColor={
+              isTranslating ? theme.colors.primaryContainer : undefined
+            }
+            icon={(props) => (
+              <MaterialIcons
+                name="translate"
+                {...props}
+                color={isTranslating ? theme.colors.primary : "white"}
+              />
+            )}
           />
           {showAllTools && (
             <IconButton
@@ -489,8 +558,11 @@ function ChatPage() {
   }, [menuMessageIdx, messages]);
 
   const message = useMemo(() => {
+    if (isTranslating) {
+      return translatedMessage ?? displayMessage?.text;
+    }
     return input.trim() !== "" ? input.trim() : displayMessage?.text;
-  }, [displayMessage, input]);
+  }, [displayMessage, input, isTranslating, translatedMessage]);
 
   const instructionsOffset = Platform.OS === "web" ? 50 : 20;
 
@@ -575,6 +647,13 @@ function ChatPage() {
                 paddingTop: angle === 180 ? 50 : 0,
                 paddingHorizontal: 0,
               }}>
+              {isTranslationLoading && (
+                <ActivityIndicator
+                  size="large"
+                  color={theme.colors.primary}
+                  style={{ position: "absolute", zIndex: 10 }}
+                />
+              )}
               {input.trim().length === 0 && displayMessage === null && (
                 <Animated.View
                   entering={FadeInUp.duration(666)
@@ -970,6 +1049,77 @@ function ChatPage() {
           </Button>
           <Button onPress={() => setMenuMessageIdx(null)}>Cancel</Button>
         </Dialog.Content>
+      </Dialog>
+      <Dialog
+        visible={showTranslateDialog}
+        onDismiss={() => setShowTranslateDialog(false)}>
+        <Dialog.Title>Translation</Dialog.Title>
+        <Dialog.ScrollArea style={{ maxHeight: 400 }}>
+          <ScrollView>
+            <Text
+              style={{
+                fontWeight: "bold",
+                marginTop: 10,
+                marginBottom: 4,
+                paddingHorizontal: 4,
+              }}>
+              From
+            </Text>
+            {LANGUAGES.map((lang) => (
+              <RadioButton.Item
+                key={`src-${lang.code}`}
+                label={lang.label}
+                value={lang.code}
+                status={sourceLang === lang.code ? "checked" : "unchecked"}
+                onPress={() => setSourceLang(lang.code)}
+              />
+            ))}
+            <Divider style={{ marginVertical: 8 }} />
+            <Text
+              style={{
+                fontWeight: "bold",
+                marginBottom: 4,
+                paddingHorizontal: 4,
+              }}>
+              To
+            </Text>
+            {LANGUAGES.map((lang) => (
+              <RadioButton.Item
+                key={`tgt-${lang.code}`}
+                label={lang.label}
+                value={lang.code}
+                status={targetLang === lang.code ? "checked" : "unchecked"}
+                onPress={() => setTargetLang(lang.code)}
+              />
+            ))}
+          </ScrollView>
+        </Dialog.ScrollArea>
+        <Dialog.Actions style={{ flexDirection: "column", gap: 8 }}>
+          <Button
+            mode="contained"
+            style={{ width: "100%" }}
+            onPress={() => {
+              setIsTranslating(true);
+              setShowTranslateDialog(false);
+            }}>
+            Enable Translation
+          </Button>
+          {isTranslating && (
+            <Button
+              style={{ width: "100%" }}
+              onPress={() => {
+                setIsTranslating(false);
+                setShowTranslateDialog(false);
+              }}>
+              Turn Off
+            </Button>
+          )}
+          <Button
+            style={{ width: "100%" }}
+            onPress={() => setShowTranslateDialog(false)}>
+            Cancel
+          </Button>
+        </Dialog.Actions>
       </Dialog>
     </ThemedView>
   );
