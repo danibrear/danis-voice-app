@@ -5,7 +5,16 @@ import * as colors from "@/constants/colorPatterns";
 import { useSpeech } from "@/hooks/useSpeech";
 import { RootState } from "@/store";
 import { addRecentMessage } from "@/store/chat";
-import { getDevToolsEnabled } from "@/store/preferences";
+import {
+  addTranslationPersonality,
+  deleteTranslationPersonality,
+  getDevToolsEnabled,
+  getFavoriteVoiceIds,
+  getTranslationPersonalities,
+  setTranslateLanguages,
+  TranslationPersonality,
+  updateTranslationPersonality,
+} from "@/store/preferences";
 import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
 import { darkTheme } from "@/theme";
@@ -34,9 +43,11 @@ import {
   Divider,
   IconButton,
   RadioButton,
+  SegmentedButtons,
   Text,
   TextInput,
   ThemeProvider,
+  TouchableRipple,
   useTheme,
 } from "react-native-paper";
 import Animated, {
@@ -135,8 +146,28 @@ function ChatPage() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslationLoading, setIsTranslationLoading] = useState(false);
   const [showTranslateDialog, setShowTranslateDialog] = useState(false);
-  const [sourceLang, setSourceLang] = useState("en");
-  const [targetLang, setTargetLang] = useState("es");
+  const [sourceLang, setSourceLang] = useState(
+    preferences.translateSourceLang ?? "en",
+  );
+  const [targetLang, setTargetLang] = useState(
+    preferences.translateTargetLang ?? "es",
+  );
+  const [translateVoiceId, setTranslateVoiceId] = useState<string | undefined>(
+    preferences.translateVoice,
+  );
+  const [availableVoices, setAvailableVoices] = useState<Speech.Voice[]>([]);
+  const [translateDialogTab, setTranslateDialogTab] = useState<
+    "languages" | "voice"
+  >("languages");
+  const [translateDialogMode, setTranslateDialogMode] = useState<
+    "list" | "create" | "edit"
+  >("list");
+  const [editingPersonalityId, setEditingPersonalityId] = useState<
+    string | null
+  >(null);
+  const [personalityName, setPersonalityName] = useState("");
+  const favoriteVoiceIds = useSelector(getFavoriteVoiceIds);
+  const personalities = useSelector(getTranslationPersonalities);
 
   const isWeb = Platform.OS === "web";
 
@@ -167,6 +198,36 @@ function ChatPage() {
       }
     },
     [sourceLang, targetLang],
+  );
+
+  useEffect(() => {
+    if (!showTranslateDialog) return;
+    setTranslateDialogMode("list");
+    setTranslateDialogTab("languages");
+    Speech.getAvailableVoicesAsync()
+      .then(setAvailableVoices)
+      .catch(() => {});
+  }, [showTranslateDialog]);
+
+  const voicesForTargetLang = useMemo(
+    () => availableVoices.filter((v) => v.language.startsWith(targetLang)),
+    [availableVoices, targetLang],
+  );
+
+  const favoritedVoicesForLang = useMemo(
+    () =>
+      voicesForTargetLang.filter((v) =>
+        favoriteVoiceIds.includes(v.identifier),
+      ),
+    [voicesForTargetLang, favoriteVoiceIds],
+  );
+
+  const otherVoicesForLang = useMemo(
+    () =>
+      voicesForTargetLang.filter(
+        (v) => !favoriteVoiceIds.includes(v.identifier),
+      ),
+    [voicesForTargetLang, favoriteVoiceIds],
   );
 
   useEffect(() => {
@@ -275,7 +336,9 @@ function ChatPage() {
   const handleSendMessage = async () => {
     if (isTranslating) {
       console.log("Saying translated message:", translatedMessage);
-      await handleSay(translatedMessage ?? input.trim());
+      await handleSay(translatedMessage ?? input.trim(), {
+        voiceOverride: preferences.translateVoice,
+      });
       return;
     }
     if (input.trim() === "") {
@@ -329,6 +392,7 @@ function ChatPage() {
     messageText: string,
     options?: {
       isReplay?: boolean;
+      voiceOverride?: string;
     },
   ) => {
     try {
@@ -344,6 +408,7 @@ function ChatPage() {
           starred: false,
         },
         {
+          voiceOverride: options?.voiceOverride,
           onDone: () => {
             handleDone();
           },
@@ -559,7 +624,7 @@ function ChatPage() {
 
   const message = useMemo(() => {
     if (isTranslating) {
-      return translatedMessage ?? displayMessage?.text;
+      return translatedMessage;
     }
     return input.trim() !== "" ? input.trim() : displayMessage?.text;
   }, [displayMessage, input, isTranslating, translatedMessage]);
@@ -1053,73 +1118,314 @@ function ChatPage() {
       <Dialog
         visible={showTranslateDialog}
         onDismiss={() => setShowTranslateDialog(false)}>
-        <Dialog.Title>Translation</Dialog.Title>
-        <Dialog.ScrollArea style={{ maxHeight: 400 }}>
-          <ScrollView>
-            <Text
-              style={{
-                fontWeight: "bold",
-                marginTop: 10,
-                marginBottom: 4,
-                paddingHorizontal: 4,
-              }}>
-              From
-            </Text>
-            {LANGUAGES.map((lang) => (
-              <RadioButton.Item
-                key={`src-${lang.code}`}
-                label={lang.label}
-                value={lang.code}
-                status={sourceLang === lang.code ? "checked" : "unchecked"}
-                onPress={() => setSourceLang(lang.code)}
+        <Dialog.Title>
+          {translateDialogMode === "list"
+            ? "Translation"
+            : translateDialogMode === "create"
+              ? "New Personality"
+              : "Edit Personality"}
+        </Dialog.Title>
+
+        {/* ── LIST MODE ── */}
+        {translateDialogMode === "list" && (
+          <>
+            <Dialog.Content style={{ paddingBottom: 0 }}>
+              <Button
+                mode="contained"
+                icon="plus"
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setPersonalityName("");
+                  setSourceLang(preferences.translateSourceLang ?? "en");
+                  setTargetLang(preferences.translateTargetLang ?? "es");
+                  setTranslateVoiceId(undefined);
+                  setTranslateDialogTab("languages");
+                  setTranslateDialogMode("create");
+                }}>
+                New Personality
+              </Button>
+            </Dialog.Content>
+            <Dialog.ScrollArea style={{ maxHeight: 340 }}>
+              <ScrollView>
+                {personalities.length === 0 && (
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      marginVertical: 20,
+                      color: theme.colors.onSurfaceVariant,
+                    }}>
+                    No personalities yet. Create one to get started.
+                  </Text>
+                )}
+                {personalities.map((p) => {
+                  const srcLabel =
+                    LANGUAGES.find((l) => l.code === p.sourceLang)?.label ??
+                    p.sourceLang;
+                  const tgtLabel =
+                    LANGUAGES.find((l) => l.code === p.targetLang)?.label ??
+                    p.targetLang;
+                  const voiceName = availableVoices.find(
+                    (v) => v.identifier === p.voiceId,
+                  )?.name;
+                  return (
+                    <TouchableRipple
+                      key={p.id}
+                      onPress={() => {
+                        dispatch(
+                          setTranslateLanguages({
+                            sourceLang: p.sourceLang,
+                            targetLang: p.targetLang,
+                            voiceId: p.voiceId,
+                          }),
+                        );
+                        setSourceLang(p.sourceLang);
+                        setTargetLang(p.targetLang);
+                        setTranslateVoiceId(p.voiceId);
+                        setIsTranslating(true);
+                        setShowTranslateDialog(false);
+                      }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          paddingVertical: 10,
+                          paddingHorizontal: 4,
+                        }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                            {p.name}
+                          </Text>
+                          <Text
+                            style={{
+                              color: theme.colors.onSurfaceVariant,
+                              fontSize: 13,
+                            }}>
+                            {srcLabel} → {tgtLabel}
+                            {voiceName ? `  ·  ${voiceName}` : ""}
+                          </Text>
+                        </View>
+                        <IconButton
+                          icon="pencil"
+                          size={18}
+                          onPress={() => {
+                            setEditingPersonalityId(p.id);
+                            setPersonalityName(p.name);
+                            setSourceLang(p.sourceLang);
+                            setTargetLang(p.targetLang);
+                            setTranslateVoiceId(p.voiceId);
+                            setTranslateDialogTab("languages");
+                            setTranslateDialogMode("edit");
+                          }}
+                        />
+                        <IconButton
+                          icon="delete"
+                          size={18}
+                          onPress={() =>
+                            dispatch(deleteTranslationPersonality(p.id))
+                          }
+                        />
+                      </View>
+                    </TouchableRipple>
+                  );
+                })}
+              </ScrollView>
+            </Dialog.ScrollArea>
+            <Dialog.Actions style={{ flexDirection: "column", gap: 8 }}>
+              {isTranslating && (
+                <Button
+                  style={{ width: "100%" }}
+                  onPress={() => {
+                    setIsTranslating(false);
+                    setShowTranslateDialog(false);
+                  }}>
+                  Turn Off Translation
+                </Button>
+              )}
+              <Button
+                style={{ width: "100%" }}
+                onPress={() => setShowTranslateDialog(false)}>
+                Cancel
+              </Button>
+            </Dialog.Actions>
+          </>
+        )}
+
+        {/* ── CREATE / EDIT MODE ── */}
+        {(translateDialogMode === "create" ||
+          translateDialogMode === "edit") && (
+          <>
+            <Dialog.Content style={{ paddingBottom: 0, gap: 12 }}>
+              <TextInput
+                mode="outlined"
+                label="Personality name"
+                value={personalityName}
+                onChangeText={setPersonalityName}
               />
-            ))}
-            <Divider style={{ marginVertical: 8 }} />
-            <Text
-              style={{
-                fontWeight: "bold",
-                marginBottom: 4,
-                paddingHorizontal: 4,
-              }}>
-              To
-            </Text>
-            {LANGUAGES.map((lang) => (
-              <RadioButton.Item
-                key={`tgt-${lang.code}`}
-                label={lang.label}
-                value={lang.code}
-                status={targetLang === lang.code ? "checked" : "unchecked"}
-                onPress={() => setTargetLang(lang.code)}
+              <SegmentedButtons
+                value={translateDialogTab}
+                onValueChange={(v) =>
+                  setTranslateDialogTab(v as "languages" | "voice")
+                }
+                buttons={[
+                  { value: "languages", label: "Languages" },
+                  { value: "voice", label: "Voice" },
+                ]}
               />
-            ))}
-          </ScrollView>
-        </Dialog.ScrollArea>
-        <Dialog.Actions style={{ flexDirection: "column", gap: 8 }}>
-          <Button
-            mode="contained"
-            style={{ width: "100%" }}
-            onPress={() => {
-              setIsTranslating(true);
-              setShowTranslateDialog(false);
-            }}>
-            Enable Translation
-          </Button>
-          {isTranslating && (
-            <Button
-              style={{ width: "100%" }}
-              onPress={() => {
-                setIsTranslating(false);
-                setShowTranslateDialog(false);
-              }}>
-              Turn Off
-            </Button>
-          )}
-          <Button
-            style={{ width: "100%" }}
-            onPress={() => setShowTranslateDialog(false)}>
-            Cancel
-          </Button>
-        </Dialog.Actions>
+            </Dialog.Content>
+            <Dialog.ScrollArea style={{ maxHeight: 320 }}>
+              <ScrollView>
+                {translateDialogTab === "languages" && (
+                  <>
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        marginTop: 10,
+                        marginBottom: 4,
+                        paddingHorizontal: 4,
+                      }}>
+                      From
+                    </Text>
+                    {LANGUAGES.map((lang) => (
+                      <RadioButton.Item
+                        key={`src-${lang.code}`}
+                        label={lang.label}
+                        value={lang.code}
+                        status={
+                          sourceLang === lang.code ? "checked" : "unchecked"
+                        }
+                        onPress={() => setSourceLang(lang.code)}
+                      />
+                    ))}
+                    <Divider style={{ marginVertical: 8 }} />
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        marginBottom: 4,
+                        paddingHorizontal: 4,
+                      }}>
+                      To
+                    </Text>
+                    {LANGUAGES.map((lang) => (
+                      <RadioButton.Item
+                        key={`tgt-${lang.code}`}
+                        label={lang.label}
+                        value={lang.code}
+                        status={
+                          targetLang === lang.code ? "checked" : "unchecked"
+                        }
+                        onPress={() => {
+                          setTargetLang(lang.code);
+                          setTranslateVoiceId(undefined);
+                          setTranslateDialogTab("voice");
+                        }}
+                      />
+                    ))}
+                  </>
+                )}
+                {translateDialogTab === "voice" && (
+                  <>
+                    {availableVoices.length === 0 && (
+                      <ActivityIndicator
+                        style={{ marginVertical: 20 }}
+                        size="small"
+                      />
+                    )}
+                    {favoritedVoicesForLang.length > 0 && (
+                      <>
+                        <Text
+                          style={{
+                            fontWeight: "bold",
+                            marginTop: 10,
+                            marginBottom: 4,
+                            paddingHorizontal: 4,
+                          }}>
+                          Favorites
+                        </Text>
+                        {favoritedVoicesForLang.map((voice) => (
+                          <RadioButton.Item
+                            key={`fav-${voice.identifier}`}
+                            label={`${voice.name}${voice.quality !== "Default" ? ` (${voice.quality})` : ""}`}
+                            value={voice.identifier}
+                            status={
+                              translateVoiceId === voice.identifier
+                                ? "checked"
+                                : "unchecked"
+                            }
+                            onPress={() =>
+                              setTranslateVoiceId(voice.identifier)
+                            }
+                          />
+                        ))}
+                        <Divider style={{ marginVertical: 8 }} />
+                      </>
+                    )}
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        marginTop: favoritedVoicesForLang.length === 0 ? 10 : 0,
+                        marginBottom: 4,
+                        paddingHorizontal: 4,
+                      }}>
+                      {favoritedVoicesForLang.length > 0
+                        ? "All Voices"
+                        : "Voices"}
+                    </Text>
+                    <RadioButton.Item
+                      label="Default"
+                      value=""
+                      status={!translateVoiceId ? "checked" : "unchecked"}
+                      onPress={() => setTranslateVoiceId(undefined)}
+                    />
+                    {otherVoicesForLang.map((voice) => (
+                      <RadioButton.Item
+                        key={voice.identifier}
+                        label={`${voice.name}${voice.quality !== "Default" ? ` (${voice.quality})` : ""}`}
+                        value={voice.identifier}
+                        status={
+                          translateVoiceId === voice.identifier
+                            ? "checked"
+                            : "unchecked"
+                        }
+                        onPress={() => setTranslateVoiceId(voice.identifier)}
+                      />
+                    ))}
+                  </>
+                )}
+              </ScrollView>
+            </Dialog.ScrollArea>
+            <Dialog.Actions style={{ flexDirection: "column", gap: 8 }}>
+              <Button
+                mode="contained"
+                style={{ width: "100%" }}
+                disabled={!personalityName.trim()}
+                onPress={() => {
+                  const personality: TranslationPersonality = {
+                    id:
+                      translateDialogMode === "edit" && editingPersonalityId
+                        ? editingPersonalityId
+                        : Date.now().toString(),
+                    name: personalityName.trim(),
+                    sourceLang,
+                    targetLang,
+                    voiceId: translateVoiceId,
+                  };
+                  if (translateDialogMode === "edit") {
+                    dispatch(updateTranslationPersonality(personality));
+                  } else {
+                    dispatch(addTranslationPersonality(personality));
+                  }
+                  setTranslateDialogMode("list");
+                }}>
+                Save
+              </Button>
+              <Button
+                style={{ width: "100%" }}
+                onPress={() => setTranslateDialogMode("list")}>
+                Back
+              </Button>
+            </Dialog.Actions>
+          </>
+        )}
       </Dialog>
     </ThemedView>
   );

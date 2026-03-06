@@ -9,6 +9,7 @@ type UseSpeechProps = {
   onBoundary?: (e: { charIndex: number; charLength: number }) => void;
   onError?: () => void;
   onDone?: () => void;
+  voiceOverride?: string;
 };
 
 export const useSpeech = () => {
@@ -65,7 +66,7 @@ export const useSpeech = () => {
     setBoundary({ start: 0, end: 0 });
 
     Speech.speak(toSay, {
-      voice: preferences.preferredVoice,
+      voice: props?.voiceOverride ?? preferences.preferredVoice,
       rate: preferences.speechRate,
       pitch: preferences.speechPitch,
       onDone: () => {
