@@ -182,7 +182,6 @@ function ChatPage() {
           sourceLangCode: sourceLang,
           targetLangCode: targetLang,
         });
-        console.log("Translation result:", result);
         if (
           Array.isArray(result.translatedTexts) &&
           result.translatedTexts.length > 0
@@ -335,7 +334,6 @@ function ChatPage() {
 
   const handleSendMessage = async () => {
     if (isTranslating) {
-      console.log("Saying translated message:", translatedMessage);
       await handleSay(translatedMessage ?? input.trim(), {
         voiceOverride: preferences.translateVoice,
       });
@@ -1133,6 +1131,7 @@ function ChatPage() {
               <Button
                 mode="contained"
                 icon="plus"
+                style={{ marginBottom: 10 }}
                 onPress={() => {
                   Keyboard.dismiss();
                   setPersonalityName("");

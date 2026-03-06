@@ -33,6 +33,7 @@ const initialState: PreferencesState = {
   chatReturnKeySendsMessage: false,
   devToolsEnabled: false,
   favoriteVoiceIds: [],
+  translateVoice: undefined,
   translateSourceLang: "en",
   translateTargetLang: "es",
   translationPersonalities: [],
