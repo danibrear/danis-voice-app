@@ -33,7 +33,7 @@ import {
   TouchableRipple,
   useTheme,
 } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
 const LANGUAGES = [
@@ -55,6 +55,7 @@ type Mode = "list" | "create" | "edit";
 
 export default function PersonalitiesScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
   const navigator = useNavigation();
   const personalities = useSelector(getTranslationPersonalities);
@@ -196,7 +197,7 @@ export default function PersonalitiesScreen() {
 
   return (
     <ThemedView style={coreStyles.container}>
-      <SafeAreaView style={coreStyles.container}>
+      <View style={[coreStyles.container, { paddingTop: insets.top }]}>
         {/* Header */}
         <View
           style={{
@@ -531,7 +532,7 @@ export default function PersonalitiesScreen() {
             </KeyboardAvoidingView>
           </View>
         )}
-      </SafeAreaView>
+      </View>
     </ThemedView>
   );
 }

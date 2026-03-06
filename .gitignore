@@ -43,6 +43,7 @@ app-example
 /android
 /build
 
+*.ipa
 *.app
 *.tar.gz
 *.apk

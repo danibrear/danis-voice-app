@@ -2,7 +2,7 @@
   "expo": {
     "name": "Dani's Voice App",
     "slug": "danis-voice-app",
-    "version": "1.1.1",
+    "version": "2.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "danisvoiceapp",
