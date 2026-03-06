@@ -275,7 +275,6 @@ function ChatPage() {
       numberOfLines: numLines,
     });
     setMessages(newMessages);
-    setInput("");
     setTimeout(() => {
       messagesEndRef.current?.scrollToEnd({ animated: true });
     }, 50);
@@ -295,8 +294,6 @@ function ChatPage() {
         order: -1,
       }),
     );
-    setDisplayMessage(null);
-    setInput("");
 
     setNoticeMessage({
       id: new Date().toISOString(),
