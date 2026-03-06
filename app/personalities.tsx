@@ -410,35 +410,35 @@ export default function PersonalitiesScreen() {
                         Favorites
                       </Text>
                       {favoritedVoicesForLang.map((voice) => (
-                        <View
+                        <TouchableRipple
                           key={`fav-${voice.identifier}`}
+                          onPress={() => setVoiceId(voice.identifier)}
                           style={{
                             flexDirection: "row",
                             alignItems: "center",
-                            justifyContent: "space-between",
+                            paddingVertical: 6,
+                            paddingLeft: 8,
                           }}>
-                          <RadioButton.Item
-                            style={{ flex: 1 }}
-                            label={`${voice.name} · ${voice.quality === "Default" ? "Standard" : voice.quality} (${voice.language})`}
-                            value={voice.identifier}
-                            status={
-                              voiceId === voice.identifier
-                                ? "checked"
-                                : "unchecked"
-                            }
-                            onPress={() => setVoiceId(voice.identifier)}
-                          />
-                          <IconButton
-                            icon={
-                              testingVoiceId === voice.identifier
-                                ? "loading"
-                                : "play-circle-outline"
-                            }
-                            size={22}
-                            disabled={testingVoiceId !== null}
-                            onPress={() => testVoice(voice.identifier)}
-                          />
-                        </View>
+                          <>
+                            <RadioButton
+                              value={voice.identifier}
+                              status={voiceId === voice.identifier ? "checked" : "unchecked"}
+                              onPress={() => setVoiceId(voice.identifier)}
+                            />
+                            <View style={{ flex: 1, marginLeft: 8 }}>
+                              <Text>{voice.name}</Text>
+                              <Text style={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}>
+                                {voice.quality === "Default" ? "Standard" : voice.quality} · {voice.language}
+                              </Text>
+                            </View>
+                            <IconButton
+                              icon={testingVoiceId === voice.identifier ? "loading" : "play-circle-outline"}
+                              size={22}
+                              disabled={testingVoiceId !== null}
+                              onPress={() => testVoice(voice.identifier)}
+                            />
+                          </>
+                        </TouchableRipple>
                       ))}
                       <Divider style={{ marginVertical: 8 }} />
                     </>
@@ -453,58 +453,61 @@ export default function PersonalitiesScreen() {
                       ? "All Voices"
                       : "Voices"}
                   </Text>
-                  <View
+                  <TouchableRipple
+                    onPress={() => setVoiceId(undefined)}
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      justifyContent: "space-between",
+                      paddingVertical: 6,
+                      paddingLeft: 8,
                     }}>
-                    <RadioButton.Item
-                      style={{ flex: 1 }}
-                      label="Default"
-                      value=""
-                      status={!voiceId ? "checked" : "unchecked"}
-                      onPress={() => setVoiceId(undefined)}
-                    />
-                    <IconButton
-                      icon={
-                        testingVoiceId === "default"
-                          ? "loading"
-                          : "play-circle-outline"
-                      }
-                      size={22}
-                      disabled={testingVoiceId !== null}
-                      onPress={() => testVoice(undefined)}
-                    />
-                  </View>
+                    <>
+                      <RadioButton
+                        value=""
+                        status={!voiceId ? "checked" : "unchecked"}
+                        onPress={() => setVoiceId(undefined)}
+                      />
+                      <View style={{ flex: 1, marginLeft: 8 }}>
+                        <Text>Default</Text>
+                      </View>
+                      <IconButton
+                        icon={testingVoiceId === "default" ? "loading" : "play-circle-outline"}
+                        size={22}
+                        disabled={testingVoiceId !== null}
+                        onPress={() => testVoice(undefined)}
+                      />
+                    </>
+                  </TouchableRipple>
                   {otherVoicesForLang.map((voice) => (
-                    <View
+                    <TouchableRipple
                       key={voice.identifier}
+                      onPress={() => setVoiceId(voice.identifier)}
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
-                        justifyContent: "space-between",
+                        paddingVertical: 6,
+                        paddingLeft: 8,
                       }}>
-                      <RadioButton.Item
-                        style={{ flex: 1 }}
-                        label={`${voice.name} · ${voice.quality === "Default" ? "Standard" : voice.quality} (${voice.language})`}
-                        value={voice.identifier}
-                        status={
-                          voiceId === voice.identifier ? "checked" : "unchecked"
-                        }
-                        onPress={() => setVoiceId(voice.identifier)}
-                      />
-                      <IconButton
-                        icon={
-                          testingVoiceId === voice.identifier
-                            ? "loading"
-                            : "play-circle-outline"
-                        }
-                        size={22}
-                        disabled={testingVoiceId !== null}
-                        onPress={() => testVoice(voice.identifier)}
-                      />
-                    </View>
+                      <>
+                        <RadioButton
+                          value={voice.identifier}
+                          status={voiceId === voice.identifier ? "checked" : "unchecked"}
+                          onPress={() => setVoiceId(voice.identifier)}
+                        />
+                        <View style={{ flex: 1, marginLeft: 8 }}>
+                          <Text>{voice.name}</Text>
+                          <Text style={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}>
+                            {voice.quality === "Default" ? "Standard" : voice.quality} · {voice.language}
+                          </Text>
+                        </View>
+                        <IconButton
+                          icon={testingVoiceId === voice.identifier ? "loading" : "play-circle-outline"}
+                          size={22}
+                          disabled={testingVoiceId !== null}
+                          onPress={() => testVoice(voice.identifier)}
+                        />
+                      </>
+                    </TouchableRipple>
                   ))}
                 </>
               )}
