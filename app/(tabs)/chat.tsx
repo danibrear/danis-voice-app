@@ -829,6 +829,9 @@ function ChatPage() {
                   * Use the arrows to flip your text for quick viewing by anyone
                   facing you.
                 </Text>
+                <Text style={{ marginTop: 5 }}>
+                  * Use the translation button above to translate your messages.
+                </Text>
                 <View
                   style={{
                     flexDirection: "row",
@@ -848,10 +851,11 @@ function ChatPage() {
                         justifyContent: "flex-end",
                         alignItems: "center",
                         gap: 3,
+                        marginTop: 3,
                       }}>
                       <MaterialIcons
                         name="favorite"
-                        size={15}
+                        size={18}
                         color={theme.colors.tertiary}
                       />
                       <Text
