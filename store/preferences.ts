@@ -23,6 +23,7 @@ export type PreferencesState = {
   translateTargetLang?: string;
   translateVoice?: string;
   translationPersonalities?: TranslationPersonality[];
+  translationEnabled?: boolean;
 };
 
 const initialState: PreferencesState = {
@@ -131,6 +132,10 @@ export const preferencesSlice = createSlice({
       );
     },
 
+    setTranslationEnabled: (state, action: PayloadAction<boolean>) => {
+      state.translationEnabled = action.payload;
+    },
+
     clearValues: () => {
       return initialState;
     },
@@ -154,6 +159,7 @@ export const {
   addTranslationPersonality,
   updateTranslationPersonality,
   deleteTranslationPersonality,
+  setTranslationEnabled,
 } = preferencesSlice.actions;
 
 export default preferencesSlice.reducer;

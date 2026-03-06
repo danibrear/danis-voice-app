@@ -77,17 +77,20 @@ export default function RootLayout() {
     if (Platform.OS === "web") {
       return;
     }
-    const interval = setInterval(() => {
-      Updates.checkForUpdateAsync()
-        .then(async (update) => {
-          if (update.isAvailable) {
-            setUpdateAvailable(true);
-          }
-        })
-        .catch((e) => {
-          console.log("[ERROR] Error checking for updates:", e);
-        });
-    }, 60 * 60 * 1000); // Check every hour
+    const interval = setInterval(
+      () => {
+        Updates.checkForUpdateAsync()
+          .then(async (update) => {
+            if (update.isAvailable) {
+              setUpdateAvailable(true);
+            }
+          })
+          .catch((e) => {
+            console.log("[ERROR] Error checking for updates:", e);
+          });
+      },
+      60 * 60 * 1000,
+    ); // Check every hour
 
     return () => clearInterval(interval);
   }, []);
@@ -130,6 +133,13 @@ export default function RootLayout() {
                     />
                     <Stack.Screen
                       name="quick"
+                      options={{
+                        headerShown: false,
+                        presentation: "transparentModal",
+                      }}
+                    />
+                    <Stack.Screen
+                      name="personalities"
                       options={{
                         headerShown: false,
                         presentation: "transparentModal",
