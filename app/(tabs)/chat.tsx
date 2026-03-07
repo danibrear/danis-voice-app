@@ -1,9 +1,10 @@
 import CrossView from "@/components/CrossView";
-import TranslateButton from "@/components/TranslateButton";
 import Logo from "@/components/Logo";
 import ThemedView from "@/components/themed/ThemedView";
+import TranslateButton from "@/components/TranslateButton";
 import * as colors from "@/constants/colorPatterns";
 import { useSpeech } from "@/hooks/useSpeech";
+import { useTranslate } from "@/hooks/useTranslate";
 import { RootState } from "@/store";
 import { addRecentMessage } from "@/store/chat";
 import { getDevToolsEnabled } from "@/store/preferences";
@@ -15,7 +16,6 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { useTranslate } from "@/hooks/useTranslate";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -177,7 +177,6 @@ function ChatPage() {
       setShowAllTools(true);
     }
   }, [input, displayMessage]);
-
 
   useEffect(() => {
     const words = input.trim().split(" ");

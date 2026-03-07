@@ -9,12 +9,14 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build:ios:dev": "eas build --profile development --platform ios --local",
+    "build:ios:dev": "eas build --profile development --platform ios",
     "build:android:dev": "eas build --profile development --platform android --local",
     "build:ios:prod": "eas build --profile production --platform ios",
     "build:ios:prod:local": "eas build --profile production --platform ios --local",
     "build:android:prod": "eas build --profile production --platform android --local",
-    "deploy:prod": "eas update --channel production"
+    "deploy:prod": "eas update --channel production",
+    "deploy:staging": "eas update --channel staging",
+    "deploy:dev": "eas update --channel development"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
