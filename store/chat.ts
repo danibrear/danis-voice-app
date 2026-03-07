@@ -3,7 +3,10 @@ import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from ".";
 
 export type ChatState = {
-  recentMessages?: string[];
+  recentMessages?: {
+    text: string;
+    voiceId?: string;
+  }[];
 };
 
 const initialState: ChatState = {
@@ -14,7 +17,10 @@ export const chatSlice = createSlice({
   name: "chat",
   initialState,
   reducers: {
-    addRecentMessage: (state, action: PayloadAction<string>) => {
+    addRecentMessage: (
+      state,
+      action: PayloadAction<{ text: string; voiceId?: string }>,
+    ) => {
       if (!state.recentMessages) {
         state.recentMessages = [];
       }
@@ -36,5 +42,11 @@ export default chatSlice.reducer;
 export const getChatState = (state: RootState) => state.chat;
 
 export const getRecentMessages = (state: RootState) => {
-  return state.chat.recentMessages || [];
+  const messages = (state.chat.recentMessages || []) as unknown as (
+    | { text: string; voiceId?: string }
+    | string
+  )[];
+  return messages.map((m): { text: string; voiceId?: string } =>
+    typeof m === "string" ? { text: m } : m,
+  );
 };

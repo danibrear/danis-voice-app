@@ -47,6 +47,7 @@ export const useSpeech = () => {
   const handleSay = async (text: StoredText, props?: UseSpeechProps) => {
     const toSay = text.text || "";
     const id = text.id;
+    const voiceId = text.voiceId || preferences.preferredVoice;
     await AudioModule.setAudioModeAsync({
       playsInSilentMode: true,
       allowsRecording: false,
@@ -66,7 +67,7 @@ export const useSpeech = () => {
     setBoundary({ start: 0, end: 0 });
 
     Speech.speak(toSay, {
-      voice: props?.voiceOverride ?? preferences.preferredVoice,
+      voice: props?.voiceOverride ?? voiceId,
       rate: preferences.speechRate,
       pitch: preferences.speechPitch,
       onDone: () => {

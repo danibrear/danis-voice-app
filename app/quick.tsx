@@ -81,13 +81,16 @@ export default function QuickScreen() {
           justifyContent: "space-between",
           backgroundColor: theme.colors.surfaceDisabled,
         }}>
-        <Text
-          style={{
-            fontWeight: "bold",
-            flexShrink: 1,
-          }}>
-          {text.text}
-        </Text>
+        <View>
+          <Text
+            style={{
+              fontWeight: "bold",
+              flexShrink: 1,
+            }}>
+            {text.text}
+          </Text>
+          {text.voiceId && <Text variant="bodySmall">{text.voiceId}</Text>}
+        </View>
         <View
           style={{
             display: "flex",
@@ -149,7 +152,8 @@ export default function QuickScreen() {
         {messagesOrder.map((message, index) =>
           renderButton({
             id: `chat-message-${index}`,
-            text: message,
+            text: message.text,
+            voiceId: message.voiceId,
             starred: false,
           }),
         )}

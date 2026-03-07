@@ -4,4 +4,5 @@ export type StoredText = {
   starred: boolean;
   fontSize?: number | null;
   order?: number | null;
+  voiceId?: string;
 };

@@ -7,8 +7,6 @@ import { useSpeech } from "@/hooks/useSpeech";
 import { useTranslate } from "@/hooks/useTranslate";
 import { RootState } from "@/store";
 import { addRecentMessage } from "@/store/chat";
-import { getDevToolsEnabled } from "@/store/preferences";
-import { createStoredText } from "@/store/storedTexts";
 import { coreStyles } from "@/styles";
 import { darkTheme } from "@/theme";
 import {
@@ -53,6 +51,7 @@ type Message = {
   text: string;
   fontSize: number | null;
   numberOfLines?: number;
+  voiceId?: string;
 };
 
 const WORD_COUNT_MIN_MAX_LINES = {
@@ -81,9 +80,6 @@ function ChatPage() {
   const [displayMessage, setDisplayMessage] = useState<Message | null>(null);
 
   const preferences = useSelector((state: RootState) => state.preferences);
-  const devToolsEnabled = useSelector(getDevToolsEnabled);
-  const SHOW_SAVE_BUTTON = devToolsEnabled;
-
   const safeAreaInsets = useSafeAreaInsets();
   const dispatch = useDispatch();
 
@@ -232,44 +228,21 @@ function ChatPage() {
       return;
     }
     await handleSay(input.trim());
+    const voiceId = preferences.preferredVoice;
     const newMessages = [
       ...messages,
-      { text: input.trim(), fontSize: fontSize },
+      { text: input.trim(), fontSize: fontSize, voiceId },
     ];
     setDisplayMessage({
       text: input.trim(),
       fontSize: fontSize,
       numberOfLines: numLines,
+      voiceId,
     });
     setMessages(newMessages);
     setTimeout(() => {
       messagesEndRef.current?.scrollToEnd({ animated: true });
     }, 50);
-  };
-
-  const handleRecentAdd = async () => {
-    if (input.trim() === "" && !displayMessage) {
-      return;
-    }
-    const textToSave =
-      input.trim() !== "" ? input.trim() : displayMessage!.text;
-    dispatch(
-      createStoredText({
-        id: new Date().getTime().toString(),
-        text: textToSave,
-        starred: false,
-        order: -1,
-      }),
-    );
-
-    setNoticeMessage({
-      id: new Date().toISOString(),
-      text: "Message saved to Recents",
-      color: "success",
-    });
-    setTimeout(() => {
-      setNoticeMessage(null);
-    }, 3000);
   };
 
   const handleSay = async (
@@ -283,7 +256,11 @@ function ChatPage() {
       setColorIndex(-1);
 
       if (!options?.isReplay) {
-        dispatch(addRecentMessage(messageText));
+        const message = {
+          text: messageText,
+          voiceId: options?.voiceOverride,
+        };
+        dispatch(addRecentMessage(message));
       }
       _callhandleSay(
         {
@@ -442,21 +419,13 @@ function ChatPage() {
               e.stopPropagation();
               handleSay(displayMessage.text, {
                 isReplay: true,
+                voiceOverride: displayMessage.voiceId,
               });
             }}
             icon={(props) => <MaterialIcons name="replay" {...props} />}
           />
         )}
 
-        {(input.trim().length > 0 || displayMessage) && SHOW_SAVE_BUTTON && (
-          <IconButton
-            icon={(props) => <MaterialIcons name="save" {...props} />}
-            mode="outlined"
-            onPress={() => {
-              handleRecentAdd();
-            }}
-          />
-        )}
         <View
           style={{
             display: "flex",
@@ -960,24 +929,6 @@ function ChatPage() {
                 marginBottom: 10,
                 textAlign: "center",
               }}>{`"${menuMessage.text}"`}</Text>
-          )}
-          {menuMessage && (
-            <Button
-              mode="contained"
-              style={{ flexGrow: 1 }}
-              onPress={() => {
-                dispatch(
-                  createStoredText({
-                    id: new Date().getTime().toString(),
-                    text: menuMessage.text,
-                    starred: false,
-                    order: -1,
-                  }),
-                );
-                setMenuMessageIdx(null);
-              }}>
-              Save to Recents
-            </Button>
           )}
           <Button
             mode="contained"
