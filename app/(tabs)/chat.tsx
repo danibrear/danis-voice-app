@@ -1,4 +1,5 @@
 import CrossView from "@/components/CrossView";
+import TranslateButton from "@/components/TranslateButton";
 import Logo from "@/components/Logo";
 import ThemedView from "@/components/themed/ThemedView";
 import * as colors from "@/constants/colorPatterns";
@@ -14,9 +15,9 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
+import { useTranslate } from "@/hooks/useTranslate";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
-import { onTranslateTask } from "expo-translate-text";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -113,43 +114,22 @@ function ChatPage() {
     null,
   );
 
-  const [translatedMessage, setTranslatedMessage] = useState<string | null>(
-    null,
-  );
   const isTranslating = preferences.translationEnabled ?? false;
-  const [isTranslationLoading, setIsTranslationLoading] = useState(false);
   const sourceLang = preferences.translateSourceLang ?? "en";
   const targetLang = preferences.translateTargetLang ?? "es";
+
+  const { translatedMessage, isTranslationLoading } = useTranslate({
+    input,
+    isTranslating,
+    sourceLang,
+    targetLang,
+  });
 
   const isWeb = Platform.OS === "web";
 
   const { handleSay: _callhandleSay, boundary } = useSpeech();
 
   const opacity = useSharedValue(0.5);
-  const translateText = useCallback(
-    async (text: string) => {
-      try {
-        const result = await onTranslateTask({
-          input: text,
-          sourceLangCode: sourceLang,
-          targetLangCode: targetLang,
-        });
-        if (
-          Array.isArray(result.translatedTexts) &&
-          result.translatedTexts.length > 0
-        ) {
-          setTranslatedMessage(result.translatedTexts[0] as string);
-        } else {
-          setTranslatedMessage(result.translatedTexts as string);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsTranslationLoading(false);
-      }
-    },
-    [sourceLang, targetLang],
-  );
 
   useEffect(() => {
     if (!displayMessage) {
@@ -198,18 +178,6 @@ function ChatPage() {
     }
   }, [input, displayMessage]);
 
-  useEffect(() => {
-    if (!isTranslating || input.trim().length === 0) {
-      setTranslatedMessage(null);
-      setIsTranslationLoading(false);
-      return;
-    }
-    setIsTranslationLoading(true);
-    const timeout = setTimeout(() => {
-      translateText(input.trim());
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [input, isTranslating, translateText]);
 
   useEffect(() => {
     const words = input.trim().split(" ");
@@ -502,25 +470,13 @@ function ChatPage() {
             e.preventDefault();
             e.stopPropagation();
           }}>
-          <IconButton
+          <TranslateButton
+            isTranslating={isTranslating}
             onPress={() => {
               Keyboard.dismiss();
               // @ts-expect-error navigate type
               navigator.navigate("personalities");
             }}
-            mode={isTranslating ? "contained" : undefined}
-            containerColor={
-              isTranslating ? theme.colors.primaryContainer : undefined
-            }
-            icon={(props) => (
-              <MaterialIcons
-                name="translate"
-                {...props}
-                color={
-                  isTranslating ? theme.colors.onPrimaryContainer : "white"
-                }
-              />
-            )}
           />
           {showAllTools && (
             <IconButton

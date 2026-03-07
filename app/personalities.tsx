@@ -14,7 +14,7 @@ import { coreStyles } from "@/styles";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
-import { onTranslateTask } from "expo-translate-text";
+import { translateText } from "@/utils/translateText";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -112,14 +112,7 @@ export default function PersonalitiesScreen() {
     const key = identifier ?? "default";
     setTestingVoiceId(key);
     try {
-      const result = await onTranslateTask({
-        input: "made with love by dani",
-        sourceLangCode: "en",
-        targetLangCode: targetLang,
-      });
-      const translated = Array.isArray(result.translatedTexts)
-        ? (result.translatedTexts[0] as string)
-        : (result.translatedTexts as string);
+      const translated = await translateText("made with love by dani", "en", targetLang);
       Speech.speak(translated, {
         voice: identifier,
         language: targetLang,
