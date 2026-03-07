@@ -19,12 +19,16 @@ export const chatSlice = createSlice({
   reducers: {
     addRecentMessage: (
       state,
-      action: PayloadAction<{ text: string; voiceId?: string }>,
+      action: PayloadAction<{ text: string; voiceId?: string } | string>,
     ) => {
       if (!state.recentMessages) {
         state.recentMessages = [];
       }
-      state.recentMessages.unshift(action.payload);
+      const message =
+        typeof action.payload === "string"
+          ? { text: action.payload }
+          : action.payload;
+      state.recentMessages.unshift(message);
       if (state.recentMessages.length > 50) {
         state.recentMessages.pop();
       }
@@ -41,12 +45,5 @@ export default chatSlice.reducer;
 
 export const getChatState = (state: RootState) => state.chat;
 
-export const getRecentMessages = (state: RootState) => {
-  const messages = (state.chat.recentMessages || []) as unknown as (
-    | { text: string; voiceId?: string }
-    | string
-  )[];
-  return messages.map((m): { text: string; voiceId?: string } =>
-    typeof m === "string" ? { text: m } : m,
-  );
-};
+export const getRecentMessages = (state: RootState) =>
+  state.chat.recentMessages || [];

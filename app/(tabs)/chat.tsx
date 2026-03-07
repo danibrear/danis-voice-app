@@ -409,23 +409,6 @@ function ChatPage() {
           e.stopPropagation();
           e.preventDefault();
         }}>
-        {displayMessage && (
-          <IconButton
-            mode="contained"
-            containerColor={theme.colors.onPrimary}
-            iconColor={theme.colors.primary}
-            onPress={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleSay(displayMessage.text, {
-                isReplay: true,
-                voiceOverride: displayMessage.voiceId,
-              });
-            }}
-            icon={(props) => <MaterialIcons name="replay" {...props} />}
-          />
-        )}
-
         <View
           style={{
             display: "flex",
