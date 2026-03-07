@@ -89,7 +89,6 @@ export default function QuickScreen() {
             }}>
             {text.text}
           </Text>
-          {text.voiceId && <Text variant="bodySmall">{text.voiceId}</Text>}
         </View>
         <View
           style={{
