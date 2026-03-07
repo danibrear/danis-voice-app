@@ -12,12 +12,12 @@ export default function TranslateButton({ isTranslating, onPress }: Props) {
     <IconButton
       onPress={onPress}
       mode={isTranslating ? "contained" : undefined}
-      containerColor={isTranslating ? theme.colors.primaryContainer : undefined}
+      containerColor={isTranslating ? theme.colors.tertiary : undefined}
       icon={(props) => (
         <MaterialIcons
           name="translate"
           {...props}
-          color={isTranslating ? theme.colors.onPrimaryContainer : "white"}
+          color={isTranslating ? theme.colors.onTertiary : "white"}
         />
       )}
     />
