@@ -79,7 +79,7 @@ export default function QuickScreen() {
           width: "100%",
           alignItems: "center",
           justifyContent: "space-between",
-          backgroundColor: theme.colors.surfaceDisabled,
+          backgroundColor: theme.colors.surfaceVariant,
         }}>
         <View>
           <Text
