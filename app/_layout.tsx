@@ -1,6 +1,7 @@
 import PageTitle from "@/components/PageTitle";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { store } from "@/store";
+import { persistedStore, store } from "@/store";
+import { PersistGate } from "redux-persist/integration/react";
 import { darkTheme, theme } from "@/theme";
 import {
   DarkTheme,
@@ -105,6 +106,7 @@ export default function RootLayout() {
     <GestureHandlerRootView>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <ReduxProvider store={store}>
+          <PersistGate loading={null} persistor={persistedStore}>
           <PaperProvider>
             <RNPThemeProvider
               theme={colorScheme === "dark" ? darkTheme : theme}>
@@ -183,6 +185,7 @@ export default function RootLayout() {
               </View>
             </RNPThemeProvider>
           </PaperProvider>
+          </PersistGate>
         </ReduxProvider>
         <StatusBar style="auto" />
       </ThemeProvider>
