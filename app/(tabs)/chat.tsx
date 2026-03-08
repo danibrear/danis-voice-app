@@ -627,29 +627,6 @@ function ChatPage() {
                 {message?.slice(boundary.end)}
               </Text>
             </View>
-
-            {showAllTools && (
-              <Animated.View
-                entering={FadeInDown.duration(500)
-                  .springify()
-                  .damping(15)
-                  .mass(0.5)}
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  width: "100%",
-                  flexDirection: "column",
-                  justifyContent: "space-around",
-                }}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}>
-                {renderTools()}
-              </Animated.View>
-            )}
           </View>
         )}
 
@@ -787,13 +764,30 @@ function ChatPage() {
             </Card>
           )}
         </View>
-        <View
-          style={{
-            position: "relative",
-            backgroundColor: theme.colors.background,
-          }}>
-          {renderTools()}
-        </View>
+        {showAllTools && (
+          <Animated.View
+            entering={FadeInDown.duration(500)
+              .springify()
+              .damping(15)
+              .mass(0.5)}
+            exiting={FadeOutDown.duration(150)}
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1001,
+              width: "100%",
+              flexDirection: "column",
+              justifyContent: "space-around",
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}>
+            {renderTools()}
+          </Animated.View>
+        )}
       </CrossView>
 
       <KeyboardAvoidingView
