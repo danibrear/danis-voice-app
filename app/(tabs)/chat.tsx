@@ -394,7 +394,7 @@ function ChatPage() {
     return (
       <Animated.View
         entering={FadeInUp.duration(150).springify().damping(15).mass(0.5)}
-        exiting={FadeOutUp.duration(150)}
+        exiting={FadeOutUp.duration(150).damping(15).mass(0.5)}
         style={{
           display: "flex",
           flexDirection: "row",
@@ -770,7 +770,7 @@ function ChatPage() {
               .springify()
               .damping(15)
               .mass(0.5)}
-            exiting={FadeOutDown.duration(150)}
+            exiting={FadeOutDown.duration(150).damping(15).mass(0.5)}
             style={{
               position: "absolute",
               bottom: 0,
