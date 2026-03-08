@@ -42,6 +42,7 @@ import Animated, {
   FadeInDown,
   FadeInUp,
   FadeOutDown,
+  FadeOutUp,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
@@ -330,6 +331,7 @@ function ChatPage() {
             logEvent("font_size_adjusted", { direction: "reset" });
             setFontSize(null);
           }}
+          disabled={fontSize === null}
         />
         <IconButton
           onPress={() => {
@@ -386,9 +388,13 @@ function ChatPage() {
     );
   };
   const renderTopTools = () => {
+    if (!showAllTools) {
+      return null;
+    }
     return (
       <Animated.View
         entering={FadeInUp.duration(150).springify().damping(15).mass(0.5)}
+        exiting={FadeOutUp.duration(150)}
         style={{
           display: "flex",
           flexDirection: "row",
@@ -428,20 +434,18 @@ function ChatPage() {
               navigator.navigate("personalities");
             }}
           />
-          {showAllTools && (
-            <IconButton
-              onPress={() => {
-                // @ts-expect-error navigate type
-                navigator.navigate("quick");
-                logEvent("quick_menu_opened_from_chat", {
-                  source: "top_tools",
-                });
-              }}
-              icon={(props) => (
-                <FontAwesome name="list" {...props} color="white" />
-              )}
-            />
-          )}
+          <IconButton
+            onPress={() => {
+              // @ts-expect-error navigate type
+              navigator.navigate("quick");
+              logEvent("quick_menu_opened_from_chat", {
+                source: "top_tools",
+              });
+            }}
+            icon={(props) => (
+              <FontAwesome name="list" {...props} color="white" />
+            )}
+          />
         </View>
       </Animated.View>
     );
