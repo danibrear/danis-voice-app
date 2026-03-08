@@ -1,3 +1,4 @@
+import { logEvent } from "@/utils/analytics";
 import { useEffect, useState } from "react";
 import { Dimensions, Modal, Platform, Text, View } from "react-native";
 
@@ -183,6 +184,7 @@ export default function ShowingModal({
           labelStyle={formStyles.bigButton}
           style={{ flexGrow: 1 }}
           onPress={() => {
+            logEvent("phrase_stopped");
             handleStop();
           }}>
           Stop
@@ -195,6 +197,7 @@ export default function ShowingModal({
           mode="contained"
           labelStyle={formStyles.bigButton}
           onPress={() => {
+            logEvent("phrase_paused");
             handlePause();
           }}>
           Pause
@@ -207,6 +210,7 @@ export default function ShowingModal({
           mode="contained"
           labelStyle={formStyles.bigButton}
           onPress={async () => {
+            logEvent("phrase_resumed");
             await handleResume();
           }}>
           Resume
@@ -224,7 +228,7 @@ export default function ShowingModal({
             if (!storedText) {
               return;
             }
-
+            logEvent("phrase_read");
             handleSay(storedText, {
               onBoundary: (e: { charIndex: number; charLength: number }) => {
                 const { charLength } = e;
@@ -343,6 +347,7 @@ export default function ShowingModal({
                     isFlashing ? theme.colors.tertiary : "transparent"
                   }
                   onPress={() => {
+                    logEvent("flash_toggled", { enabled: !isFlashing });
                     setIsFlashing(!isFlashing);
                   }}
                   mode={isFlashing ? "contained" : "outlined"}
@@ -382,7 +387,10 @@ export default function ShowingModal({
                   containerColor={theme.colors.tertiary}
                   iconColor="white"
                   size={22}
-                  onPress={() => handleSetFontSize(Math.min(250, fontSize + 5))}
+                  onPress={() => {
+                    logEvent("phrase_font_size_adjusted", { direction: "increase" });
+                    handleSetFontSize(Math.min(250, fontSize + 5));
+                  }}
                   mode="contained"
                 />
                 <IconButton
@@ -390,7 +398,10 @@ export default function ShowingModal({
                   size={22}
                   containerColor={theme.colors.tertiary}
                   iconColor="white"
-                  onPress={() => handleSetFontSize(Math.max(20, fontSize - 5))}
+                  onPress={() => {
+                    logEvent("phrase_font_size_adjusted", { direction: "decrease" });
+                    handleSetFontSize(Math.max(20, fontSize - 5));
+                  }}
                   mode="contained"
                 />
                 {fontSize !== defaultFontSize && (
@@ -399,7 +410,10 @@ export default function ShowingModal({
                     size={22}
                     containerColor={theme.dark ? "#fff" : "#333"}
                     iconColor={theme.colors.tertiary}
-                    onPress={() => handleSetFontSize(null)}
+                    onPress={() => {
+                      logEvent("phrase_font_size_adjusted", { direction: "reset" });
+                      handleSetFontSize(null);
+                    }}
                     mode="contained"
                   />
                 )}

@@ -1,3 +1,4 @@
+import { logEvent } from "@/utils/analytics";
 import { RootState } from "@/store";
 import {
   removeText,
@@ -86,6 +87,7 @@ export default function RecentList({
       if (isLongPressing) {
         return;
       }
+      logEvent("phrase_opened", { starred: item.starred });
       Keyboard.dismiss();
       onPress(item);
     },
@@ -93,6 +95,7 @@ export default function RecentList({
   );
 
   const handleReorderStoredTexts = (newOrder: StoredText[]) => {
+    logEvent("phrases_reordered");
     try {
       setIsUpdating(true);
       const updatedWithOrder = newOrder.map((text, index) => ({
@@ -152,6 +155,7 @@ export default function RecentList({
               <Button
                 mode="outlined"
                 onPress={() => {
+                  logEvent("starred_filter_toggled", { enabled: !starredOnly });
                   setStarredOnly((s) => !s);
                 }}
                 disabled={starredPhrases.length === 0 && !starredOnly}
@@ -172,6 +176,7 @@ export default function RecentList({
                     mode="contained"
                     buttonColor={theme.colors.error}
                     onPress={() => {
+                      logEvent("phrases_bulk_deleted", { count: selectedIds.length });
                       selectedIds.forEach((id) => {
                         dispatch(removeText(id));
                       });
@@ -399,6 +404,7 @@ export default function RecentList({
               buttonColor={theme.colors.error}
               onPress={() => {
                 if (selectedStoredText) {
+                  logEvent("phrase_deleted");
                   dispatch(removeText(selectedStoredText.id));
                 }
                 setIsDeleting(false);

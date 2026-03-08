@@ -11,10 +11,11 @@ import {
   updateTranslationPersonality,
 } from "@/store/preferences";
 import { coreStyles } from "@/styles";
+import { logEvent } from "@/utils/analytics";
+import { translateText } from "@/utils/translateText";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import * as Speech from "expo-speech";
-import { translateText } from "@/utils/translateText";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -112,13 +113,57 @@ export default function PersonalitiesScreen() {
     const key = identifier ?? "default";
     setTestingVoiceId(key);
     try {
-      const translated = await translateText("made with love by dani", "en", targetLang);
-      Speech.speak(translated, {
+      const translated = await translateText(
+        "made with love by dani",
+        "en",
+        targetLang,
+      );
+      if (translated.status === "error") {
+        console.log("[ERROR] Translation error:", translated.error);
+        return;
+      }
+      if (
+        !translated.translatedTexts ||
+        translated.translatedTexts.length === 0
+      ) {
+        console.log("[ERROR] No translation available");
+        logEvent("voice_test_failed", {
+          voice_id: identifier || "default",
+          target_lang: targetLang,
+          error: "No translation available",
+        });
+        return;
+      }
+      let translatedText: string;
+      if (Array.isArray(translated.translatedTexts)) {
+        translatedText = translated.translatedTexts[0];
+      } else {
+        translatedText = translated.translatedTexts;
+      }
+
+      logEvent("voice_test_success", {
+        voice_id: identifier || "default",
+        target_lang: targetLang,
+      });
+      Speech.speak(translatedText, {
         voice: identifier,
         language: targetLang,
+        onError: (error) => {
+          console.log("[ERROR] Speech error:", error);
+          logEvent("voice_test_failed", {
+            voice_id: identifier || "default",
+            target_lang: targetLang,
+            error: (error as Error).message,
+          });
+        },
       });
-    } catch {
-      // ignore
+    } catch (error) {
+      console.log("[ERROR] Voice test failed:", error);
+      logEvent("voice_test_failed", {
+        voice_id: identifier || "default",
+        target_lang: targetLang,
+        error: (error as Error).message,
+      });
     } finally {
       setTestingVoiceId(null);
     }
@@ -416,17 +461,32 @@ export default function PersonalitiesScreen() {
                           <>
                             <RadioButton
                               value={voice.identifier}
-                              status={voiceId === voice.identifier ? "checked" : "unchecked"}
+                              status={
+                                voiceId === voice.identifier
+                                  ? "checked"
+                                  : "unchecked"
+                              }
                               onPress={() => setVoiceId(voice.identifier)}
                             />
                             <View style={{ flex: 1, marginLeft: 8 }}>
                               <Text>{voice.name}</Text>
-                              <Text style={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}>
-                                {voice.quality === "Default" ? "Standard" : voice.quality} · {voice.language}
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  color: theme.colors.onSurfaceVariant,
+                                }}>
+                                {voice.quality === "Default"
+                                  ? "Standard"
+                                  : voice.quality}{" "}
+                                · {voice.language}
                               </Text>
                             </View>
                             <IconButton
-                              icon={testingVoiceId === voice.identifier ? "loading" : "play-circle-outline"}
+                              icon={
+                                testingVoiceId === voice.identifier
+                                  ? "loading"
+                                  : "play-circle-outline"
+                              }
                               size={22}
                               disabled={testingVoiceId !== null}
                               onPress={() => testVoice(voice.identifier)}
@@ -465,7 +525,11 @@ export default function PersonalitiesScreen() {
                         <Text>Default</Text>
                       </View>
                       <IconButton
-                        icon={testingVoiceId === "default" ? "loading" : "play-circle-outline"}
+                        icon={
+                          testingVoiceId === "default"
+                            ? "loading"
+                            : "play-circle-outline"
+                        }
                         size={22}
                         disabled={testingVoiceId !== null}
                         onPress={() => testVoice(undefined)}
@@ -485,17 +549,32 @@ export default function PersonalitiesScreen() {
                       <>
                         <RadioButton
                           value={voice.identifier}
-                          status={voiceId === voice.identifier ? "checked" : "unchecked"}
+                          status={
+                            voiceId === voice.identifier
+                              ? "checked"
+                              : "unchecked"
+                          }
                           onPress={() => setVoiceId(voice.identifier)}
                         />
                         <View style={{ flex: 1, marginLeft: 8 }}>
                           <Text>{voice.name}</Text>
-                          <Text style={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}>
-                            {voice.quality === "Default" ? "Standard" : voice.quality} · {voice.language}
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: theme.colors.onSurfaceVariant,
+                            }}>
+                            {voice.quality === "Default"
+                              ? "Standard"
+                              : voice.quality}{" "}
+                            · {voice.language}
                           </Text>
                         </View>
                         <IconButton
-                          icon={testingVoiceId === voice.identifier ? "loading" : "play-circle-outline"}
+                          icon={
+                            testingVoiceId === voice.identifier
+                              ? "loading"
+                              : "play-circle-outline"
+                          }
                           size={22}
                           disabled={testingVoiceId !== null}
                           onPress={() => testVoice(voice.identifier)}

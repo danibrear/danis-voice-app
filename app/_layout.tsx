@@ -7,9 +7,10 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import { logScreenView } from "@/utils/analytics";
 import * as QuickActions from "expo-quick-actions";
 import { RouterAction, useQuickActionRouting } from "expo-quick-actions/router";
-import { Stack } from "expo-router";
+import { Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as Updates from "expo-updates";
@@ -40,8 +41,13 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const segments = useSegments();
 
   useQuickActionRouting();
+
+  useEffect(() => {
+    logScreenView(segments.join("/") || "home");
+  }, [segments]);
 
   useEffect(() => {
     setTimeout(() => {

@@ -1,3 +1,4 @@
+import { logEvent } from "@/utils/analytics";
 import { coreStyles, formStyles, spacingStyles } from "@/styles";
 import { useContext, useEffect, useState } from "react";
 import { KeyboardAvoidingView, View } from "react-native";
@@ -170,12 +171,14 @@ export default function HomeScreen() {
             onPress={() => {
               if (textInput.trim().length === 0) {
                 setError("Please enter some text to show.");
+                logEvent("phrase_show_error", { reason: "empty_input" });
                 return;
               }
               const existing = storedTexts.recentTexts.find(
                 (t: StoredText) => t.text === textInput,
               );
               if (existing) {
+                logEvent("phrase_shown", { is_existing: true });
                 setStoredText(existing);
               } else {
                 const newStoredText: StoredText = {
@@ -186,10 +189,12 @@ export default function HomeScreen() {
                 };
                 try {
                   dispatch(createStoredText(newStoredText));
+                  logEvent("phrase_shown", { is_existing: false });
                   setStoredText(newStoredText);
                 } catch (e) {
                   console.log("[ERROR] error creating stored text:", e);
                   setError("Failed to create phrase. Please try again.");
+                  logEvent("phrase_show_error", { reason: "create_failed" });
                 }
               }
               setTextInput("");

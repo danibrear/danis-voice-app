@@ -9,6 +9,7 @@ import { RootState } from "@/store";
 import { addRecentMessage } from "@/store/chat";
 import { coreStyles } from "@/styles";
 import { darkTheme } from "@/theme";
+import { logEvent } from "@/utils/analytics";
 import {
   FontAwesome,
   MaterialCommunityIcons,
@@ -114,12 +115,13 @@ function ChatPage() {
   const sourceLang = preferences.translateSourceLang ?? "en";
   const targetLang = preferences.translateTargetLang ?? "es";
 
-  const { translatedMessage, isTranslationLoading } = useTranslate({
-    input,
-    isTranslating,
-    sourceLang,
-    targetLang,
-  });
+  const { translatedMessage, isTranslationLoading, translationError } =
+    useTranslate({
+      input,
+      isTranslating,
+      sourceLang,
+      targetLang,
+    });
 
   const isWeb = Platform.OS === "web";
 
@@ -219,6 +221,11 @@ function ChatPage() {
 
   const handleSendMessage = async () => {
     if (isTranslating) {
+      logEvent("message_sent", {
+        translated: true,
+        source_lang: sourceLang,
+        target_lang: targetLang,
+      });
       await handleSay(translatedMessage ?? input.trim(), {
         voiceOverride: preferences.translateVoice,
       });
@@ -227,6 +234,7 @@ function ChatPage() {
     if (input.trim() === "") {
       return;
     }
+    logEvent("message_sent", { translated: false });
     await handleSay(input.trim());
     const voiceId = preferences.preferredVoice;
     const newMessages = [
@@ -274,6 +282,7 @@ function ChatPage() {
             handleDone();
           },
           onError: () => {
+            logEvent("speech_error");
             handleDone();
           },
           onBoundary: (e: { charIndex: number; charLength: number }) => {
@@ -307,6 +316,7 @@ function ChatPage() {
           iconColor="white"
           size={30}
           onPress={() => {
+            logEvent("font_size_adjusted", { direction: "increase" });
             if (fontSize === null) {
               setFontSize(100);
               return;
@@ -320,6 +330,7 @@ function ChatPage() {
           iconColor="white"
           size={30}
           onPress={() => {
+            logEvent("font_size_adjusted", { direction: "decrease" });
             if (fontSize === null) {
               setFontSize(100);
               return;
@@ -335,6 +346,7 @@ function ChatPage() {
           }}
           size={30}
           onPress={() => {
+            logEvent("font_size_adjusted", { direction: "reset" });
             setFontSize(null);
           }}
         />
@@ -365,7 +377,10 @@ function ChatPage() {
           )}
         />
         <IconButton
-          onPress={() => setAngle(180)}
+          onPress={() => {
+            logEvent("text_flipped", { flipped: true });
+            setAngle(180);
+          }}
           mode={angle === 180 ? "contained" : undefined}
           icon={(props) => (
             <MaterialCommunityIcons
@@ -377,7 +392,10 @@ function ChatPage() {
           size={30}
         />
         <IconButton
-          onPress={() => setAngle(0)}
+          onPress={() => {
+            logEvent("text_flipped", { flipped: false });
+            setAngle(0);
+          }}
           mode={angle === 0 ? "contained" : undefined}
           icon={(props) => (
             <MaterialCommunityIcons
@@ -424,6 +442,11 @@ function ChatPage() {
           <TranslateButton
             isTranslating={isTranslating}
             onPress={() => {
+              logEvent("translation_toggled", {
+                enabled: !isTranslating,
+                source_lang: sourceLang,
+                target_lang: targetLang,
+              });
               Keyboard.dismiss();
               // @ts-expect-error navigate type
               navigator.navigate("personalities");
@@ -434,6 +457,9 @@ function ChatPage() {
               onPress={() => {
                 // @ts-expect-error navigate type
                 navigator.navigate("quick");
+                logEvent("quick_menu_opened_from_chat", {
+                  source: "top_tools",
+                });
               }}
               icon={(props) => (
                 <FontAwesome name="list" {...props} color="white" />
@@ -658,6 +684,7 @@ function ChatPage() {
                 )}
                 onPress={() => {
                   if (isPaused) {
+                    logEvent("speech_resumed");
                     Speech.resume();
                     setIsSpeaking(true);
                     setIsPaused(false);
@@ -674,6 +701,7 @@ function ChatPage() {
                   icon={(props) => <MaterialIcons name={"pause"} {...props} />}
                   onPress={() => {
                     if (isSpeaking) {
+                      logEvent("speech_paused");
                       Speech.pause();
                       setIsSpeaking(false);
                       setIsPaused(true);
@@ -689,6 +717,7 @@ function ChatPage() {
                   )}
                   onPress={() => {
                     if (isSpeaking) {
+                      logEvent("speech_stopped");
                       Speech.stop();
                       setIsSpeaking(false);
                     }
@@ -833,6 +862,28 @@ function ChatPage() {
             </Text>
           </Animated.View>
         )}
+        {translationError && (
+          <Animated.View
+            entering={FadeInDown.duration(300).springify().damping(20).mass(1)}
+            exiting={FadeInDown.duration(10)}
+            style={{ width: "100%", alignItems: "center" }}>
+            <Text
+              style={{
+                color: theme.colors.onError,
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: 14,
+                backgroundColor: theme.colors.error,
+                paddingVertical: 8,
+                borderRadius: 5,
+                marginBottom: 5,
+                width: "100%",
+                paddingHorizontal: 10,
+              }}>
+              Translation failed: {translationError}
+            </Text>
+          </Animated.View>
+        )}
         <View
           style={{
             display: "flex",
@@ -917,6 +968,7 @@ function ChatPage() {
             mode="contained"
             style={{ flexGrow: 1 }}
             onPress={() => {
+              logEvent("message_deleted");
               const newMessages = messages.filter(
                 (_, i) => i !== menuMessageIdx,
               );
