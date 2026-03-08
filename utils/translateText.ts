@@ -1,12 +1,7 @@
 import { onTranslateTask } from "expo-translate-text";
 import { fetchGoogleTranslate } from "./fetchGoogleTranslate";
 import { logEvent } from "./analytics";
-
-type TranslateTextResult = {
-  translatedTexts: string[] | string;
-  status: "success" | "error";
-  error?: string;
-};
+import { TranslateTextResult } from "@/types/TranslatedText";
 
 export async function translateText(
   text: string,
