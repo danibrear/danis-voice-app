@@ -51,7 +51,6 @@ import { useDispatch, useSelector } from "react-redux";
 type Message = {
   text: string;
   fontSize: number | null;
-  numberOfLines?: number;
   voiceId?: string;
 };
 
@@ -78,7 +77,6 @@ function ChatPage() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [displayMessage, setDisplayMessage] = useState<Message | null>(null);
 
   const preferences = useSelector((state: RootState) => state.preferences);
   const safeAreaInsets = useSafeAreaInsets();
@@ -130,15 +128,12 @@ function ChatPage() {
   const opacity = useSharedValue(0.5);
 
   useEffect(() => {
-    if (!displayMessage) {
-      opacity.value = withTiming(0.75, { duration: 250 });
-
-      setTimeout(() => {
-        opacity.value = withTiming(0.333, { duration: 600 });
-      }, 600);
-    }
+    opacity.value = withTiming(0.75, { duration: 250 });
+    setTimeout(() => {
+      opacity.value = withTiming(0.333, { duration: 600 });
+    }, 600);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayMessage]);
+  }, []);
 
   useEffect(() => {
     if (
@@ -167,14 +162,6 @@ function ChatPage() {
     }, 50);
     return () => clearInterval(interval);
   }, [isSpeaking, messages]);
-
-  useEffect(() => {
-    if (displayMessage && input.trim() !== "") {
-      setDisplayMessage(null);
-      setFontSize(null);
-      setShowAllTools(true);
-    }
-  }, [input, displayMessage]);
 
   useEffect(() => {
     const words = input.trim().split(" ");
@@ -241,12 +228,6 @@ function ChatPage() {
       ...messages,
       { text: input.trim(), fontSize: fontSize, voiceId },
     ];
-    setDisplayMessage({
-      text: input.trim(),
-      fontSize: fontSize,
-      numberOfLines: numLines,
-      voiceId,
-    });
     setMessages(newMessages);
     setTimeout(() => {
       messagesEndRef.current?.scrollToEnd({ animated: true });
@@ -312,8 +293,8 @@ function ChatPage() {
         }}>
         <IconButton
           icon="magnify-plus"
-          disabled={input.trim().length === 0}
           iconColor="white"
+          disabled={input.trim() === ""}
           size={30}
           onPress={() => {
             logEvent("font_size_adjusted", { direction: "increase" });
@@ -326,8 +307,8 @@ function ChatPage() {
         />
         <IconButton
           icon="magnify-minus"
-          disabled={input.trim().length === 0}
           iconColor="white"
+          disabled={input.trim() === ""}
           size={30}
           onPress={() => {
             logEvent("font_size_adjusted", { direction: "decrease" });
@@ -352,24 +333,19 @@ function ChatPage() {
         />
         <IconButton
           onPress={() => {
-            if (input.trim() === "" && displayMessage === null) {
+            if (input.trim() === "") {
               Keyboard.dismiss();
             }
-            setDisplayMessage(null);
             setInput("");
           }}
           size={30}
-          disabled={input.trim() === "" && !displayMessage && !keyboardFocused}
+          disabled={input.trim() === "" && !keyboardFocused}
           icon={(props) => (
             <FontAwesome
-              name={
-                input.trim() === "" && displayMessage === null
-                  ? "chevron-down"
-                  : "window-close"
-              }
+              name={input.trim() === "" ? "chevron-down" : "window-close"}
               {...props}
               color={
-                input.trim() === "" && !displayMessage && !keyboardFocused
+                input.trim() === "" && !keyboardFocused
                   ? theme.colors.surfaceDisabled
                   : "white"
               }
@@ -479,8 +455,8 @@ function ChatPage() {
     if (isTranslating) {
       return translatedMessage;
     }
-    return input.trim() !== "" ? input.trim() : displayMessage?.text;
-  }, [displayMessage, input, isTranslating, translatedMessage]);
+    return input.trim() !== "" ? input.trim() : null;
+  }, [input, isTranslating, translatedMessage]);
 
   const instructionsOffset = Platform.OS === "web" ? 50 : 20;
 
@@ -523,7 +499,7 @@ function ChatPage() {
               alignItems: "center",
             }}
             onTouchStart={() => {
-              if (input.trim() === "" && displayMessage === null) {
+              if (input.trim() === "") {
                 setShowAllTools(true);
               } else {
                 setShowAllTools((s) => !s);
@@ -572,7 +548,7 @@ function ChatPage() {
                   style={{ position: "absolute", zIndex: 10 }}
                 />
               )}
-              {input.trim().length === 0 && displayMessage === null && (
+              {input.trim().length === 0 && (
                 <Animated.View
                   entering={FadeInUp.duration(666)
                     .springify()
@@ -611,7 +587,7 @@ function ChatPage() {
               )}
               <Text
                 adjustsFontSizeToFit={true}
-                numberOfLines={displayMessage?.numberOfLines || numLines}
+                numberOfLines={numLines}
                 allowFontScaling={true}
                 style={{
                   transform: [
@@ -628,7 +604,7 @@ function ChatPage() {
                   justifyContent: "center",
                   alignContent: "center",
                   alignItems: "center",
-                  fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
+                  fontSize: fontSize ?? 60,
                 }}>
                 {message?.slice(0, boundary.start)}
                 <Text
@@ -640,7 +616,7 @@ function ChatPage() {
                     justifyContent: "center",
                     alignContent: "center",
                     alignItems: "center",
-                    fontSize: displayMessage?.fontSize ?? fontSize ?? 60,
+                    fontSize: fontSize ?? 60,
                   }}>
                   {message?.slice(boundary.start, boundary.end)}
                 </Text>
