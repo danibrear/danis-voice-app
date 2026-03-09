@@ -16,24 +16,19 @@ function init() {
   if (initialized || !MEASUREMENT_ID || typeof window === "undefined") return;
   initialized = true;
 
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function (...args) {
-    window.dataLayer.push(args);
-  };
+  const gtagScript = document.createElement("script");
+  gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
+  gtagScript.async = true;
+  document.head.appendChild(gtagScript);
 
-  const script = document.createElement("script");
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
-  script.async = true;
-  document.head.appendChild(script);
-  setTimeout(() => {
-    console.log(
-      "[Analytics] Initializing gtag with MEASUREMENT_ID:",
-      MEASUREMENT_ID,
-    );
-    window.gtag("js", new Date());
-    window.gtag("config", MEASUREMENT_ID);
-    console.log("[Analytics] gtag initialized");
-  }, 250);
+  const initScript = document.createElement("script");
+  initScript.textContent = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${MEASUREMENT_ID}');
+  `;
+  document.head.appendChild(initScript);
 }
 
 function getDeviceParams(): Record<string, string | number | boolean> {
