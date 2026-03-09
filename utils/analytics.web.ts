@@ -20,13 +20,15 @@ function init() {
   window.gtag = function (...args) {
     window.dataLayer.push(args);
   };
-  window.gtag("js", new Date());
-  window.gtag("config", MEASUREMENT_ID);
 
   const script = document.createElement("script");
   script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
   script.async = true;
   document.head.appendChild(script);
+  setTimeout(() => {
+    window.gtag("js", new Date());
+    window.gtag("config", MEASUREMENT_ID);
+  }, 250);
 }
 
 function getDeviceParams(): Record<string, string | number | boolean> {
