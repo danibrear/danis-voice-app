@@ -26,8 +26,13 @@ function init() {
   script.async = true;
   document.head.appendChild(script);
   setTimeout(() => {
+    console.log(
+      "[Analytics] Initializing gtag with MEASUREMENT_ID:",
+      MEASUREMENT_ID,
+    );
     window.gtag("js", new Date());
     window.gtag("config", MEASUREMENT_ID);
+    console.log("[Analytics] gtag initialized");
   }, 250);
 }
 
