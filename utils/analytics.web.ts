@@ -46,11 +46,8 @@ export async function logEvent(
   params?: Record<string, string | number | boolean>,
 ): Promise<void> {
   init();
-  console.log("[Analytics] logEvent called:", name, params ?? {});
   if (!MEASUREMENT_ID || typeof window === "undefined" || !window.gtag) return;
-  console.log("[Analytics] Logged event:", name, params ?? {});
   window.gtag("event", name, { ...getDeviceParams(), ...(params ?? {}) });
-  console.log("[Analytics] gtag event sent:", name, params ?? {});
 }
 
 export function logScreenView(screenName: string): Promise<void> {
